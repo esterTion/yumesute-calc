@@ -18,6 +18,7 @@ class GameDb {
   static CharacterBase = {};
   static CharacterLevel = {};
   static CharacterBloomBonusGroup = {};
+  static AlbumEffect = {};
   static Effect = {};
   static SenseNotation = {};
 
@@ -40,6 +41,7 @@ class GameDb {
     this.CharacterLevel = await this.loadKeyedMasterTable('CharacterLevelMaster', 'Level')
     this.CharacterBloomBonusGroup = await this.loadKeyedMasterTable('CharacterBloomBonusGroupMaster')
 
+    this.AlbumEffect = await this.loadKeyedMasterTable('AlbumEffectMaster')
     this.Effect = await this.loadKeyedMasterTable('EffectMaster')
 
     this.SenseNotation = await this.loadKeyedMasterTable('SenseNotationMaster')
@@ -73,6 +75,42 @@ class Effect {
   static get(id, level) {
     return new Effect(id, level)
   }
+
+  canTrigger(calc, index) {
+    for (let trigger of this.Triggers) {
+      if (this.Range === 'All') {
+        switch (trigger.Trigger) {
+          case 'CompanyCount': { return calc.properties.companyCount == trigger.Value;}
+          case 'AttributeCount': { return calc.properties.attributeCount == trigger.Value;}
+        }
+      }
+      return false;
+    }
+    return true
+  }
+  applyEffect(calc, index, type) {
+    const targets = this.Range === 'All' ? [0,1,2,3,4] : this.Range === 'Self' ? [index] : []
+    switch (this.Type) {
+      case 'BaseCorrection': { return }
+      case 'PerformanceUp': { return PerformanceUpEffect.applyEffect(this, calc, targets, type) }
+      case 'BaseScoreUp': { return BaseScoreUpEffect.applyEffect(this, calc, targets, type) }
+      default: {console.log(this.Type, index)}
+    }
+  }
+
+}
+class PerformanceUpEffect {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][3] += effect.activeEffect.Value
+    })
+  }
+}
+class BaseScoreUpEffect {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`BaseScoreUp calc type: ${effect.CalculationType}`)
+    calc.passiveEffects.baseScoreUp += effect.activeEffect.Value
+  }
 }
 
 class EpisodeReadState {
@@ -81,6 +119,39 @@ class EpisodeReadState {
   static Two = 2;
 }
 
+class CharacterStat {
+  constructor(vo, ex, co) {
+    this.vo = vo
+    this.ex = ex
+    this.co = co
+  }
+  get total() {
+    return this.vo + this.ex + this.co
+  }
+  // add another Stat
+  add(stat) {
+    const newStat = new CharacterStat(this.vo, this.ex, this.co)
+    newStat.vo += stat.vo
+    newStat.ex += stat.ex
+    newStat.co += stat.co
+    return newStat
+  }
+  // multiple a percentage, including performance
+  mul(percentage) {
+    const newStat = new CharacterStat(
+      Math.floor(this.vo * (percentage[0] + percentage[3]) / 10000),
+      Math.floor(this.ex * (percentage[1] + percentage[3]) / 10000),
+      Math.floor(this.co * (percentage[2] + percentage[3]) / 10000)
+    )
+    return newStat
+  }
+  static Zero() {
+    return new CharacterStat(0,0,0)
+  }
+  static fromArray(arr) {
+    return new CharacterStat(arr[0], arr[1], arr[2])
+  }
+}
 class CharacterData {
   Id;
   lvl;
@@ -169,6 +240,9 @@ class CharacterData {
   }
   get voFinal() {
     return this.calcStat(this.voMin);
+  }
+  get statFinal() {
+    return new CharacterStat(Math.floor(this.voFinal), Math.floor(this.exFinal), Math.floor(this.coFinal))
   }
   get starRank() {
     return root.appState.characterStarRank.get(this.data.CharacterBaseMasterId);
@@ -290,10 +364,123 @@ class CharacterStarRankData {
   }
 }
 
+class StatBonusType {
+  static Album = 0;
+  static Poster = 1;
+  static Accessory = 2;
+  static Other = 3;
+}
+class ScoreCalculator {
+  constructor(members, posters, accessories, extra) {
+    this.members = members;
+    this.posters = posters;
+    this.accessories = accessories;
+    this.extra = extra;
+    this.passiveEffects = {
+      album:[],
+      poster:[],
+      accessory:[],
+      baseScoreUp: 0,
+    }
+    this.stat = new StatCalculator(this.members)
+
+    this.properties = {
+      company: [],
+      attribute: [],
+    };
+    members.forEach(i => {
+      this.properties.company.push(i ? GameDb.CharacterBase[i.data.CharacterBaseMasterId].CompanyMasterId : null);
+      this.properties.attribute.push(i ? i.data.Attribute : null);
+    })
+    this.properties.companyCount = (new Set(this.properties.company.filter(i => i!==null))).size;
+    this.properties.attributeCount = (new Set(this.properties.attribute.filter(i => i!==null))).size;
+  }
+  calc(node) {
+    node.textContent = ''
+
+    const passiveEffects = this.passiveEffects
+    Object.values(GameDb.AlbumEffect).forEach(i => {
+      if (this.extra.albumLevel < i.Level) return
+      const effect = Effect.get(i.EffectMasterId, 1)
+      if (effect.FireTimingType !== 'Passive') return
+      if (!effect.canTrigger(this, -1)) return
+      passiveEffects.album.push({effect, source:-1})
+    })
+    passiveEffects.album.forEach(i => i.effect.applyEffect(this, i.source, StatBonusType.Album))
+
+    // bloom effect
+    this.members.filter(i => i !== null).forEach((chara, idx) => {
+      chara.bloomBonusEffects.forEach(effect => effect.applyEffect(this, idx, StatBonusType.Album))
+    })
+
+    let statExtra = 1
+    if (this.extra.starRankScoreBonus) {
+      statExtra = 1 + this.extra.starRankScoreBonus * 30 / 100
+    }
+
+    this.stat.calc()
+
+    const baseScore = [0.95, 0.97, 1, 1.05].map(coef => Math.floor(Math.floor(this.stat.finalTotal * statExtra) * 10 * (1 + passiveEffects.baseScoreUp/10000) * coef))
+    const senseScore = []
+    const starActScore = []
+
+    this.result = {
+      baseScore,
+      senseScore,
+      starActScore,
+    }
+  }
+}
+class StatCalculator {
+  constructor(members) {
+    this.initial = members.map(i => i ? i.statFinal : CharacterStat.Zero())
+    /**
+     * [0]: album
+     *   [0]: percentage
+     *     [0]: vo
+     *     [1]: ex
+     *     [2]: co
+     *     [3]: perf
+     *   [1]: addition
+     *     ...
+     * [1]: poster
+     *   ...
+     * [2]: accessory
+     *   ...
+     * [3]: other
+     *   ...
+     */
+    this.buff = members.map(_ => ([0,0,0,0].map(_ => ([[0,0,0,0], [0,0,0,0]]))))
+    this.buffLimit = members.map(_ => ([[20000,20000,20000,20000], [Infinity,Infinity,Infinity,Infinity]]))
+  }
+  calc() {
+    const buffRemaining = this.buffLimit.map(i=>i.map(i=>i.map(i=>i)))
+    this.buffFinal = this.buff.map((charaBuf, charaIdx) => charaBuf.map(category => {
+      return category.map((v,i) => v.map((v,j) => {
+        v = Math.min(v, buffRemaining[charaIdx][i][j])
+        buffRemaining[charaIdx][i][j] -= v
+        return v
+      }))
+    }))
+    this.bonus = this.buffFinal.map((charaBuf, charaIdx) => {
+      const bonus = charaBuf.map(i => CharacterStat.fromArray(i[1].slice(0, 3)))
+      const bonusAddition = bonus.reduce((sum, category) => sum.add(category), CharacterStat.Zero())
+      bonus.push(bonusAddition)
+      const statWithAddition = this.initial[charaIdx].add(bonusAddition)
+      const bonusPercentage = charaBuf.map(i => statWithAddition.mul(i[0]))
+      bonusPercentage.push(bonusPercentage.reduce((sum, category) => sum.add(category), CharacterStat.Zero()))
+      return bonus.map((i, idx) => i.add(bonusPercentage[idx]))
+    })
+    this.final = this.initial.map((i, idx) => i.add(this.bonus[idx][4]))
+    this.finalTotal = this.final.reduce((s, i) => s+i.total, 0)
+  }
+}
+
 class RootLogic {
   appState = {
     characters: [],
     characterStarRank: new CharacterStarRankData(),
+    albumLevel: 0,
   }
 
   async init() {
@@ -328,6 +515,22 @@ class RootLogic {
 
       _('div', {className: 'margin-box'}),
 
+      _('div', {}, [_('text', 'Album Level: '), this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])])]),
+
+      _('div', {className: 'margin-box'}),
+
+      _('div', {}, [
+        this.charaSortSelect = _('select', { event: { change: _=>this.setCharaSort() }}, [
+          _('option', { value: '' }, [_('text', 'Keep')]),
+          _('option', { value: 'Id' }, [_('text', 'ID')]),
+          _('option', { value: 'CharacterBaseMasterId' }, [_('text', 'Chara')]),
+        ]),
+        _('text', ''),
+        _('label', {}, [
+          this.charaSortDescInput = _('input', { type: 'checkbox', event: { change: _=>this.setCharaSort() }}),
+          _('text', '降順')
+        ])
+      ]),
       this.characterForm = _('form', {}, [
         this.characterContainer = _('table', { className: 'characters' }),
       ]),
@@ -344,8 +547,13 @@ class RootLogic {
     Object.values(GameDb.CharacterBase).forEach(i => {
       this.keikoSelect.appendChild(_('option', { value: i.Id }, [_('text', i.Name)]))
     })
+    Object.values(GameDb.AlbumEffect).forEach(i => {
+      this.albumLevelSelect.appendChild(_('option', { value: i.Level }, [_('text', i.Level)]))
+    })
 
     this.loadState()
+
+    this.albumLevelSelect.value = this.appState.albumLevel
 
     this.renderSenseNote()
     this.update()
@@ -362,6 +570,7 @@ class RootLogic {
       removeAllChilds(this.characterContainer)
       this.appState.characters = data.characters.map((i) => CharacterData.fromJSON(i, this.characterContainer))
       this.appState.characterStarRank = CharacterStarRankData.fromJSON(data.characterStarRank)
+      this.appState.albumLevel = data.albumLevel
     }
     this.update()
   }
@@ -373,6 +582,26 @@ class RootLogic {
   removeCharacter(chara) {
     this.appState.characters.splice(this.appState.characters.indexOf(chara), 1)
     this.update()
+  }
+  setAlbumLevel() {
+    this.appState.albumLevel = this.albumLevelSelect.value | 0;
+  }
+  setCharaSort() {
+    const sortKey = this.charaSortSelect.value;
+    const desc = this.charaSortDescInput.checked;
+    if (!sortKey) {
+      return
+    }
+    this.appState.characters.sort((a,b) => {
+      if (a.data[sortKey] === b.data[sortKey]) {
+        return 0
+      }
+      if (desc) {
+        return b.data[sortKey] - a.data[sortKey]
+      }
+      return a.data[sortKey] - b.data[sortKey]
+    })
+    this.appState.characters.forEach(i => this.characterContainer.appendChild(i.node))
   }
   update() {
     const addableCharacters = Object.values(GameDb.Character).map(i=>i.Id)
@@ -418,36 +647,40 @@ class RootLogic {
       select.appendChild(_('option', { value: '' }, [_('text', '未選択')]))
       for (let i=0; i<this.appState.characters.length; i++) {
         if (this.appState.characters[i].data.CharacterBaseMasterId !== keikoCharaId) continue;
-        select.appendChild(_('option', { value: i }, [_('text', GameDb.GetCharacterName(this.appState.characters[i].Id))]))
+        const chara = this.appState.characters[i]
+        select.appendChild(_('option', { value: i }, [_('text', GameDb.GetCharacterName(chara.Id) +`@${chara.lvl} ${chara.bloom}`)]))
       }
     }
+
+    for (let i=0; i<5; i++) {
+      let idx = this.appState.characters.indexOf(this.keikoSelection[i])
+      this.keikoBox.children[i].value = idx > -1 && this.keikoSelection[i].data.CharacterBaseMasterId == keikoCharaId ? idx : ''
+    }
+    this.keikoCalcResult()
   }
+  keikoSelection = []
   keikoCalcResult() {
     this.keikoResult.textContent = ''
     const keikoCharaId = this.keikoSelect.value | 0;
     if (!keikoCharaId) return
     ([...this.keikoBox.querySelectorAll('option[disabled]')]).forEach(i => i.removeAttribute('disabled'))
-    const memberChoice = []
+    this.keikoSelection.splice(0, this.keikoSelection.length)
     for (let select of this.keikoBox.children) {
-      if (select.selectedIndex === 0) continue;
+      if (select.selectedIndex <= 0) {
+        this.keikoSelection.push(null)
+        continue;
+      }
       for (let otherSelect of this.keikoBox.children) {
         if (otherSelect === select) continue;
         otherSelect.options[select.selectedIndex].setAttribute('disabled', '')
       }
-      memberChoice.push(select.value)
+      this.keikoSelection.push(this.appState.characters[select.value])
     }
-    let totalBaseScoreUp = 0;
-    let totalStat = memberChoice.map(idx => {
-      const chara = this.appState.characters[idx]
-      const val = [chara.voFinal, chara.exFinal, chara.coFinal].map(Math.floor).reduce((s,i) => s+i, 0)
-      const scoreUpEffect = chara.bloomBonusEffects.filter(i => i.Type === 'BaseScoreUp').map(i => i.activeEffect.Value).reduce((acc, cur) => acc + cur, 0)
-      totalBaseScoreUp += scoreUpEffect
-      return val;
-    }).reduce((acc, cur) => acc + cur, 0)
-    totalStat = totalStat * (100 + this.appState.characterStarRank.get(keikoCharaId) * 30) / 100
-    totalStat = Math.floor(totalStat)
-    const score = [0.95, 0.97, 1, 1.05].map(i => Math.floor(totalStat * 10 * (1 + totalBaseScoreUp/10000) * i))
-    this.keikoResult.textContent = score.join(' ')
+
+    const calc = new ScoreCalculator(this.keikoSelection, [], [], { albumLevel: this.appState.albumLevel, starRankScoreBonus: this.appState.characterStarRank.get(keikoCharaId) })
+    calc.calc(this.keikoResult)
+
+    this.keikoResult.textContent = calc.result.baseScore.join(' ')
   }
 }
 
