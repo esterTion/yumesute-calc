@@ -44,3 +44,14 @@ body {
 .stat {
   text-align: right;
 }
+table.stat-details {
+  text-align: center;
+  white-space: pre-wrap;
+  border-collapse: collapse;
+}
+.odd-row {
+  background: #E0E0E0;
+}
+table.stat-details td {
+  padding: 4px 10px;
+}

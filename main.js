@@ -22,19 +22,6 @@ class GameDb {
   static Effect = {};
   static SenseNotation = {};
 
-  static GetCharacterName(Id) {
-    if (this.Character[Id]) {
-      const chara = this.Character[Id]
-      return ({
-        'Rare1': '★',
-        'Rare2': '★★',
-        'Rare3': '★★★',
-        'Rare4': '★★★★',
-      })[chara.Rarity] + `【${chara.Name}】`+ this.CharacterBase[chara.CharacterBaseMasterId].Name
-    }
-    return ''
-  }
-
   static async load() {
     this.Character = await this.loadKeyedMasterTable('CharacterMaster')
     this.CharacterBase = await this.loadKeyedMasterTable('CharacterBaseMaster')
@@ -173,11 +160,12 @@ class CharacterData {
     if (this.data === undefined) {
       throw new Error(`Character ${Id} not found`)
     }
+    if (!parent) return
     this.node = parent.appendChild(_('tbody', {}, [
       _('tr', {}, [
-        _('td', {}, [_('text', GameDb.GetCharacterName(Id))]),
-        _('td', {}, [_('text', 'Co:')]),
-        this.coValNode = _('td', {className: 'stat'}),
+        _('td', {}, [_('text', this.fullCardName)]),
+        _('td', {}, [_('text', 'Vo:')]),
+        this.voValNode = _('td', {className: 'stat'}),
         _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: `https://redive.estertion.win/wds/card/${this.Id}_0.webp@w200`})])
       ]),
       _('tr', {}, [
@@ -192,8 +180,8 @@ class CharacterData {
           _('label', {}, [_('input', { type: 'radio', name: `episodeReadState-${this.data.Id}`, value:1, event: { change: e=>this.setEpisodeReadState(e) }}), _('text', '前編読む　')]),
           _('label', {}, [_('input', { type: 'radio', name: `episodeReadState-${this.data.Id}`, value:2, event: { change: e=>this.setEpisodeReadState(e) }}), _('text', '後編読む　')]),
         ]),
-        _('td', {}, [_('text', 'Vo:')]),
-        this.voValNode = _('td', {className: 'stat'}),
+        _('td', {}, [_('text', 'Co:')]),
+        this.coValNode = _('td', {className: 'stat'}),
       ]),
       _('tr', {}, [
         _('td', {}, [
@@ -222,6 +210,23 @@ class CharacterData {
     for (let i = 0; i < 6; i++) {
       this.bloomInput.appendChild(_('option', { value: i }, [_('text', i)]))
     }
+  }
+  get rarityStr() {
+    return ({
+      'Rare1': '★',
+      'Rare2': '★★',
+      'Rare3': '★★★',
+      'Rare4': '★★★★',
+    })[this.data.Rarity]
+  }
+  get cardName() {
+    return this.data.Name
+  }
+  get charaName() {
+    return GameDb.CharacterBase[this.data.CharacterBaseMasterId].Name
+  }
+  get fullCardName() {
+    return `${this.rarityStr}【${this.cardName}】${this.charaName}`
   }
   get coMin() {
     return this.data.MinLevelStatus.Concentration;
@@ -283,13 +288,11 @@ class CharacterData {
 
     this.cardImg.src = `https://redive.estertion.win/wds/card/${this.Id}_${this.awaken&&this.data.Rarity==='Rare4'?1:0}.webp@w200`
 
-    const co = Math.floor(this.coFinal);
-    const ex = Math.floor(this.exFinal);
-    const vo = Math.floor(this.voFinal);
-    this.coValNode.textContent = co
-    this.exValNode.textContent = ex
-    this.voValNode.textContent = vo
-    this.totalValNode.textContent = co + ex + vo
+    const stat = this.statFinal
+    this.voValNode.textContent = stat.vo
+    this.exValNode.textContent = stat.ex
+    this.coValNode.textContent = stat.co
+    this.totalValNode.textContent = stat.total
   }
   remove() {
     this.node.remove()
@@ -396,7 +399,7 @@ class ScoreCalculator {
     this.properties.attributeCount = (new Set(this.properties.attribute.filter(i => i!==null))).size;
   }
   calc(node) {
-    node.textContent = ''
+    removeAllChilds(node)
 
     const passiveEffects = this.passiveEffects
     Object.values(GameDb.AlbumEffect).forEach(i => {
@@ -429,6 +432,56 @@ class ScoreCalculator {
       senseScore,
       starActScore,
     }
+
+    node.appendChild(_('div', {}, [
+      this.createStatDetailsTable(),
+      _('text', `合計演技力：${this.stat.finalTotal}`),
+      _('br'),
+      _('text', `基础分: ${baseScore[0]} / ${baseScore[1]} / ${baseScore[2]} / ${baseScore[3]}`)
+    ]))
+  }
+  createStatDetailsTable() {
+    let rowNumber;
+    return _('div', {}, this.members.map((chara, idx) => (rowNumber = 0, chara === null ? _('text', '') : _('details', {}, [
+      _('summary', {}, [_('text', chara.fullCardName)]),
+      _('table', { className: 'stat-details'}, [
+        _('thead', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+          _('th'),
+          _('th', {}, [_('text', '歌唱力')]),
+          _('th', {}, [_('text', '表現力')]),
+          _('th', {}, [_('text', '集中力')]),
+          _('th', {}, [_('text', '演技力')]),
+        ])]),
+        _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+          _('td', {}, [_('text', '初期値')]),
+          _('td', {}, [_('text', this.stat.initial[idx].vo)]),
+          _('td', {}, [_('text', this.stat.initial[idx].ex)]),
+          _('td', {}, [_('text', this.stat.initial[idx].co)]),
+          _('td', {}, [_('text', this.stat.initial[idx].total)]),
+        ])]),
+        _('tbody', {}, ['アルバム', 'ポスター', 'アクセサリー'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+          _('td', {}, [_('text', name)]),
+          _('td', {}, [_('text', `${this.stat.buffFinal[idx][j][0][0] / 100}%\n+${this.stat.buffFinal[idx][j][1][0]}\n${this.stat.bonus[idx][j].vo}`)]),
+          _('td', {}, [_('text', `${this.stat.buffFinal[idx][j][0][1] / 100}%\n+${this.stat.buffFinal[idx][j][1][1]}\n${this.stat.bonus[idx][j].ex}`)]),
+          _('td', {}, [_('text', `${this.stat.buffFinal[idx][j][0][2] / 100}%\n+${this.stat.buffFinal[idx][j][1][2]}\n${this.stat.bonus[idx][j].co}`)]),
+          _('td', {}, [_('text', `${this.stat.buffFinal[idx][j][0][3] / 100}%\n${this.stat.bonus[idx][j].total}`)]),
+        ]))),
+        _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+          _('td', {}, [_('text', '上昇合計')]),
+          _('td', {}, [_('text', `${this.stat.buffFinal[idx][4][0][0] / 100}%/${this.stat.buffLimit[idx][0][0] / 100}%\n+${this.stat.buffFinal[idx][4][1][0]}\n${this.stat.bonus[idx][4].vo}`)]),
+          _('td', {}, [_('text', `${this.stat.buffFinal[idx][4][0][1] / 100}%/${this.stat.buffLimit[idx][0][1] / 100}%\n+${this.stat.buffFinal[idx][4][1][1]}\n${this.stat.bonus[idx][4].ex}`)]),
+          _('td', {}, [_('text', `${this.stat.buffFinal[idx][4][0][2] / 100}%/${this.stat.buffLimit[idx][0][2] / 100}%\n+${this.stat.buffFinal[idx][4][1][2]}\n${this.stat.bonus[idx][4].co}`)]),
+          _('td', {}, [_('text', `${this.stat.buffFinal[idx][4][0][3] / 100}%/${this.stat.buffLimit[idx][0][3] / 100}%\n${this.stat.bonus[idx][4].total}`)]),
+        ])]),
+        _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+          _('td', {}, [_('text', '最終値')]),
+          _('td', {}, [_('text', `${this.stat.final[idx].vo}`)]),
+          _('td', {}, [_('text', `${this.stat.final[idx].ex}`)]),
+          _('td', {}, [_('text', `${this.stat.final[idx].co}`)]),
+          _('td', {}, [_('text', `${this.stat.final[idx].total}`)]),
+        ])]),
+      ])
+    ]))))
   }
 }
 class StatCalculator {
@@ -470,6 +523,16 @@ class StatCalculator {
       const bonusPercentage = charaBuf.map(i => statWithAddition.mul(i[0]))
       bonusPercentage.push(bonusPercentage.reduce((sum, category) => sum.add(category), CharacterStat.Zero()))
       return bonus.map((i, idx) => i.add(bonusPercentage[idx]))
+    })
+    this.buffFinal.forEach(charaBuf => {
+      charaBuf.push(charaBuf.reduce((sum, category) => {
+        for (let i=0; i<2; i++) {
+          for (let j=0; j<4; j++) {
+            sum[i][j] += category[i][j]
+          }
+        }
+        return sum
+      }, [[0,0,0,0],[0,0,0,0]]))
     })
     this.final = this.initial.map((i, idx) => i.add(this.bonus[idx][4]))
     this.finalTotal = this.final.reduce((s, i) => s+i.total, 0)
@@ -585,6 +648,7 @@ class RootLogic {
   }
   setAlbumLevel() {
     this.appState.albumLevel = this.albumLevelSelect.value | 0;
+    this.update()
   }
   setCharaSort() {
     const sortKey = this.charaSortSelect.value;
@@ -608,7 +672,7 @@ class RootLogic {
     .filter(i=>this.appState.characters.map(i=>i.Id).indexOf(i) === -1)
     removeAllChilds(this.addCharacterSelect)
     addableCharacters.forEach((i) => {
-      this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', GameDb.GetCharacterName(i))]))
+      this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
     })
 
     this.appState.characters.forEach(i => i.update())
@@ -648,7 +712,7 @@ class RootLogic {
       for (let i=0; i<this.appState.characters.length; i++) {
         if (this.appState.characters[i].data.CharacterBaseMasterId !== keikoCharaId) continue;
         const chara = this.appState.characters[i]
-        select.appendChild(_('option', { value: i }, [_('text', GameDb.GetCharacterName(chara.Id) +`@${chara.lvl} ${chara.bloom}`)]))
+        select.appendChild(_('option', { value: i }, [_('text', `${chara.fullCardName}@${chara.lvl} ${chara.bloom}`)]))
       }
     }
 
@@ -680,7 +744,7 @@ class RootLogic {
     const calc = new ScoreCalculator(this.keikoSelection, [], [], { albumLevel: this.appState.albumLevel, starRankScoreBonus: this.appState.characterStarRank.get(keikoCharaId) })
     calc.calc(this.keikoResult)
 
-    this.keikoResult.textContent = calc.result.baseScore.join(' ')
+    //this.keikoResult.textContent = calc.result.baseScore.join(' ')
   }
 }
 
