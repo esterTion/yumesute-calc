@@ -29,6 +29,7 @@ class GameDb {
     this.CharacterBloomBonusGroup = await this.loadKeyedMasterTable('CharacterBloomBonusGroupMaster')
 
     this.AlbumEffect = await this.loadKeyedMasterTable('AlbumEffectMaster')
+    this.PhotoEffect = await this.loadKeyedMasterTable('PhotoEffectMaster')
     this.Effect = await this.loadKeyedMasterTable('EffectMaster')
 
     this.SenseNotation = await this.loadKeyedMasterTable('SenseNotationMaster')
@@ -63,12 +64,28 @@ class Effect {
     return new Effect(id, level)
   }
 
+  get activeEffectValueStr() {
+    switch (this.CalculationType) {
+      case 'PercentageAddition':
+      case 'Multiplication': { return this.activeEffect.Value / 100 }
+      case 'FixedAddition': { return this.activeEffect.Value }
+    }
+    return ''
+  }
+
   canTrigger(calc, index) {
     for (let trigger of this.Triggers) {
       if (this.Range === 'All') {
         switch (trigger.Trigger) {
           case 'CompanyCount': { return calc.properties.companyCount == trigger.Value;}
           case 'AttributeCount': { return calc.properties.attributeCount == trigger.Value;}
+          default: { console.log(`Trigger ${trigger.Trigger} for All`) }
+        }
+      }
+      if (this.Range === 'Self') {
+        switch (trigger.Trigger) {
+          case 'CharacterBase': { return calc.members[index].data.CharacterBaseMasterId == trigger.Value;}
+          default: { console.log(`Trigger ${trigger.Trigger} for Self`) }
         }
       }
       return false;
@@ -79,12 +96,20 @@ class Effect {
     const targets = this.Range === 'All' ? [0,1,2,3,4] : this.Range === 'Self' ? [index] : []
     switch (this.Type) {
       case 'BaseCorrection': { return }
+      case 'VocalUp': { return VocalUpEffect.applyEffect(this, calc, targets, type) }
       case 'PerformanceUp': { return PerformanceUpEffect.applyEffect(this, calc, targets, type) }
       case 'BaseScoreUp': { return BaseScoreUpEffect.applyEffect(this, calc, targets, type) }
       default: {console.log(this.Type, index)}
     }
   }
 
+}
+class VocalUpEffect {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][0] += effect.activeEffect.Value
+    })
+  }
 }
 class PerformanceUpEffect {
   static applyEffect(effect, calc, targets, type) {
@@ -169,7 +194,7 @@ class CharacterData {
         _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: `https://redive.estertion.win/wds/card/${this.Id}_0.webp@w200`})])
       ]),
       _('tr', {}, [
-        _('td', {}, [_('text', 'Level: '), this.levelInput = _('select', { event: { change: e=>this.setLevel(e) } })]),
+        _('td', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
         _('td', {}, [_('text', 'Ex:')]),
         this.exValNode = _('td', {className: 'stat'}),
       ]),
@@ -199,7 +224,7 @@ class CharacterData {
     ]))
 
     for (let lvl in GameDb.CharacterLevel) {
-      this.levelInput.appendChild(_('option', { value: lvl }, [_('text', lvl)]))
+      this.levelSelect.appendChild(_('option', { value: lvl }, [_('text', lvl)]))
     }
     for (let i = 0; i < 51; i++) {
       this.starRankInput.appendChild(_('option', { value: i }, [_('text', i)]))
@@ -279,7 +304,7 @@ class CharacterData {
       this.awakenInput.setAttribute('disabled', '')
       this.awaken = false
     }
-    this.levelInput.value = this.lvl;
+    this.levelSelect.value = this.lvl;
     this.awakenInput.checked = this.awaken;
     this.starRankInput.value = this.starRank;
     root.characterForm[`episodeReadState-${this.data.Id}`].value = this.episodeReadState;
@@ -367,6 +392,67 @@ class CharacterStarRankData {
   }
 }
 
+class PhotoEffectData {
+  constructor(id, level, parent) {
+    this.id = id
+    this.level = level
+    this.data = GameDb.PhotoEffect[id]
+
+    if (!parent) return
+    this.node = parent.appendChild(_('div', {}, [
+      this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } }),
+      this.desc = _('span', { style: { padding: '0 1em' }}),
+      _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
+    ]))
+
+    for (let i = 1; i < 26; i++) {
+      this.levelSelect.appendChild(_('option', { value: i }, [_('text', i)]))
+    }
+  }
+  get effectLevel() {
+    if (this.level < 1 || this.level > 25) return 1
+    return [0,
+      1,1,1,1,2,
+      3,3,3,3,4,
+      5,5,5,5,6,
+      7,7,7,7,8,
+      9,9,9,9,10
+    ][this.level]
+  }
+  get selectName() {
+    return `【${this.targetCharcterName}】${this.data.Name}`
+  }
+  get targetCharcterName() {
+    const charaId = Math.floor(this.id / 1000)
+    if (charaId === 0) return '全体'
+    return GameDb.CharacterBase[charaId].Name
+  }
+  get description() {
+    return this.data.Description.replace('[:param1]', this.effect.activeEffectValueStr)
+  }
+
+  update() {
+    this.levelSelect.value = this.level;
+    this.effect = Effect.get(this.data.EffectMasterId, this.effectLevel)
+    this.desc.textContent = `${this.data.Name}：${this.description}`;
+  }
+  remove() {
+    this.node.remove()
+    root.removePhotoEffect(this)
+  }
+  setLevel(e) {
+    this.level = e.target.value | 0;
+    root.update()
+  }
+
+  static fromJSON(data, parent) {
+    return new PhotoEffectData(data[0], data[1], parent)
+  }
+  toJSON() {
+    return [this.id, this.level]
+  }
+}
+
 class StatBonusType {
   static Album = 0;
   static Poster = 1;
@@ -409,6 +495,14 @@ class ScoreCalculator {
       if (!effect.canTrigger(this, -1)) return
       passiveEffects.album.push({effect, source:-1})
     })
+    this.extra.albumExtra.forEach(i => {
+      const effect = i.effect
+      this.members.forEach((chara, idx) => {
+        if (!chara) return
+        if (!effect.canTrigger(this, idx)) return
+        passiveEffects.album.push({effect, source:idx})
+      })
+    })
     passiveEffects.album.forEach(i => i.effect.applyEffect(this, i.source, StatBonusType.Album))
 
     // bloom effect
@@ -439,6 +533,8 @@ class ScoreCalculator {
       _('br'),
       _('text', `基础分: ${baseScore[0]} / ${baseScore[1]} / ${baseScore[2]} / ${baseScore[3]}`)
     ]))
+
+    console.log(this)
   }
   createStatDetailsTable() {
     let rowNumber;
@@ -454,31 +550,31 @@ class ScoreCalculator {
         ])]),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', {}, [_('text', '初期値')]),
-          _('td', {}, [_('text', this.stat.initial[idx].vo)]),
-          _('td', {}, [_('text', this.stat.initial[idx].ex)]),
-          _('td', {}, [_('text', this.stat.initial[idx].co)]),
-          _('td', {}, [_('text', this.stat.initial[idx].total)]),
+          _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].vo)]),
+          _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].ex)]),
+          _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].co)]),
+          _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].total)]),
         ])]),
         _('tbody', {}, ['アルバム', 'ポスター', 'アクセサリー'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', {}, [_('text', name)]),
-          _('td', {}, [_('text', `${this.stat.buffFinal[idx][j][0][0] / 100}%\n+${this.stat.buffFinal[idx][j][1][0]}\n${this.stat.bonus[idx][j].vo}`)]),
-          _('td', {}, [_('text', `${this.stat.buffFinal[idx][j][0][1] / 100}%\n+${this.stat.buffFinal[idx][j][1][1]}\n${this.stat.bonus[idx][j].ex}`)]),
-          _('td', {}, [_('text', `${this.stat.buffFinal[idx][j][0][2] / 100}%\n+${this.stat.buffFinal[idx][j][1][2]}\n${this.stat.bonus[idx][j].co}`)]),
-          _('td', {}, [_('text', `${this.stat.buffFinal[idx][j][0][3] / 100}%\n${this.stat.bonus[idx][j].total}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][0] / 100}%\n+${this.stat.buffFinal[idx][j][1][0]}\n${this.stat.bonus[idx][j].vo}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][1] / 100}%\n+${this.stat.buffFinal[idx][j][1][1]}\n${this.stat.bonus[idx][j].ex}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][2] / 100}%\n+${this.stat.buffFinal[idx][j][1][2]}\n${this.stat.bonus[idx][j].co}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][3] / 100}%\n${this.stat.bonus[idx][j].total}`)]),
         ]))),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', {}, [_('text', '上昇合計')]),
-          _('td', {}, [_('text', `${this.stat.buffFinal[idx][4][0][0] / 100}%/${this.stat.buffLimit[idx][0][0] / 100}%\n+${this.stat.buffFinal[idx][4][1][0]}\n${this.stat.bonus[idx][4].vo}`)]),
-          _('td', {}, [_('text', `${this.stat.buffFinal[idx][4][0][1] / 100}%/${this.stat.buffLimit[idx][0][1] / 100}%\n+${this.stat.buffFinal[idx][4][1][1]}\n${this.stat.bonus[idx][4].ex}`)]),
-          _('td', {}, [_('text', `${this.stat.buffFinal[idx][4][0][2] / 100}%/${this.stat.buffLimit[idx][0][2] / 100}%\n+${this.stat.buffFinal[idx][4][1][2]}\n${this.stat.bonus[idx][4].co}`)]),
-          _('td', {}, [_('text', `${this.stat.buffFinal[idx][4][0][3] / 100}%/${this.stat.buffLimit[idx][0][3] / 100}%\n${this.stat.bonus[idx][4].total}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][4][0][0] / 100}%/${this.stat.buffLimit[idx][0][0] / 100}%\n+${this.stat.buffFinal[idx][4][1][0]}\n${this.stat.bonus[idx][4].vo}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][4][0][1] / 100}%/${this.stat.buffLimit[idx][0][1] / 100}%\n+${this.stat.buffFinal[idx][4][1][1]}\n${this.stat.bonus[idx][4].ex}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][4][0][2] / 100}%/${this.stat.buffLimit[idx][0][2] / 100}%\n+${this.stat.buffFinal[idx][4][1][2]}\n${this.stat.bonus[idx][4].co}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][4][0][3] / 100}%/${this.stat.buffLimit[idx][0][3] / 100}%\n${this.stat.bonus[idx][4].total}`)]),
         ])]),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', {}, [_('text', '最終値')]),
-          _('td', {}, [_('text', `${this.stat.final[idx].vo}`)]),
-          _('td', {}, [_('text', `${this.stat.final[idx].ex}`)]),
-          _('td', {}, [_('text', `${this.stat.final[idx].co}`)]),
-          _('td', {}, [_('text', `${this.stat.final[idx].total}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.final[idx].vo}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.final[idx].ex}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.final[idx].co}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.final[idx].total}`)]),
         ])]),
       ])
     ]))))
@@ -544,16 +640,13 @@ class RootLogic {
     characters: [],
     characterStarRank: new CharacterStarRankData(),
     albumLevel: 0,
+    albumExtra: [],
   }
 
   async init() {
     console.log('init')
 
     await GameDb.load()
-
-    window.addEventListener('blur', _=>this.saveState())
-    window.addEventListener('unload', _=>this.saveState())
-    //window.addEventListener('focus', _=>this.loadState())
     this.loaded = true;
 
     document.getElementById('loading').remove()
@@ -579,6 +672,11 @@ class RootLogic {
       _('div', {className: 'margin-box'}),
 
       _('div', {}, [_('text', 'Album Level: '), this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])])]),
+      this.photoEffectContainer = _('div'),
+      _('div', {}, [
+        this.addPhotoEffectSelect = _('select'),
+        _('input', { type: 'button', value: '追加', event: { click: e=>this.addPhotoEffect() }}),
+      ]),
 
       _('div', {className: 'margin-box'}),
 
@@ -617,9 +715,17 @@ class RootLogic {
     this.loadState()
 
     this.albumLevelSelect.value = this.appState.albumLevel
+    Object.values(GameDb.PhotoEffect).forEach(i => {
+      const pe = new PhotoEffectData(i.Id, 1, null)
+      this.addPhotoEffectSelect.appendChild(_('option', { value: i.Id }, [_('text', pe.selectName)]))
+    })
 
     this.renderSenseNote()
     this.update()
+
+    window.addEventListener('blur', _=>this.saveState())
+    window.addEventListener('unload', _=>this.saveState())
+    //window.addEventListener('focus', _=>this.loadState())
   }
   saveState() {
     if (window.DEBUG_NO_SAVE) return;
@@ -634,6 +740,8 @@ class RootLogic {
       this.appState.characters = data.characters.map((i) => CharacterData.fromJSON(i, this.characterContainer))
       this.appState.characterStarRank = CharacterStarRankData.fromJSON(data.characterStarRank)
       this.appState.albumLevel = data.albumLevel
+      removeAllChilds(this.photoEffectContainer)
+      this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
     }
     this.update()
   }
@@ -648,6 +756,15 @@ class RootLogic {
   }
   setAlbumLevel() {
     this.appState.albumLevel = this.albumLevelSelect.value | 0;
+    this.update()
+  }
+  addPhotoEffect() {
+    const photoEffectId = this.addPhotoEffectSelect.value | 0;
+    this.appState.albumExtra.push(new PhotoEffectData(photoEffectId, 1, this.photoEffectContainer))
+    this.update()
+  }
+  removePhotoEffect(pe) {
+    this.appState.albumExtra.splice(this.appState.albumExtra.indexOf(pe), 1)
     this.update()
   }
   setCharaSort() {
@@ -676,6 +793,7 @@ class RootLogic {
     })
 
     this.appState.characters.forEach(i => i.update())
+    this.appState.albumExtra.forEach(i => i.update())
 
     this.keikoFillChara()
   }
@@ -741,7 +859,11 @@ class RootLogic {
       this.keikoSelection.push(this.appState.characters[select.value])
     }
 
-    const calc = new ScoreCalculator(this.keikoSelection, [], [], { albumLevel: this.appState.albumLevel, starRankScoreBonus: this.appState.characterStarRank.get(keikoCharaId) })
+    const calc = new ScoreCalculator(this.keikoSelection, [], [], {
+      albumLevel: this.appState.albumLevel,
+      albumExtra: this.appState.albumExtra,
+      starRankScoreBonus: this.appState.characterStarRank.get(keikoCharaId),
+    })
     calc.calc(this.keikoResult)
 
     //this.keikoResult.textContent = calc.result.baseScore.join(' ')

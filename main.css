@@ -49,6 +49,9 @@ table.stat-details {
   white-space: pre-wrap;
   border-collapse: collapse;
 }
+.stat-value {
+  font-size: 0.8em;
+}
 .odd-row {
   background: #E0E0E0;
 }
