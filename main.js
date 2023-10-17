@@ -27,6 +27,9 @@ class GameDb {
     this.CharacterBase = await this.loadKeyedMasterTable('CharacterBaseMaster')
     this.CharacterLevel = await this.loadKeyedMasterTable('CharacterLevelMaster', 'Level')
     this.CharacterBloomBonusGroup = await this.loadKeyedMasterTable('CharacterBloomBonusGroupMaster')
+    this.Sense = await this.loadKeyedMasterTable('SenseMaster')
+    this.StarAct = await this.loadKeyedMasterTable('StarActMaster')
+    this.StarActCondition = await this.loadKeyedMasterTable('StarActConditionMaster')
 
     this.AlbumEffect = await this.loadKeyedMasterTable('AlbumEffectMaster')
     this.PhotoEffect = await this.loadKeyedMasterTable('PhotoEffectMaster')
@@ -131,6 +134,92 @@ class EpisodeReadState {
   static Two = 2;
 }
 
+class SenseData {
+  constructor(id, level) {
+    this.id = id
+    this.level = level
+    this.data = GameDb.Sense[id]
+    this.recastDown = []
+    if (!this.data) throw new Error(`Sense ${id} not found`)
+    Object.assign(this, this.data)
+  }
+  get desc() {
+    return this.Description
+      .replace('[:score]', this.scoreUp)
+      .replace('[:gauge]', this.gaugeUp)
+      .replace(/\[:pre(\d)\]/g, (_,i)=>Effect.get(this.PreEffects[0].EffectMasterId, this.level).activeEffectValueStr)
+      .replace('[:sec]', ()=>Effect.get(this.Branches[0].BranchEffects[0].EffectMasterId, this.level).DurationSecond)
+      .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level).activeEffectValueStr)
+  }
+  getType(members = null) {
+    switch (this.Type) {
+      case 'Support':
+      case 'Control':
+      case 'Amplification':
+      case 'Special': return this.Type.toLowerCase()
+      case 'None': return ''
+      case 'Alternative': {
+        if (!members) return ''
+        return '?'
+      }
+    }
+  }
+  resetRecastDown() {
+    this.recastDown = []
+  }
+  get ct() {
+    return this.CoolTime - this.recastDown.reduce((acc, cur) => acc + cur, 0)
+  }
+  get scoreUp() {
+    return (this.AcquirableScorePercent + (this.level- 1) * this.ScoreUpPerLevel) / 100
+  }
+  get gaugeUp() {
+    return this.AcquirableGauge / 100
+  }
+  clone() {
+    const sense = new SenseData(this.id, this.level)
+    sense.recastDown = this.recastDown.slice()
+    return sense
+  }
+}
+class StarActData {
+  constructor(id, level) {
+    this.id = id
+    this.level = level
+    this.data = GameDb.StarAct[id]
+    if (!this.data) throw new Error(`StarAct ${id} not found`)
+    Object.assign(this, this.data)
+
+    this.condition = GameDb.StarActCondition[this.StarActConditionMasterId]
+    if (!this.condition) throw new Error(`StarActCondition ${this.StarActConditionMasterId} not found`)
+
+    this.requirements = [
+      this.condition.SupportLight,
+      this.condition.ControlLight,
+      this.condition.AmplificationLight,
+      this.condition.SpecialLight
+    ]
+    this.requireDecrease = [0,0,0,0]
+  }
+  get desc() {
+    return this.Description
+      .replace('[:score]', this.scoreUp)
+  }
+  get scoreUp() {
+    return (this.AcquirableScorePercent + this.level * this.ScoreUpPerLevel) / 100
+  }
+  resetRequireDecrease() {
+    this.requireDecrease = [0,0,0,0]
+  }
+  get actualRequirements() {
+    return this.requirements.map((req, i) => req - this.requireDecrease[i])
+  }
+  clone() {
+    const staract = new StarActData(this.id, this.level)
+    staract.requireDecrease = this.requireDecrease.slice()
+    return staract
+  }
+}
 class CharacterStat {
   constructor(vo, ex, co) {
     this.vo = vo
@@ -185,6 +274,10 @@ class CharacterData {
     if (this.data === undefined) {
       throw new Error(`Character ${Id} not found`)
     }
+
+    this.sense = new SenseData(this.data.SenseMasterId, this.senselv)
+    this.staract = new StarActData(this.data.StarActMasterId, this.bloom)
+
     if (!parent) return
     this.node = parent.appendChild(_('tbody', {}, [
       _('tr', {}, [
@@ -218,8 +311,24 @@ class CharacterData {
         this.totalValNode = _('td', {className: 'stat'}),
       ]),
       _('tr', {}, [
+        _('td', {}, [this.senseDescNode = _('div', { className: 'sense-star', style: {maxWidth: '380px'} })]),
+        _('td', {}, [_('text', 'CT: ')]),
+        this.ctValNode = _('td'),
         _('td'),
-        _('td', { colspan: 2 }, [_('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }})])
+      ]),
+      _('tr', {}, [
+        this.staractDescNode = _('td'),
+        this.staractRequirementsNode = _('td', {colspan: 3}, [
+          _('span', { className: 'sense-star', 'data-sense-type': 'support'}),
+          _('span', { className: 'sense-star', 'data-sense-type': 'control'}),
+          _('span', { className: 'sense-star', 'data-sense-type': 'amplification'}),
+          _('span', { className: 'sense-star', 'data-sense-type': 'special'}),
+        ]),
+      ]),
+      _('tr', {}, [
+        _('td'),
+        _('td', { colspan: 2 }, [_('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }})]),
+        _('td'),
       ]),
     ]))
 
@@ -318,6 +427,30 @@ class CharacterData {
     this.exValNode.textContent = stat.ex
     this.coValNode.textContent = stat.co
     this.totalValNode.textContent = stat.total
+
+    this.sense.resetRecastDown()
+    this.staract.resetRequireDecrease()
+    this.bloomBonusEffects.forEach(effect => {
+      switch (effect.Type) {
+        case 'SenseRecastDown': return this.sense.recastDown.push(effect.activeEffect.Value)
+        case 'DecreaseRequireSupportLight': return this.staract.requireDecrease[0] += effect.activeEffect.Value
+        case 'DecreaseRequireControlLight': return this.staract.requireDecrease[1] += effect.activeEffect.Value
+        case 'DecreaseRequireAmplificationLight': return this.staract.requireDecrease[2] += effect.activeEffect.Value
+        case 'DecreaseRequireSpecialLight': return this.staract.requireDecrease[3] += effect.activeEffect.Value
+      }
+    })
+
+    this.sense.level = this.senselv
+    this.senseDescNode.textContent = this.sense.desc
+    this.senseDescNode.dataset.senseType = this.sense.getType()
+    this.ctValNode.textContent = this.sense.ct
+
+    this.staract.level = this.bloom
+    this.staractDescNode.textContent = this.staract.desc
+    this.staract.actualRequirements.forEach((req, i) => {
+      this.staractRequirementsNode.children[i].textContent = req
+      this.staractRequirementsNode.children[i].style.display = req > 0 ? '' : 'none'
+    })
   }
   remove() {
     this.node.remove()
@@ -497,6 +630,10 @@ class ScoreCalculator {
     })
     this.extra.albumExtra.forEach(i => {
       const effect = i.effect
+      if (effect.Triggers.length === 0) {
+        passiveEffects.album.push({effect, source:-1})
+        return
+      }
       this.members.forEach((chara, idx) => {
         if (!chara) return
         if (!effect.canTrigger(this, idx)) return
@@ -808,7 +945,7 @@ class RootLogic {
     const totalDuration = data.Details.reduce((acc, cur) => Math.max(acc, cur.TimingSecond), 0)
     data.Details.forEach(i => {
       const lane = this.senseBox.children[i.Position - 1].children[1]
-      lane.appendChild(_('div', { className: 'sense-node', style: {left: `calc(${i.TimingSecond / totalDuration * 100}% - 40px)`} }, [_('text', i.TimingSecond)]))
+      lane.appendChild(_('div', { className: 'sense-node', style: {left: `calc(${i.TimingSecond / totalDuration * 100}% - 40px)`, fontSize: i.TimingSecond > 99 ? '14px' : '' } }, [_('text', i.TimingSecond)]))
     })
     data.Details.reduce((acc, cur) => (acc[cur.Position-1].push(cur),acc), [[],[],[],[],[]])
       .map(lane => lane.sort((a,b) => a.TimingSecond - b.TimingSecond)

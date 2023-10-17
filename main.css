@@ -37,8 +37,36 @@ body {
   width: 40px;
   line-height: 40px;
   text-align: center;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><circle cx='20' cy='20' r='18' fill='rgb(177,177,177)' stroke='rgb(145,145,145)' stroke-width='1'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(177,177,177)' stroke='rgb(145,145,145)' stroke-width='1.5' y='39'>✦</text></svg>");
   color: white;
+}
+*[data-sense-type="support"] .sense-node {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(141,229,83)' stroke='rgb(98,187,69)' stroke-width='1.5' y='39'>✦</text></svg>");
+}
+*[data-sense-type="control"] .sense-node {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(235,67,64)' stroke='rgb(192,54,54)' stroke-width='1.5' y='39'>✦</text></svg>");
+}
+*[data-sense-type="amplification"] .sense-node {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(255,199,63)' stroke='rgb(236,180,35)' stroke-width='1.5' y='39'>✦</text></svg>");
+}
+*[data-sense-type="special"] .sense-node {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(52,90,212)' stroke='rgb(40,80,188)' stroke-width='1.5' y='39'>✦</text></svg>");
+}
+.sense-star::before {
+  content: "✦";
+  color: rgb(177,177,177);
+}
+.sense-star[data-sense-type="support"]::before {
+  color: rgb(141,229,83);
+}
+.sense-star[data-sense-type="control"]::before {
+  color: rgb(235,67,64);
+}
+.sense-star[data-sense-type="amplification"]::before {
+  color: rgb(255,199,63);
+}
+.sense-star[data-sense-type="special"]::before {
+  color: rgb(52,90,212);
 }
 
 .stat {
