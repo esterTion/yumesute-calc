@@ -36,26 +36,30 @@ class GameDb {
   static SenseNotation = {};
 
   static async load() {
-    this.Character = await this.loadKeyedMasterTable('CharacterMaster')
-    this.CharacterBase = await this.loadKeyedMasterTable('CharacterBaseMaster')
-    this.CharacterLevel = await this.loadKeyedMasterTable('CharacterLevelMaster', 'Level')
-    this.CharacterBloomBonusGroup = await this.loadKeyedMasterTable('CharacterBloomBonusGroupMaster')
-    this.Sense = await this.loadKeyedMasterTable('SenseMaster')
-    this.StarAct = await this.loadKeyedMasterTable('StarActMaster')
-    this.StarActCondition = await this.loadKeyedMasterTable('StarActConditionMaster')
+    const promises = [
+      this.loadKeyedMasterTable('CharacterMaster').then(r => this.Character = r),
+      this.loadKeyedMasterTable('CharacterBaseMaster').then(r => this.CharacterBase = r),
+      this.loadKeyedMasterTable('CharacterLevelMaster', 'Level').then(r => this.CharacterLevel = r),
+      this.loadKeyedMasterTable('CharacterBloomBonusGroupMaster').then(r => this.CharacterBloomBonusGroup = r),
+      this.loadKeyedMasterTable('SenseMaster').then(r => this.Sense = r),
+      this.loadKeyedMasterTable('StarActMaster').then(r => this.StarAct = r),
+      this.loadKeyedMasterTable('StarActConditionMaster').then(r => this.StarActCondition = r),
 
-    this.AlbumEffect = await this.loadKeyedMasterTable('AlbumEffectMaster')
-    this.PhotoEffect = await this.loadKeyedMasterTable('PhotoEffectMaster')
-    this.Effect = await this.loadKeyedMasterTable('EffectMaster')
+      this.loadKeyedMasterTable('AlbumEffectMaster').then(r => this.AlbumEffect = r),
+      this.loadKeyedMasterTable('PhotoEffectMaster').then(r => this.PhotoEffect = r),
+      this.loadKeyedMasterTable('EffectMaster').then(r => this.Effect = r),
 
-    this.Poster = await this.loadKeyedMasterTable('PosterMaster')
-    this.PosterAbility = await this.loadKeyedMasterTable('PosterAbilityMaster')
+      this.loadKeyedMasterTable('PosterMaster').then(r => this.Poster = r),
+      this.loadKeyedMasterTable('PosterAbilityMaster').then(r => this.PosterAbility = r),
 
-    this.Accessory = await this.loadKeyedMasterTable('AccessoryMaster')
-    this.AccessoryEffect = await this.loadKeyedMasterTable('AccessoryEffectMaster')
-    this.RandomEffectGroup = await this.loadKeyedMasterTable('RandomEffectGroupMaster')
+      this.loadKeyedMasterTable('AccessoryMaster').then(r => this.Accessory = r),
+      this.loadKeyedMasterTable('AccessoryEffectMaster').then(r => this.AccessoryEffect = r),
+      this.loadKeyedMasterTable('RandomEffectGroupMaster').then(r => this.RandomEffectGroup = r),
 
-    this.SenseNotation = await this.loadKeyedMasterTable('SenseNotationMaster')
+      this.loadKeyedMasterTable('SenseNotationMaster').then(r => this.SenseNotation = r),
+    ]
+
+    await Promise.all(promises)
   }
   static async loadKeyedMasterTable(tableName, idKey = 'Id') {
     const resp = await this.loadMasterTable(tableName)
@@ -1033,6 +1037,7 @@ class RootLogic {
     accessories: [],
     albumLevel: 0,
     albumExtra: [],
+    version: 1,
   }
 
   async init() {
@@ -1158,6 +1163,7 @@ class RootLogic {
     console.log('load')
     if (localStorage.getItem('appState') !== null) {
       const data = JSON.parse(localStorage.getItem('appState'))
+      this.addMissingFields(data)
       removeAllChilds(this.characterContainer)
       this.appState.characters = data.characters.map((i) => CharacterData.fromJSON(i, this.characterContainer))
       this.appState.characterStarRank = CharacterStarRankData.fromJSON(data.characterStarRank)
@@ -1170,6 +1176,9 @@ class RootLogic {
       this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
     }
     this.update()
+  }
+  addMissingFields(data) {
+    // if (data.version < 2) {}
   }
 
   changeTab() {
