@@ -18,8 +18,21 @@ class GameDb {
   static CharacterBase = {};
   static CharacterLevel = {};
   static CharacterBloomBonusGroup = {};
+  static Sense = {};
+  static StarAct = {};
+  static StarActCondition = {};
+
   static AlbumEffect = {};
+  static PhotoEffect = {};
   static Effect = {};
+
+  static Poster = {};
+  static PosterAbility = {};
+
+  static Accessory = {};
+  static AccessoryEffect = {};
+  static RandomEffectGroup = {};
+
   static SenseNotation = {};
 
   static async load() {
@@ -34,6 +47,13 @@ class GameDb {
     this.AlbumEffect = await this.loadKeyedMasterTable('AlbumEffectMaster')
     this.PhotoEffect = await this.loadKeyedMasterTable('PhotoEffectMaster')
     this.Effect = await this.loadKeyedMasterTable('EffectMaster')
+
+    this.Poster = await this.loadKeyedMasterTable('PosterMaster')
+    this.PosterAbility = await this.loadKeyedMasterTable('PosterAbilityMaster')
+
+    this.Accessory = await this.loadKeyedMasterTable('AccessoryMaster')
+    this.AccessoryEffect = await this.loadKeyedMasterTable('AccessoryEffectMaster')
+    this.RandomEffectGroup = await this.loadKeyedMasterTable('RandomEffectGroupMaster')
 
     this.SenseNotation = await this.loadKeyedMasterTable('SenseNotationMaster')
   }
@@ -50,6 +70,12 @@ class GameDb {
     return resp
   }
 }
+class BeautyText {
+  static convertGameTextToValidDom(text) {
+    return text
+    .replace(/<color=(#[0-9A-Fa-f]*)>(.*?)<\/color>/g, '<span style="color: $1">$2</span>')
+  }
+}
 class Effect {
   constructor(id, level) {
     if (!GameDb.Effect[id]) {
@@ -57,7 +83,6 @@ class Effect {
     }
     this.data = GameDb.Effect[id]
     this.level = level
-    this.activeEffect = this.data.Details.filter(i => i.Level === level)[0]
     if (!this.activeEffect) {
       throw new Error(`Effect ${id} level ${level} not found`)
     }
@@ -65,6 +90,13 @@ class Effect {
   }
   static get(id, level) {
     return new Effect(id, level)
+  }
+  get level() {
+    return this._level
+  }
+  set level(val) {
+    this._level = val
+    this.activeEffect = this.data.Details.filter(i => i.Level === val)[0]
   }
 
   get activeEffectValueStr() {
@@ -89,6 +121,11 @@ class Effect {
         switch (trigger.Trigger) {
           case 'CharacterBase': { return calc.members[index].data.CharacterBaseMasterId == trigger.Value;}
           default: { console.log(`Trigger ${trigger.Trigger} for Self`) }
+        }
+      }
+      if (this.Range === 'None') {
+        switch (trigger.Trigger) {
+          default: { console.log(`Trigger ${trigger.Trigger} for None`) }
         }
       }
       return false;
@@ -174,7 +211,7 @@ class SenseData {
     return (this.AcquirableScorePercent + (this.level- 1) * this.ScoreUpPerLevel) / 100
   }
   get gaugeUp() {
-    return this.AcquirableGauge / 100
+    return this.AcquirableGauge
   }
   clone() {
     const sense = new SenseData(this.id, this.level)
@@ -281,7 +318,7 @@ class CharacterData {
     if (!parent) return
     this.node = parent.appendChild(_('tbody', {}, [
       _('tr', {}, [
-        _('td', {}, [_('text', this.fullCardName)]),
+        _('td', {}, [_('span', {className: `card-attribute-${this.attributeName}`}), _('text', this.fullCardName)]),
         _('td', {}, [_('text', 'Vo:')]),
         this.voValNode = _('td', {className: 'stat'}),
         _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: `https://redive.estertion.win/wds/card/${this.Id}_0.webp@w200`})])
@@ -311,7 +348,7 @@ class CharacterData {
         this.totalValNode = _('td', {className: 'stat'}),
       ]),
       _('tr', {}, [
-        _('td', {}, [this.senseDescNode = _('div', { className: 'sense-star', style: {maxWidth: '380px'} })]),
+        _('td', {}, [this.senseDescNode = _('div', { className: 'sense-star', style: {maxWidth: '390px'} })]),
         _('td', {}, [_('text', 'CT: ')]),
         this.ctValNode = _('td'),
         _('td'),
@@ -352,6 +389,9 @@ class CharacterData {
       'Rare3': '★★★',
       'Rare4': '★★★★',
     })[this.data.Rarity]
+  }
+  get attributeName() {
+    return this.data.Attribute.toLowerCase()
   }
   get cardName() {
     return this.data.Name
@@ -525,6 +565,219 @@ class CharacterStarRankData {
   }
 }
 
+class PosterData {
+  constructor(id, parent) {
+    this.id = id
+    this.level = 1
+    this.release = 0
+    this.data = GameDb.Poster[id]
+    if (!this.data) throw new Error(`Poster ${id} not found`)
+
+    if (!parent) return
+    this.node = parent.appendChild(_('div', {}, [
+      _('div', {}, [_('text', this.fullPosterName)]),
+      _('div', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
+      _('div', {}, [_('text', '解放: '), this.releaseSelect = _('select', { event: { change: e=>this.setRelease(e) } })]),
+      _('div', {}, [_('text', 'Leader: ')]),
+      this.leaderAbilityBox = _('div'),
+      _('div', {}, [_('text', 'Normal: ')]),
+      this.normalAbilityBox = _('div'),
+      _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
+    ]))
+
+    for (let i = 1; i <= this.maxLevel; i++) {
+      this.levelSelect.appendChild(_('option', { value: i }, [_('text', i)]))
+    }
+    for (let i = 0; i < 5; i++) {
+      this.releaseSelect.appendChild(_('option', { value: i }, [_('text', i)]))
+    }
+
+    this.abilitiesData = Object.values(GameDb.PosterAbility).filter(i => i.PosterMasterId === this.id)
+    this.abilities = []
+    this.abilitiesData.filter(i=>i.Type === 'Leader').forEach(i => this.abilities.push(new PosterAbilityData(i.Id, this.leaderAbilityBox)))
+    this.abilitiesData.filter(i=>i.Type === 'Normal').forEach(i => this.abilities.push(new PosterAbilityData(i.Id, this.normalAbilityBox)))
+  }
+
+  get currentMaxLevel() {
+    return this.maxLevel - (4 - this.release)
+  }
+  get maxLevel () {
+    switch (this.data.Rarity) {
+      case 'R': return 6
+      case 'SR': return 8
+      case 'SSR': return 10
+    }
+  }
+  get fullPosterName() {
+    return `${this.data.Rarity} ${this.data.Name}`
+  }
+
+  setLevel(e) {
+    this.level = e.target.value | 0;
+    root.update()
+  }
+  setRelease(e) {
+    this.release = e.target.value | 0;
+    root.update()
+  }
+
+  update() {
+    this.levelSelect.value = this.level;
+    for (let i = 0, currentMax = this.currentMaxLevel, max = this.maxLevel; i < max; i++) {
+      if (i < currentMax) {
+        this.levelSelect.children[i].removeAttribute('disabled')
+      } else {
+        this.levelSelect.children[i].setAttribute('disabled', '')
+      }
+    }
+    this.releaseSelect.value = this.release;
+    this.abilities.forEach(i => {
+      i.level = this.level
+      i.release = this.release
+      i.update()
+    })
+  }
+  remove() {
+    this.node.remove()
+    root.removePoster(this)
+  }
+
+  static fromJSON(data, parent) {
+    const poster = new PosterData(data[0], parent)
+    poster.level = data[1]
+    poster.release = data[2]
+    return poster
+  }
+  toJSON() {
+    return [this.id, this.level, this.release]
+  }
+}
+class PosterAbilityData {
+  constructor(id, parent) {
+    this.id = id
+    this.data = GameDb.PosterAbility[id]
+    if (!this.data) throw new Error(`PosterAbility ${id} not found`)
+    this.level = 1
+    this.release = 0
+
+    if (!parent) return
+    this.node = parent.appendChild(_('div', {}, [
+      _('span', {}, [_('text', this.data.Name + ': ')]),
+      _('br'),
+      this.descNode = _('span', { style: { paddingLeft: '1em' }}),
+    ]))
+  }
+
+  update() {
+    this.descNode.innerHTML = this.desc
+    this.node.style.opacity = this.data.ReleaseLevelAt > this.level ? 0.5 : 1
+  }
+
+  get desc() {
+    return BeautyText.convertGameTextToValidDom(this.data.Description)
+    .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.data.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level + this.release).activeEffectValueStr)
+  }
+}
+
+class AccessoryData {
+  id;
+  level;
+  constructor(id, parent) {
+    this.id = id
+    this.level = 1
+    this.data = GameDb.Accessory[id]
+    if (!this.data) throw new Error(`Accessory ${id} not found`)
+
+    if (!parent) return
+    this.node = parent.appendChild(_('div', {}, [
+      _('div', {}, [_('text', this.fullAccessoryName)]),
+      _('div', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
+      this.effectBox = _('div'),
+      this.randomEffectSelect = _('select', { event: { change: e=>this.setRandomEffect(e) } }),
+      _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
+    ]))
+
+    this.mainEffects = this.data.FixedAccessoryEffects.map(i => new AccessoryEffectData(i, this.effectBox))
+    this.data.RandomEffectGroups.forEach(i => {
+      const group = GameDb.RandomEffectGroup[i]
+      if (!group) throw new Error(`RandomEffectGroup ${i} not found`)
+      group.AccessoryEffects.forEach(j => this.randomEffectSelect.appendChild(_('option', { value: j }, [_('text', GameDb.AccessoryEffect[j].Name)])))
+    })
+    this.randomEffectId = this.randomEffectSelect.value
+    this.randomEffect = new AccessoryEffectData(this.randomEffectId, this.effectBox)
+
+    for (let i = 1; i < 11; i++) {
+      this.levelSelect.appendChild(_('option', { value: i }, [_('text', i)]))
+    }
+  }
+
+  get fullAccessoryName() {
+    return `${this.data.Rarity} ${this.data.Name}`
+  }
+
+  setRandomEffect(e) {
+    this.randomEffect.node.remove()
+    this.randomEffectId = e.target.value
+    this.randomEffect = new AccessoryEffectData(this.randomEffectId, this.effectBox)
+    root.update()
+  }
+  setLevel(e) {
+    this.level = e.target.value | 0;
+    root.update()
+  }
+
+  update() {
+    this.levelSelect.value = this.level;
+    this.mainEffects.forEach(i => {
+      i.level = this.level
+      i.update()
+    })
+    this.randomEffect.level = this.level
+    this.randomEffect.update()
+  }
+  remove() {
+    this.node.remove()
+    root.removeAccessory(this)
+  }
+
+  static fromJSON(data, parent) {
+    const accessory = new AccessoryData(data[0], parent)
+    accessory.level = data[1]
+    accessory.randomEffectSelect.value = data[2]
+    accessory.setRandomEffect({ target: accessory.randomEffectSelect })
+    return accessory
+  }
+  toJSON() {
+    return [this.id, this.level, this.randomEffectId]
+  }
+}
+class AccessoryEffectData {
+  constructor(id, parent) {
+    this.id = id
+    this.data = GameDb.AccessoryEffect[id]
+    if (!this.data) throw new Error(`AccessoryEffect ${id} not found`)
+    this.level = 1
+    this.effect = Effect.get(this.data.EffectMasterId, this.level)
+
+    if (!parent) return
+    this.node = parent.appendChild(_('div', {}, [
+      _('span', {}, [_('text', this.data.Name + ': ')]),
+      _('br'),
+      this.descNode = _('span', { style: { paddingLeft: '1em' }}),
+    ]))
+  }
+
+  update() {
+    this.effect.level = this.level
+    this.descNode.innerHTML = this.desc
+  }
+
+  get desc() {
+    return BeautyText.convertGameTextToValidDom(this.data.Description)
+      .replace(/\[:param1\]/g, _=>this.effect.activeEffectValueStr)
+  }
+}
+
 class PhotoEffectData {
   constructor(id, level, parent) {
     this.id = id
@@ -534,7 +787,7 @@ class PhotoEffectData {
     if (!parent) return
     this.node = parent.appendChild(_('div', {}, [
       this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } }),
-      this.desc = _('span', { style: { padding: '0 1em' }}),
+      this.desc = _('span'),
       _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
     ]))
 
@@ -776,6 +1029,8 @@ class RootLogic {
   appState = {
     characters: [],
     characterStarRank: new CharacterStarRankData(),
+    posters: [],
+    accessories: [],
     albumLevel: 0,
     albumExtra: [],
   }
@@ -817,25 +1072,49 @@ class RootLogic {
 
       _('div', {className: 'margin-box'}),
 
-      _('div', {}, [
-        this.charaSortSelect = _('select', { event: { change: _=>this.setCharaSort() }}, [
-          _('option', { value: '' }, [_('text', 'Keep')]),
-          _('option', { value: 'Id' }, [_('text', 'ID')]),
-          _('option', { value: 'CharacterBaseMasterId' }, [_('text', 'Chara')]),
+      this.tabSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'character' }), _('text', 'キャラ')]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'poster' }), _('text', 'ポスター')]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'accessory' }), _('text', 'アクセサリー')]),
+      ]),
+
+      this.characterTabContent = _('div', {}, [
+        _('div', {}, [
+          this.charaSortSelect = _('select', { event: { change: _=>this.setCharaSort() }}, [
+            _('option', { value: '' }, [_('text', 'Keep')]),
+            _('option', { value: 'Id' }, [_('text', 'ID')]),
+            _('option', { value: 'CharacterBaseMasterId' }, [_('text', 'Chara')]),
+          ]),
+          _('text', ''),
+          _('label', {}, [
+            this.charaSortDescInput = _('input', { type: 'checkbox', event: { change: _=>this.setCharaSort() }}),
+            _('text', '降順')
+          ])
         ]),
-        _('text', ''),
-        _('label', {}, [
-          this.charaSortDescInput = _('input', { type: 'checkbox', event: { change: _=>this.setCharaSort() }}),
-          _('text', '降順')
-        ])
+        this.characterForm = _('form', {}, [
+          this.characterContainer = _('table', { className: 'characters' }),
+        ]),
+        _('div', {}, [
+          this.addCharacterSelect = _('select'),
+          _('input', { type: 'button', value: '追加', event: { click: e=>this.addCharacter() }}),
+        ]),
       ]),
-      this.characterForm = _('form', {}, [
-        this.characterContainer = _('table', { className: 'characters' }),
+
+      this.posterTabContent = _('div', {}, [
+        this.posterContainer = _('table', { className: 'posters' }),
+        _('div', {}, [
+          this.addPosterSelect = _('select'),
+          _('input', { type: 'button', value: '追加', event: { click: e=>this.addPoster() }}),
+        ]),
       ]),
-      _('div', {}, [
-        this.addCharacterSelect = _('select'),
-        _('input', { type: 'button', value: '追加', event: { click: e=>this.addCharacter() }}),
-      ])
+
+      this.accessoryTabContent = _('div', {}, [
+        this.accessoryContainer = _('table', { className: 'accessories' }),
+        _('div', {}, [
+          this.addAccessorySelect = _('select'),
+          _('input', { type: 'button', value: '追加', event: { click: e=>this.addAccessory() }}),
+        ]),
+      ]),
     ]))
 
     Object.values(GameDb.SenseNotation).forEach(i => {
@@ -848,6 +1127,9 @@ class RootLogic {
     Object.values(GameDb.AlbumEffect).forEach(i => {
       this.albumLevelSelect.appendChild(_('option', { value: i.Level }, [_('text', i.Level)]))
     })
+    Object.values(GameDb.Accessory).forEach(i => {
+      this.addAccessorySelect.appendChild(_('option', { value: i.Id }, [_('text', (new AccessoryData(i.Id, null)).fullAccessoryName)]))
+    })
 
     this.loadState()
 
@@ -859,6 +1141,9 @@ class RootLogic {
 
     this.renderSenseNote()
     this.update()
+
+    this.tabSelectForm.tab.value = 'character'
+    this.changeTab()
 
     window.addEventListener('blur', _=>this.saveState())
     window.addEventListener('unload', _=>this.saveState())
@@ -876,12 +1161,24 @@ class RootLogic {
       removeAllChilds(this.characterContainer)
       this.appState.characters = data.characters.map((i) => CharacterData.fromJSON(i, this.characterContainer))
       this.appState.characterStarRank = CharacterStarRankData.fromJSON(data.characterStarRank)
+      removeAllChilds(this.posterContainer)
+      this.appState.posters = data.posters.map(i => PosterData.fromJSON(i, this.posterContainer))
+      removeAllChilds(this.accessoryContainer)
+      this.appState.accessories = data.accessories.map(i => AccessoryData.fromJSON(i, this.accessoryContainer))
       this.appState.albumLevel = data.albumLevel
       removeAllChilds(this.photoEffectContainer)
       this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
     }
     this.update()
   }
+
+  changeTab() {
+    const tab = this.tabSelectForm.tab.value
+    this.characterTabContent.style.display = tab === 'character' ? '' : 'none'
+    this.posterTabContent.style.display = tab === 'poster' ? '' : 'none'
+    this.accessoryTabContent.style.display = tab === 'accessory' ? '' : 'none'
+  }
+
   addCharacter() {
     const charaId = this.addCharacterSelect.value | 0;
     this.appState.characters.push(new CharacterData(charaId, this.characterContainer))
@@ -889,19 +1186,6 @@ class RootLogic {
   }
   removeCharacter(chara) {
     this.appState.characters.splice(this.appState.characters.indexOf(chara), 1)
-    this.update()
-  }
-  setAlbumLevel() {
-    this.appState.albumLevel = this.albumLevelSelect.value | 0;
-    this.update()
-  }
-  addPhotoEffect() {
-    const photoEffectId = this.addPhotoEffectSelect.value | 0;
-    this.appState.albumExtra.push(new PhotoEffectData(photoEffectId, 1, this.photoEffectContainer))
-    this.update()
-  }
-  removePhotoEffect(pe) {
-    this.appState.albumExtra.splice(this.appState.albumExtra.indexOf(pe), 1)
     this.update()
   }
   setCharaSort() {
@@ -921,6 +1205,41 @@ class RootLogic {
     })
     this.appState.characters.forEach(i => this.characterContainer.appendChild(i.node))
   }
+
+  setAlbumLevel() {
+    this.appState.albumLevel = this.albumLevelSelect.value | 0;
+    this.update()
+  }
+  addPhotoEffect() {
+    const photoEffectId = this.addPhotoEffectSelect.value | 0;
+    this.appState.albumExtra.push(new PhotoEffectData(photoEffectId, 1, this.photoEffectContainer))
+    this.update()
+  }
+  removePhotoEffect(pe) {
+    this.appState.albumExtra.splice(this.appState.albumExtra.indexOf(pe), 1)
+    this.update()
+  }
+
+  addPoster() {
+    const posterId = this.addPosterSelect.value | 0;
+    this.appState.posters.push(new PosterData(posterId, this.posterContainer))
+    this.update()
+  }
+  removePoster(poster) {
+    this.appState.posters.splice(this.appState.posters.indexOf(poster), 1)
+    this.update()
+  }
+
+  addAccessory() {
+    const accessoryId = this.addAccessorySelect.value | 0;
+    this.appState.accessories.push(new AccessoryData(accessoryId, this.accessoryContainer))
+    this.update()
+  }
+  removeAccessory(accessory) {
+    this.appState.accessories.splice(this.appState.accessories.indexOf(accessory), 1)
+    this.update()
+  }
+
   update() {
     const addableCharacters = Object.values(GameDb.Character).map(i=>i.Id)
     .filter(i=>this.appState.characters.map(i=>i.Id).indexOf(i) === -1)
@@ -929,7 +1248,16 @@ class RootLogic {
       this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
     })
 
+    const addablePosters = Object.values(GameDb.Poster).map(i=>i.Id)
+    .filter(i=>this.appState.posters.map(i=>i.id).indexOf(i) === -1)
+    removeAllChilds(this.addPosterSelect)
+    addablePosters.forEach((i) => {
+      this.addPosterSelect.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
+    })
+
     this.appState.characters.forEach(i => i.update())
+    this.appState.posters.forEach(i => i.update())
+    this.appState.accessories.forEach(i => i.update())
     this.appState.albumExtra.forEach(i => i.update())
 
     this.keikoFillChara()

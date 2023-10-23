@@ -57,16 +57,44 @@ body {
   color: rgb(177,177,177);
 }
 .sense-star[data-sense-type="support"]::before {
-  color: rgb(141,229,83);
+  color: #228b22;
 }
 .sense-star[data-sense-type="control"]::before {
-  color: rgb(235,67,64);
+  color: #ff0000;
 }
 .sense-star[data-sense-type="amplification"]::before {
-  color: rgb(255,199,63);
+  color: #ffd700;
 }
 .sense-star[data-sense-type="special"]::before {
-  color: rgb(52,90,212);
+  color: #0000ff;
+}
+
+.card-attribute-cute::before {
+  content: "憐";
+  color: #ff679d;
+  font-size: 0.8em;
+}
+.card-attribute-cool::before {
+  content: "凛";
+  color: #33B4DF;
+  font-size: 0.8em;
+}
+.card-attribute-colorful::before {
+  content: "彩";
+  color: #7AC940;
+  font-size: 0.8em;
+}
+.card-attribute-cheerful::before {
+  content: "陽";
+  color: #FF9314;
+  font-size: 0.8em;
+}
+
+.posters > div {
+	margin-bottom: 1em;
+}
+.accessories > div {
+	margin-bottom: 1em;
 }
 
 .stat {
