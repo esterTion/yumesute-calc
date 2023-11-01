@@ -4,6 +4,13 @@ body {
   cursor: default;
   font-family: Arial, Meiryo;
 }
+#error, #loading {
+  white-space: pre-wrap;
+}
+
+img {
+  width: 200px;
+}
 
 .margin-box {
   margin-bottom: 40px;

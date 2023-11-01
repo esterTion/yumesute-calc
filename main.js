@@ -36,28 +36,35 @@ class GameDb {
   static SenseNotation = {};
 
   static async load() {
+    let loaded = -1
+    const updateProgress = () => {
+      loaded++
+      document.getElementById('loading').textContent = `Loading ${loaded}/${total}`
+    }
     const promises = [
-      this.loadKeyedMasterTable('CharacterMaster').then(r => this.Character = r),
-      this.loadKeyedMasterTable('CharacterBaseMaster').then(r => this.CharacterBase = r),
-      this.loadKeyedMasterTable('CharacterLevelMaster', 'Level').then(r => this.CharacterLevel = r),
-      this.loadKeyedMasterTable('CharacterBloomBonusGroupMaster').then(r => this.CharacterBloomBonusGroup = r),
-      this.loadKeyedMasterTable('SenseMaster').then(r => this.Sense = r),
-      this.loadKeyedMasterTable('StarActMaster').then(r => this.StarAct = r),
-      this.loadKeyedMasterTable('StarActConditionMaster').then(r => this.StarActCondition = r),
+      this.loadKeyedMasterTable('CharacterMaster').then(r => this.Character = r).then(updateProgress),
+      this.loadKeyedMasterTable('CharacterBaseMaster').then(r => this.CharacterBase = r).then(updateProgress),
+      this.loadKeyedMasterTable('CharacterLevelMaster', 'Level').then(r => this.CharacterLevel = r).then(updateProgress),
+      this.loadKeyedMasterTable('CharacterBloomBonusGroupMaster').then(r => this.CharacterBloomBonusGroup = r).then(updateProgress),
+      this.loadKeyedMasterTable('SenseMaster').then(r => this.Sense = r).then(updateProgress),
+      this.loadKeyedMasterTable('StarActMaster').then(r => this.StarAct = r).then(updateProgress),
+      this.loadKeyedMasterTable('StarActConditionMaster').then(r => this.StarActCondition = r).then(updateProgress),
 
-      this.loadKeyedMasterTable('AlbumEffectMaster').then(r => this.AlbumEffect = r),
-      this.loadKeyedMasterTable('PhotoEffectMaster').then(r => this.PhotoEffect = r),
-      this.loadKeyedMasterTable('EffectMaster').then(r => this.Effect = r),
+      this.loadKeyedMasterTable('AlbumEffectMaster').then(r => this.AlbumEffect = r).then(updateProgress),
+      this.loadKeyedMasterTable('PhotoEffectMaster').then(r => this.PhotoEffect = r).then(updateProgress),
+      this.loadKeyedMasterTable('EffectMaster').then(r => this.Effect = r).then(updateProgress),
 
-      this.loadKeyedMasterTable('PosterMaster').then(r => this.Poster = r),
-      this.loadKeyedMasterTable('PosterAbilityMaster').then(r => this.PosterAbility = r),
+      this.loadKeyedMasterTable('PosterMaster').then(r => this.Poster = r).then(updateProgress),
+      this.loadKeyedMasterTable('PosterAbilityMaster').then(r => this.PosterAbility = r).then(updateProgress),
 
-      this.loadKeyedMasterTable('AccessoryMaster').then(r => this.Accessory = r),
-      this.loadKeyedMasterTable('AccessoryEffectMaster').then(r => this.AccessoryEffect = r),
-      this.loadKeyedMasterTable('RandomEffectGroupMaster').then(r => this.RandomEffectGroup = r),
+      this.loadKeyedMasterTable('AccessoryMaster').then(r => this.Accessory = r).then(updateProgress),
+      this.loadKeyedMasterTable('AccessoryEffectMaster').then(r => this.AccessoryEffect = r).then(updateProgress),
+      this.loadKeyedMasterTable('RandomEffectGroupMaster').then(r => this.RandomEffectGroup = r).then(updateProgress),
 
-      this.loadKeyedMasterTable('SenseNotationMaster').then(r => this.SenseNotation = r),
+      this.loadKeyedMasterTable('SenseNotationMaster').then(r => this.SenseNotation = r).then(updateProgress),
     ]
+    const total = promises.length
+    updateProgress()
 
     await Promise.all(promises)
   }
@@ -77,6 +84,7 @@ class GameDb {
 class BeautyText {
   static convertGameTextToValidDom(text) {
     return text
+    .replace(/\*/g, '✦')
     .replace(/<color=(#[0-9A-Fa-f]*)>(.*?)<\/color>/g, '<span style="color: $1">$2</span>')
   }
 }
@@ -141,6 +149,8 @@ class Effect {
     switch (this.Type) {
       case 'BaseCorrection': { return }
       case 'VocalUp': { return VocalUpEffect.applyEffect(this, calc, targets, type) }
+      case 'ExpressionUp': { return ExpressionUpEffect.applyEffect(this, calc, targets, type) }
+      case 'ConcentrationUp': { return ConcentrationUpEffect.applyEffect(this, calc, targets, type) }
       case 'PerformanceUp': { return PerformanceUpEffect.applyEffect(this, calc, targets, type) }
       case 'BaseScoreUp': { return BaseScoreUpEffect.applyEffect(this, calc, targets, type) }
       default: {console.log(this.Type, index)}
@@ -151,14 +161,28 @@ class Effect {
 class VocalUpEffect {
   static applyEffect(effect, calc, targets, type) {
     targets.forEach(idx => {
-      calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][0] += effect.activeEffect.Value
+      calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][StatBonus.Vocal] += effect.activeEffect.Value
+    })
+  }
+}
+class ExpressionUpEffect {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][StatBonus.Expression] += effect.activeEffect.Value
+    })
+  }
+}
+class ConcentrationUpEffect {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][StatBonus.Concentration] += effect.activeEffect.Value
     })
   }
 }
 class PerformanceUpEffect {
   static applyEffect(effect, calc, targets, type) {
     targets.forEach(idx => {
-      calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][3] += effect.activeEffect.Value
+      calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][StatBonus.Performance] += effect.activeEffect.Value
     })
   }
 }
@@ -503,27 +527,27 @@ class CharacterData {
 
   setLevel(e) {
     this.lvl = e.target.value | 0;
-    root.update()
+    root.update({ chara: true })
   }
   setAwaken(e) {
     this.awaken = e.target.checked;
-    root.update()
+    root.update({ chara: true })
   }
   setEpisodeReadState(e) {
     this.episodeReadState = e.target.value | 0;
-    root.update()
+    root.update({ chara: true })
   }
   setStarRank(e) {
     this.starRank = e.target.value | 0;
-    root.update()
+    root.update({ chara: true })
   }
   setSense(e) {
     this.senselv = e.target.value | 0;
-    root.update()
+    root.update({ chara: true })
   }
   setBloom(e) {
     this.bloom = e.target.value | 0;
-    root.update()
+    root.update({ chara: true })
   }
 
   toJSON() {
@@ -618,11 +642,12 @@ class PosterData {
 
   setLevel(e) {
     this.level = e.target.value | 0;
-    root.update()
+    root.update({ poster: true })
   }
   setRelease(e) {
     this.release = e.target.value | 0;
-    root.update()
+    this.level = Math.min(this.level, this.currentMaxLevel)
+    root.update({ poster: true })
   }
 
   update() {
@@ -666,7 +691,7 @@ class PosterAbilityData {
 
     if (!parent) return
     this.node = parent.appendChild(_('div', {}, [
-      _('span', {}, [_('text', this.data.Name + ': ')]),
+      _('span', {}, [_('text', this.data.Name + ': ' + (this.data.ReleaseLevelAt ? '(Lv'+this.data.ReleaseLevelAt+')' : ''))]),
       _('br'),
       this.descNode = _('span', { style: { paddingLeft: '1em' }}),
     ]))
@@ -707,8 +732,13 @@ class AccessoryData {
       if (!group) throw new Error(`RandomEffectGroup ${i} not found`)
       group.AccessoryEffects.forEach(j => this.randomEffectSelect.appendChild(_('option', { value: j }, [_('text', GameDb.AccessoryEffect[j].Name)])))
     })
-    this.randomEffectId = this.randomEffectSelect.value
-    this.randomEffect = new AccessoryEffectData(this.randomEffectId, this.effectBox)
+    if (this.data.RandomEffectGroups.length > 0) {
+      this.randomEffectId = this.randomEffectSelect.value
+      this.randomEffect = new AccessoryEffectData(this.randomEffectId, this.effectBox)
+    } else {
+      this.randomEffectSelect.setAttribute('disabled', '')
+      this.randomEffectSelect.style.display = 'none'
+    }
 
     for (let i = 1; i < 11; i++) {
       this.levelSelect.appendChild(_('option', { value: i }, [_('text', i)]))
@@ -723,11 +753,11 @@ class AccessoryData {
     this.randomEffect.node.remove()
     this.randomEffectId = e.target.value
     this.randomEffect = new AccessoryEffectData(this.randomEffectId, this.effectBox)
-    root.update()
+    root.update({ accessory: true })
   }
   setLevel(e) {
     this.level = e.target.value | 0;
-    root.update()
+    root.update({ accessory: true })
   }
 
   update() {
@@ -736,8 +766,10 @@ class AccessoryData {
       i.level = this.level
       i.update()
     })
-    this.randomEffect.level = this.level
-    this.randomEffect.update()
+    if (this.randomEffect) {
+      this.randomEffect.level = this.level
+      this.randomEffect.update()
+    }
   }
   remove() {
     this.node.remove()
@@ -747,8 +779,10 @@ class AccessoryData {
   static fromJSON(data, parent) {
     const accessory = new AccessoryData(data[0], parent)
     accessory.level = data[1]
-    accessory.randomEffectSelect.value = data[2]
-    accessory.setRandomEffect({ target: accessory.randomEffectSelect })
+    if (data[2]) {
+      accessory.randomEffectSelect.value = data[2]
+      accessory.setRandomEffect({ target: accessory.randomEffectSelect })
+    }
     return accessory
   }
   toJSON() {
@@ -832,7 +866,7 @@ class PhotoEffectData {
   }
   setLevel(e) {
     this.level = e.target.value | 0;
-    root.update()
+    root.update({ album: true })
   }
 
   static fromJSON(data, parent) {
@@ -848,6 +882,12 @@ class StatBonusType {
   static Poster = 1;
   static Accessory = 2;
   static Other = 3;
+}
+class StatBonus {
+  static Vocal = 0;
+  static Expression = 1;
+  static Concentration = 2;
+  static Performance = 3;
 }
 class ScoreCalculator {
   constructor(members, posters, accessories, extra) {
@@ -1005,6 +1045,7 @@ class StatCalculator {
         return v
       }))
     }))
+    // TODO: correct calc - mul single buff - add single buff - mul perf buff
     this.bonus = this.buffFinal.map((charaBuf, charaIdx) => {
       const bonus = charaBuf.map(i => CharacterStat.fromArray(i[1].slice(0, 3)))
       const bonusAddition = bonus.reduce((sum, category) => sum.add(category), CharacterStat.Zero())
@@ -1048,22 +1089,32 @@ class RootLogic {
 
     document.getElementById('loading').remove()
     document.getElementById('app').appendChild(_('div', {}, [
-      this.senseNoteSelect = _('select', {event: {change: _=>this.renderSenseNote()}}),
-      this.senseBox = _('div', { className: 'sense-render-box' }),
-
       _('div', {className: 'margin-box'}),
-
-      _('div', {}, [_('text', '稽古算分')]),
-      _('div', {}, [
-        this.keikoSelect = _('select', { event: { change: _=>this.keikoFillChara() }}),
-        this.keikoBox = _('div', { style: { display: 'none' }}, [
-          _('select', { event: { change: _=>this.keikoCalcResult() }}),
-          _('select', { event: { change: _=>this.keikoCalcResult() }}),
-          _('select', { event: { change: _=>this.keikoCalcResult() }}),
-          _('select', { event: { change: _=>this.keikoCalcResult() }}),
-          _('select', { event: { change: _=>this.keikoCalcResult() }}),
+      this.calcTypeSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'normal' }), _('text', '通常（Audition/League）')]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'highscore' }), _('text', '高分')]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'keiko' }), _('text', '稽古')]),
+      ]),
+      this.normalCalcTabContent = _('div', {}, [
+        this.senseNoteSelect = _('select', {event: {change: _=>this.renderSenseNote()}}),
+        this.senseBox = _('div', { className: 'sense-render-box' }),
+        this.highscoreCalcTabContent = _('div', {}, [
+          _('text', 'スコアボーナス: '),
         ]),
-        this.keikoResult = _('div'),
+        this.calcResult = _('div'),
+      ]),
+      this.keikoCalcTabContent = _('div', {}, [
+        _('div', {}, [
+          this.keikoSelect = _('select', { event: { change: _=>this.keikoFillChara() }}),
+          this.keikoBox = _('div', { style: { display: 'none' }}, [
+            _('select', { event: { change: _=>this.keikoCalcResult() }}),
+            _('select', { event: { change: _=>this.keikoCalcResult() }}),
+            _('select', { event: { change: _=>this.keikoCalcResult() }}),
+            _('select', { event: { change: _=>this.keikoCalcResult() }}),
+            _('select', { event: { change: _=>this.keikoCalcResult() }}),
+          ]),
+          this.keikoResult = _('div'),
+        ]),
       ]),
 
       _('div', {className: 'margin-box'}),
@@ -1145,8 +1196,14 @@ class RootLogic {
     })
 
     this.renderSenseNote()
-    this.update()
+    this.update({
+      chara: true,
+      poster: true,
+      accessory: true,
+      album: true,
+    })
 
+    this.calcTypeSelectForm.tab.value = 'normal'
     this.tabSelectForm.tab.value = 'character'
     this.changeTab()
 
@@ -1175,13 +1232,23 @@ class RootLogic {
       removeAllChilds(this.photoEffectContainer)
       this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
     }
-    this.update()
+    this.update({
+      chara: true,
+      poster: true,
+      accessory: true,
+      album: true,
+    })
   }
   addMissingFields(data) {
     // if (data.version < 2) {}
   }
 
   changeTab() {
+    const calcType = this.calcTypeSelectForm.tab.value
+    this.normalCalcTabContent.style.display = calcType !== 'keiko' ? '' : 'none'
+    this.highscoreCalcTabContent.style.display = calcType === 'highscore' ? '' : 'none'
+    this.keikoCalcTabContent.style.display = calcType === 'keiko' ? '' : 'none'
+
     const tab = this.tabSelectForm.tab.value
     this.characterTabContent.style.display = tab === 'character' ? '' : 'none'
     this.posterTabContent.style.display = tab === 'poster' ? '' : 'none'
@@ -1191,11 +1258,11 @@ class RootLogic {
   addCharacter() {
     const charaId = this.addCharacterSelect.value | 0;
     this.appState.characters.push(new CharacterData(charaId, this.characterContainer))
-    this.update()
+    this.update({ chara: true })
   }
   removeCharacter(chara) {
     this.appState.characters.splice(this.appState.characters.indexOf(chara), 1)
-    this.update()
+    this.update({ chara: true })
   }
   setCharaSort() {
     const sortKey = this.charaSortSelect.value;
@@ -1217,59 +1284,74 @@ class RootLogic {
 
   setAlbumLevel() {
     this.appState.albumLevel = this.albumLevelSelect.value | 0;
-    this.update()
+    this.update({ album: true })
   }
   addPhotoEffect() {
     const photoEffectId = this.addPhotoEffectSelect.value | 0;
     this.appState.albumExtra.push(new PhotoEffectData(photoEffectId, 1, this.photoEffectContainer))
-    this.update()
+    this.update({ album: true })
   }
   removePhotoEffect(pe) {
     this.appState.albumExtra.splice(this.appState.albumExtra.indexOf(pe), 1)
-    this.update()
+    this.update({ album: true })
   }
 
   addPoster() {
     const posterId = this.addPosterSelect.value | 0;
     this.appState.posters.push(new PosterData(posterId, this.posterContainer))
-    this.update()
+    this.update({ poster: true })
   }
   removePoster(poster) {
     this.appState.posters.splice(this.appState.posters.indexOf(poster), 1)
-    this.update()
+    this.update({ poster: true })
   }
 
   addAccessory() {
     const accessoryId = this.addAccessorySelect.value | 0;
     this.appState.accessories.push(new AccessoryData(accessoryId, this.accessoryContainer))
-    this.update()
+    this.update({ accessory: true })
   }
   removeAccessory(accessory) {
     this.appState.accessories.splice(this.appState.accessories.indexOf(accessory), 1)
-    this.update()
+    this.update({ accessory: true })
   }
 
-  update() {
-    const addableCharacters = Object.values(GameDb.Character).map(i=>i.Id)
-    .filter(i=>this.appState.characters.map(i=>i.Id).indexOf(i) === -1)
-    removeAllChilds(this.addCharacterSelect)
-    addableCharacters.forEach((i) => {
-      this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
-    })
+  update(parts) {
+    try {
 
-    const addablePosters = Object.values(GameDb.Poster).map(i=>i.Id)
-    .filter(i=>this.appState.posters.map(i=>i.id).indexOf(i) === -1)
-    removeAllChilds(this.addPosterSelect)
-    addablePosters.forEach((i) => {
-      this.addPosterSelect.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
-    })
+    if (parts.chara) {
+      const addableCharacters = Object.values(GameDb.Character).map(i=>i.Id)
+      .filter(i=>this.appState.characters.map(i=>i.Id).indexOf(i) === -1)
+      removeAllChilds(this.addCharacterSelect)
+      addableCharacters.forEach((i) => {
+        this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
+      })
+      this.appState.characters.forEach(i => i.update())
+    }
 
-    this.appState.characters.forEach(i => i.update())
-    this.appState.posters.forEach(i => i.update())
-    this.appState.accessories.forEach(i => i.update())
-    this.appState.albumExtra.forEach(i => i.update())
+    if (parts.poster) {
+      const addablePosters = Object.values(GameDb.Poster).map(i=>i.Id)
+      .filter(i=>this.appState.posters.map(i=>i.id).indexOf(i) === -1)
+      removeAllChilds(this.addPosterSelect)
+      addablePosters.forEach((i) => {
+        this.addPosterSelect.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
+      })
+      this.appState.posters.forEach(i => i.update())
+    }
+
+    if (parts.accessory) {
+      this.appState.accessories.forEach(i => i.update())
+    }
+    if (parts.album) {
+      this.appState.albumExtra.forEach(i => i.update())
+    }
 
     this.keikoFillChara()
+
+    } catch (e) {
+      window.error_message.textContent = e.toString()
+      throw e
+    }
   }
 
   renderSenseNote() {
@@ -1346,4 +1428,4 @@ class RootLogic {
 
 window.root = new RootLogic()
 
-window.addEventListener('load', () => root.init())
+window.addEventListener('load', () => root.init().catch(e => window.error_message.textContent = e.toString()))
