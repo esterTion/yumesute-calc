@@ -1349,7 +1349,8 @@ class RootLogic {
     this.keikoFillChara()
 
     } catch (e) {
-      window.error_message.textContent = e.toString()
+      window.error_message.textContent = [e.toString(), e.stack].join('\n')
+      window.scrollTo(0, 0)
       throw e
     }
   }
@@ -1428,4 +1429,4 @@ class RootLogic {
 
 window.root = new RootLogic()
 
-window.addEventListener('load', () => root.init().catch(e => window.error_message.textContent = e.toString()))
+window.addEventListener('load', () => root.init().catch(e => window.error_message.textContent = [e.toString(),e.stack].join('\n')))

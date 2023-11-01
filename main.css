@@ -4,7 +4,7 @@ body {
   cursor: default;
   font-family: Arial, Meiryo;
 }
-#error, #loading {
+#error_message, #loading {
   white-space: pre-wrap;
 }
 
