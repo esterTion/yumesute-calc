@@ -602,7 +602,7 @@ class PosterData {
     if (!this.data) throw new Error(`Poster ${id} not found`)
 
     if (!parent) return
-    this.node = parent.appendChild(_('div', {}, [
+    this.node = parent.appendChild(_('tr', {}, [_('td', {}, [
       _('div', {}, [_('text', this.fullPosterName)]),
       _('div', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
       _('div', {}, [_('text', '解放: '), this.releaseSelect = _('select', { event: { change: e=>this.setRelease(e) } })]),
@@ -611,7 +611,7 @@ class PosterData {
       _('div', {}, [_('text', 'Normal: ')]),
       this.normalAbilityBox = _('div'),
       _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
-    ]))
+    ]), _('td', {}, [_('img', { src: this.imageUrl, style: { width: '200px' }})])]))
 
     for (let i = 1; i <= this.maxLevel; i++) {
       this.levelSelect.appendChild(_('option', { value: i }, [_('text', i)]))
@@ -626,6 +626,9 @@ class PosterData {
     this.abilitiesData.filter(i=>i.Type === 'Normal').forEach(i => this.abilities.push(new PosterAbilityData(i.Id, this.normalAbilityBox)))
   }
 
+  get imageUrl() {
+    return `https://redive.estertion.win/wds/poster/${this.id}_0.webp@w200`
+  }
   get currentMaxLevel() {
     return this.maxLevel - (4 - this.release)
   }
@@ -691,9 +694,8 @@ class PosterAbilityData {
 
     if (!parent) return
     this.node = parent.appendChild(_('div', {}, [
-      _('span', {}, [_('text', this.data.Name + ': ' + (this.data.ReleaseLevelAt ? '(Lv'+this.data.ReleaseLevelAt+')' : ''))]),
-      _('br'),
-      this.descNode = _('span', { style: { paddingLeft: '1em' }}),
+      _('div', {}, [_('text', this.data.Name + ': ' + (this.data.ReleaseLevelAt ? '(Lv'+this.data.ReleaseLevelAt+')' : ''))]),
+      this.descNode = _('div', { style: { paddingLeft: '1em', maxWidth: '450px' }}),
     ]))
   }
 
