@@ -1321,10 +1321,15 @@ class RootLogic {
   update(parts) {
     try {
 
+    const displaySortValue = (tbl, key, a, b) => (
+      tbl[a][key] === tbl[b][key] ? 0 : tbl[a][key] > tbl[b][key] ? 1 : -1
+    )
+
     if (parts.chara) {
       const addableCharacters = Object.values(GameDb.Character).map(i=>i.Id)
       .filter(i=>this.appState.characters.map(i=>i.Id).indexOf(i) === -1)
       removeAllChilds(this.addCharacterSelect)
+      addableCharacters.sort((a,b) => displaySortValue(GameDb.Character, 'DisplayStartAt', a, b))
       addableCharacters.forEach((i) => {
         this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
       })
@@ -1335,6 +1340,7 @@ class RootLogic {
       const addablePosters = Object.values(GameDb.Poster).map(i=>i.Id)
       .filter(i=>this.appState.posters.map(i=>i.id).indexOf(i) === -1)
       removeAllChilds(this.addPosterSelect)
+      addablePosters.sort((a,b) => displaySortValue(GameDb.Poster, 'DisplayStartAt', a, b))
       addablePosters.forEach((i) => {
         this.addPosterSelect.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
       })
