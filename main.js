@@ -1082,6 +1082,10 @@ class RootLogic {
     albumExtra: [],
     version: 1,
   }
+  nonPersistentState = {
+    characterOptions: {},
+    posterOptions: {},
+  }
 
   async init() {
     console.log('init')
@@ -1185,6 +1189,40 @@ class RootLogic {
     Object.values(GameDb.AlbumEffect).forEach(i => {
       this.albumLevelSelect.appendChild(_('option', { value: i.Level }, [_('text', i.Level)]))
     })
+    {
+      // characters
+      const addableCharactersByDate = Object.values(GameDb.Character)
+      .reduce((acc, i) => {
+        acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
+        acc[i.DisplayStartAt][1].push(i.Id)
+        return acc
+      }, {})
+      const addableCharacters = Object.values(addableCharactersByDate)
+      addableCharacters.sort((a,b) => (a[0] > b[0] ? 1 : -1))
+      addableCharacters.forEach((group) => {
+        this.addCharacterSelect.appendChild(_('option', { disabled: '' }, [_('text', group[0])]))
+        group[1].forEach(i => {
+          this.nonPersistentState.characterOptions[i] = this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
+        })
+      })
+    }
+    {
+      // posters
+      const addablePostersByDate = Object.values(GameDb.Poster)
+      .reduce((acc, i) => {
+        acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
+        acc[i.DisplayStartAt][1].push(i.Id)
+        return acc
+      }, {})
+      const addablePosters = Object.values(addablePostersByDate)
+      addablePosters.sort((a,b) => (a[0] > b[0] ? 1 : -1))
+      addablePosters.forEach((group) => {
+        this.addPosterSelect.appendChild(_('option', { disabled: '' }, [_('text', group[0])]))
+        group[1].forEach(i => {
+          this.nonPersistentState.posterOptions[i] = this.addPosterSelect.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
+        })
+      })
+    }
     Object.values(GameDb.Accessory).forEach(i => {
       this.addAccessorySelect.appendChild(_('option', { value: i.Id }, [_('text', (new AccessoryData(i.Id, null)).fullAccessoryName)]))
     })
@@ -1325,26 +1363,24 @@ class RootLogic {
       tbl[a][key] === tbl[b][key] ? 0 : tbl[a][key] > tbl[b][key] ? 1 : -1
     )
 
+    Object.values(this.nonPersistentState.characterOptions).forEach(i => i.removeAttribute('disabled'))
     if (parts.chara) {
-      const addableCharacters = Object.values(GameDb.Character).map(i=>i.Id)
-      .filter(i=>this.appState.characters.map(i=>i.Id).indexOf(i) === -1)
-      removeAllChilds(this.addCharacterSelect)
-      addableCharacters.sort((a,b) => displaySortValue(GameDb.Character, 'DisplayStartAt', a, b))
-      addableCharacters.forEach((i) => {
-        this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
+      this.appState.characters.forEach(i => {
+        i.update()
+        if (this.nonPersistentState.characterOptions[i.Id]) {
+          this.nonPersistentState.characterOptions[i.Id].setAttribute('disabled', '')
+        }
       })
-      this.appState.characters.forEach(i => i.update())
     }
 
     if (parts.poster) {
-      const addablePosters = Object.values(GameDb.Poster).map(i=>i.Id)
-      .filter(i=>this.appState.posters.map(i=>i.id).indexOf(i) === -1)
-      removeAllChilds(this.addPosterSelect)
-      addablePosters.sort((a,b) => displaySortValue(GameDb.Poster, 'DisplayStartAt', a, b))
-      addablePosters.forEach((i) => {
-        this.addPosterSelect.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
+      Object.values(this.nonPersistentState.posterOptions).forEach(i => i.removeAttribute('disabled'))
+      this.appState.posters.forEach(i => {
+        i.update()
+        if (this.nonPersistentState.posterOptions[i.id]) {
+          this.nonPersistentState.posterOptions[i.id].setAttribute('disabled', '')
+        }
       })
-      this.appState.posters.forEach(i => i.update())
     }
 
     if (parts.accessory) {
