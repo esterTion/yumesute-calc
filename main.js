@@ -1200,9 +1200,9 @@ class RootLogic {
       const addableCharacters = Object.values(addableCharactersByDate)
       addableCharacters.sort((a,b) => (a[0] > b[0] ? 1 : -1))
       addableCharacters.forEach((group) => {
-        this.addCharacterSelect.appendChild(_('option', { disabled: '' }, [_('text', group[0])]))
+        const groupEle = this.addCharacterSelect.appendChild(_('optgroup', { label: group[0] }))
         group[1].forEach(i => {
-          this.nonPersistentState.characterOptions[i] = this.addCharacterSelect.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
+          this.nonPersistentState.characterOptions[i] = groupEle.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
         })
       })
     }
@@ -1217,9 +1217,9 @@ class RootLogic {
       const addablePosters = Object.values(addablePostersByDate)
       addablePosters.sort((a,b) => (a[0] > b[0] ? 1 : -1))
       addablePosters.forEach((group) => {
-        this.addPosterSelect.appendChild(_('option', { disabled: '' }, [_('text', group[0])]))
+        const groupEle = this.addPosterSelect.appendChild(_('optgroup', { label: group[0] }))
         group[1].forEach(i => {
-          this.nonPersistentState.posterOptions[i] = this.addPosterSelect.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
+          this.nonPersistentState.posterOptions[i] = groupEle.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
         })
       })
     }
