@@ -13,6 +13,22 @@ function removeAllChilds(node) {
   }
 }
 
+const AttributeEnum = [
+  "",
+  "Cute",
+  "Cool",
+  "Colorful",
+  "Cheerful"
+]
+const SenseTypeEnum = {
+  "1": "Support",
+  "2": "Control",
+  "3": "Amplification",
+  "4": "Special",
+  "9": "None",
+  "10": "Alternative"
+}
+
 class GameDb {
   static Character = {};
   static CharacterBase = {};
@@ -34,6 +50,9 @@ class GameDb {
   static RandomEffectGroup = {};
 
   static SenseNotation = {};
+
+  static CircleTheaterLevel = {};
+  static CircleSupportCompanyLevelDetail = {};
 
   static async load() {
     let loaded = -1
@@ -62,6 +81,9 @@ class GameDb {
       this.loadKeyedMasterTable('RandomEffectGroupMaster').then(r => this.RandomEffectGroup = r).then(updateProgress),
 
       this.loadKeyedMasterTable('SenseNotationMaster').then(r => this.SenseNotation = r).then(updateProgress),
+
+      this.loadKeyedMasterTable('CircleTheaterLevelMaster').then(r => this.CircleTheaterLevel = r).then(updateProgress),
+      this.loadKeyedMasterTable('CircleSupportCompanyLevelDetailMaster').then(r => this.CircleSupportCompanyLevelDetail = r).then(updateProgress),
     ]
     const total = promises.length
     updateProgress()
@@ -144,6 +166,23 @@ class Effect {
     }
     return true
   }
+  conditionSatified(calc, index) {
+    const member = calc.members[index]
+    if (!member) return false
+    for (let condition of this.data.Conditions) {
+      switch (condition.Condition) {
+        case "CharacterBase": { if (member.data.CharacterBaseMasterId !== condition.Value) return false; break; }
+        case "Company": { if (GameDb.CharacterBase[member.data.CharacterBaseMasterId].CompanyMasterId !== condition.Value) return false; break; }
+        case "Attribute": { if (member.data.Attribute !== AttributeEnum[condition.Value]) return false; break; }
+        case "SenseType": { if (GameDb.Sense[member.data.SenseMasterId].Type !== SenseTypeEnum[condition.Value]) return false; break; }
+        case "Character": { if (member.data.CharacterMasterId !== condition.Value) return false; break; }
+        // TODO: Implement after poster is implemented
+        case "EquippedPoster": { return false }
+        default: { return false }
+      }
+    }
+    return true
+  }
   applyEffect(calc, index, type) {
     const targets = this.Range === 'All' ? [0,1,2,3,4] : this.Range === 'Self' ? [index] : []
     switch (this.Type) {
@@ -161,6 +200,7 @@ class Effect {
 class VocalUpEffect {
   static applyEffect(effect, calc, targets, type) {
     targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
       calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][StatBonus.Vocal] += effect.activeEffect.Value
     })
   }
@@ -168,6 +208,7 @@ class VocalUpEffect {
 class ExpressionUpEffect {
   static applyEffect(effect, calc, targets, type) {
     targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
       calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][StatBonus.Expression] += effect.activeEffect.Value
     })
   }
@@ -175,6 +216,7 @@ class ExpressionUpEffect {
 class ConcentrationUpEffect {
   static applyEffect(effect, calc, targets, type) {
     targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
       calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][StatBonus.Concentration] += effect.activeEffect.Value
     })
   }
@@ -182,12 +224,14 @@ class ConcentrationUpEffect {
 class PerformanceUpEffect {
   static applyEffect(effect, calc, targets, type) {
     targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
       calc.stat.buff[idx][type][['PercentageAddition', 'FixedAddition'].indexOf(effect.CalculationType)][StatBonus.Performance] += effect.activeEffect.Value
     })
   }
 }
 class BaseScoreUpEffect {
   static applyEffect(effect, calc, targets, type) {
+    if (!effect.conditionSatified(calc, idx)) return
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`BaseScoreUp calc type: ${effect.CalculationType}`)
     calc.passiveEffects.baseScoreUp += effect.activeEffect.Value
   }
@@ -305,9 +349,25 @@ class CharacterStat {
   // multiple a percentage, including performance
   mul(percentage) {
     const newStat = new CharacterStat(
-      Math.floor(this.vo * (percentage[0] + percentage[3]) / 10000),
-      Math.floor(this.ex * (percentage[1] + percentage[3]) / 10000),
-      Math.floor(this.co * (percentage[2] + percentage[3]) / 10000)
+      Math.floor(this.vo * (percentage[StatBonus.Vocal        ] + percentage[StatBonus.Performance]) / 10000),
+      Math.floor(this.ex * (percentage[StatBonus.Expression   ] + percentage[StatBonus.Performance]) / 10000),
+      Math.floor(this.co * (percentage[StatBonus.Concentration] + percentage[StatBonus.Performance]) / 10000)
+    )
+    return newStat
+  }
+  mulStat(percentage) {
+    const newStat = new CharacterStat(
+      Math.floor(this.vo * percentage[StatBonus.Vocal        ] / 10000),
+      Math.floor(this.ex * percentage[StatBonus.Expression   ] / 10000),
+      Math.floor(this.co * percentage[StatBonus.Concentration] / 10000)
+    )
+    return newStat
+  }
+  mulPerformance(percentage) {
+    const newStat = new CharacterStat(
+      Math.floor(this.vo * percentage[StatBonus.Performance] / 10000),
+      Math.floor(this.ex * percentage[StatBonus.Performance] / 10000),
+      Math.floor(this.co * percentage[StatBonus.Performance] / 10000)
     )
     return newStat
   }
@@ -592,6 +652,7 @@ class CharacterStarRankData {
     return rank
   }
 }
+
 
 class PosterData {
   constructor(id, parent) {
@@ -879,11 +940,47 @@ class PhotoEffectData {
   }
 }
 
+class TheaterLevelData {
+  levelData = {
+    Sirius: 0,
+    Eden: 0,
+    Gingaza: 0,
+    Denki: 0,
+  }
+
+  getLevel(company) {
+    return this.levelData[company] || 0
+  }
+  setLevel(company, level) {
+    this.levelData[company] = level | 0
+  }
+  getTotalLevel() {
+    return this.levelData.Sirius
+      + this.levelData.Eden
+      + this.levelData.Gingaza
+      + this.levelData.Denki
+  }
+  getEffects() {
+    return Object.values(GameDb.CircleSupportCompanyLevelDetail).filter(i => i.Level <= this.getLevel(i.Company)).map(i => Effect.get(i.EffectMasterId, 1))
+  }
+
+  toJSON() {
+    return this.levelData
+  }
+  static fromJSON(data) {
+    const theater = new TheaterLevelData()
+    theater.levelData = data
+    return theater
+  }
+}
+
 class StatBonusType {
   static Album = 0;
   static Poster = 1;
   static Accessory = 2;
   static Other = 3;
+  static Theater = 4;
+  static Total = 5;
 }
 class StatBonus {
   static Vocal = 0;
@@ -946,6 +1043,10 @@ class ScoreCalculator {
       chara.bloomBonusEffects.forEach(effect => effect.applyEffect(this, idx, StatBonusType.Album))
     })
 
+    // theater effect
+    const theaterEffects = root.appState.theaterLevel.getEffects()
+    theaterEffects.forEach(effect => effect.applyEffect(this, -1, StatBonusType.Theater))
+
     let statExtra = 1
     if (this.extra.starRankScoreBonus) {
       statExtra = 1 + this.extra.starRankScoreBonus * 30 / 100
@@ -965,10 +1066,14 @@ class ScoreCalculator {
 
     node.appendChild(_('div', {}, [
       this.createStatDetailsTable(),
-      _('text', `合計演技力：${this.stat.finalTotal}`),
+      _('span', { 'data-text-key': 'CALC_TOTAL_STAT'}),
+      _('text', this.stat.finalTotal),
       _('br'),
-      _('text', `基础分: ${baseScore[0]} / ${baseScore[1]} / ${baseScore[2]} / ${baseScore[3]}`)
+      _('span', { 'data-text-key': 'CALC_BASE_SCORE'}),
+      _('text', `${baseScore[0]} / ${baseScore[1]} / ${baseScore[2]} / ${baseScore[3]}`)
     ]))
+
+    ConstText.fillText()
 
     console.log(this)
   }
@@ -979,34 +1084,34 @@ class ScoreCalculator {
       _('table', { className: 'stat-details'}, [
         _('thead', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('th'),
-          _('th', {}, [_('text', '歌唱力')]),
-          _('th', {}, [_('text', '表現力')]),
-          _('th', {}, [_('text', '集中力')]),
-          _('th', {}, [_('text', '演技力')]),
+          _('th', { 'data-text-key': 'VOCAL'         }, [_('text', '歌唱力')]),
+          _('th', { 'data-text-key': 'EXPRESSION'    }, [_('text', '表現力')]),
+          _('th', { 'data-text-key': 'CONCENTRATION' }, [_('text', '集中力')]),
+          _('th', { 'data-text-key': 'PERFORMANCE'   }, [_('text', '演技力')]),
         ])]),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
-          _('td', {}, [_('text', '初期値')]),
+          _('td', { 'data-text-key': 'CALC_TABLE_INITIAL' }, [_('text', '初期値')]),
           _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].vo)]),
           _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].ex)]),
           _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].co)]),
           _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].total)]),
         ])]),
-        _('tbody', {}, ['アルバム', 'ポスター', 'アクセサリー'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
-          _('td', {}, [_('text', name)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][0] / 100}%\n+${this.stat.buffFinal[idx][j][1][0]}\n${this.stat.bonus[idx][j].vo}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][1] / 100}%\n+${this.stat.buffFinal[idx][j][1][1]}\n${this.stat.bonus[idx][j].ex}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][2] / 100}%\n+${this.stat.buffFinal[idx][j][1][2]}\n${this.stat.bonus[idx][j].co}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][3] / 100}%\n${this.stat.bonus[idx][j].total}`)]),
+        _('tbody', {}, ['CALC_TABLE_ALBUM', 'CALC_TABLE_POSTER', 'CALC_TABLE_ACCESSORY', 'CALC_TABLE_OTHER', 'CALC_TABLE_THEATER'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+          _('td', { 'data-text-key': name }, [_('text', name)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Vocal        ] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Vocal        ]}\n${this.stat.bonus[idx][j].vo}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Expression   ] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Expression   ]}\n${this.stat.bonus[idx][j].ex}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Concentration] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Concentration]}\n${this.stat.bonus[idx][j].co}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Performance  ] / 100}%\n${this.stat.bonus[idx][j].total}`)]),
         ]))),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
-          _('td', {}, [_('text', '上昇合計')]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][4][0][0] / 100}%/${this.stat.buffLimit[idx][0][0] / 100}%\n+${this.stat.buffFinal[idx][4][1][0]}\n${this.stat.bonus[idx][4].vo}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][4][0][1] / 100}%/${this.stat.buffLimit[idx][0][1] / 100}%\n+${this.stat.buffFinal[idx][4][1][1]}\n${this.stat.bonus[idx][4].ex}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][4][0][2] / 100}%/${this.stat.buffLimit[idx][0][2] / 100}%\n+${this.stat.buffFinal[idx][4][1][2]}\n${this.stat.bonus[idx][4].co}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][4][0][3] / 100}%/${this.stat.buffLimit[idx][0][3] / 100}%\n${this.stat.bonus[idx][4].total}`)]),
+          _('td', { 'data-text-key': 'CALC_TABLE_TOTAL_BONUS'}, [_('text', '上昇合計')]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Vocal        ] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Vocal        ] / 100}%\n+${this.stat.buffFinal[idx][StatBonusType.Total][1][StatBonus.Vocal        ]}\n${this.stat.bonus[idx][StatBonusType.Total].vo}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Expression   ] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Expression   ] / 100}%\n+${this.stat.buffFinal[idx][StatBonusType.Total][1][StatBonus.Expression   ]}\n${this.stat.bonus[idx][StatBonusType.Total].ex}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Concentration] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Concentration] / 100}%\n+${this.stat.buffFinal[idx][StatBonusType.Total][1][StatBonus.Concentration]}\n${this.stat.bonus[idx][StatBonusType.Total].co}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Performance  ] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Performance  ] / 100}%\n${this.stat.bonus[idx][StatBonusType.Total].total}`)]),
         ])]),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
-          _('td', {}, [_('text', '最終値')]),
+          _('td', { 'data-text-key': 'CALC_TABLE_FINAL_STAT' }, [_('text', '最終値')]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.final[idx].vo}`)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.final[idx].ex}`)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.final[idx].co}`)]),
@@ -1034,8 +1139,10 @@ class StatCalculator {
      *   ...
      * [3]: other
      *   ...
+     * [4]: theater
+     *   ...
      */
-    this.buff = members.map(_ => ([0,0,0,0].map(_ => ([[0,0,0,0], [0,0,0,0]]))))
+    this.buff = members.map(_ => ([0,0,0,0,0].map(_ => ([[0,0,0,0], [0,0,0,0]]))))
     this.buffLimit = members.map(_ => ([[20000,20000,20000,20000], [Infinity,Infinity,Infinity,Infinity]]))
   }
   calc() {
@@ -1047,13 +1154,12 @@ class StatCalculator {
         return v
       }))
     }))
-    // TODO: correct calc - mul single buff - add single buff - mul perf buff
     this.bonus = this.buffFinal.map((charaBuf, charaIdx) => {
-      const bonus = charaBuf.map(i => CharacterStat.fromArray(i[1].slice(0, 3)))
+      const bonus = charaBuf.map(i => this.initial[charaIdx].mulStat(i[0]).add(CharacterStat.fromArray(i[1].slice(0, 3))))
       const bonusAddition = bonus.reduce((sum, category) => sum.add(category), CharacterStat.Zero())
       bonus.push(bonusAddition)
       const statWithAddition = this.initial[charaIdx].add(bonusAddition)
-      const bonusPercentage = charaBuf.map(i => statWithAddition.mul(i[0]))
+      const bonusPercentage = charaBuf.map(i => statWithAddition.mulPerformance(i[0]))
       bonusPercentage.push(bonusPercentage.reduce((sum, category) => sum.add(category), CharacterStat.Zero()))
       return bonus.map((i, idx) => i.add(bonusPercentage[idx]))
     })
@@ -1067,8 +1173,64 @@ class StatCalculator {
         return sum
       }, [[0,0,0,0],[0,0,0,0]]))
     })
-    this.final = this.initial.map((i, idx) => i.add(this.bonus[idx][4]))
+    this.final = this.initial.map((i, idx) => i.add(this.bonus[idx][StatBonusType.Total]))
     this.finalTotal = this.final.reduce((s, i) => s+i.total, 0)
+  }
+}
+
+class ConstText {
+  static language = 'zh'
+
+  static en = {}
+  static ja = {}
+  static zh = {
+    SENSE_NOTATION_TAB_NORMAL: '通常（试音/排位）',
+    SENSE_NOTATION_TAB_HIGHSCORE: '高分',
+    SENSE_NOTATION_TAB_KEIKO: '稽古',
+
+    ALBUM_LEVEL_LABEL: '相册等级：',
+
+    THEATER_LEVEL_LABEL: '剧场等级：',
+    SIRIUS: 'Sirius',
+    EDEN: 'Eden',
+    GINGAZA: '银河座',
+    DENKI: '剧团电姬',
+
+    ADD: '添加',
+    DELETE: '删除',
+    NOT_SELECTED: '未选择',
+
+    TAB_CHARA: '角色',
+    TAB_POSTER: '海报',
+    TAB_ACCESSORY: '饰品',
+
+    VOCAL: '歌唱力',
+    EXPRESSION: '表现力',
+    CONCENTRATION: '集中力',
+    PERFORMANCE: '演技力',
+    CALC_TABLE_INITIAL: '初始值',
+    CALC_TABLE_ALBUM: '相册',
+    CALC_TABLE_POSTER: '海报',
+    CALC_TABLE_ACCESSORY: '饰品',
+    CALC_TABLE_OTHER: '其他',
+    CALC_TABLE_THEATER: '剧场',
+    CALC_TABLE_TOTAL_BONUS: '总加成',
+    CALC_TABLE_FINAL_STAT: '最终值',
+    CALC_TOTAL_STAT: '总演技力：',
+    CALC_BASE_SCORE: '基础分: ',
+  }
+
+  static get(key) {
+    return ConstText[ConstText.language][key]
+  }
+
+  static fillText() {
+    document.querySelectorAll('[data-text-key]').forEach(i => {
+      i.textContent = ConstText.get(i.dataset.textKey)
+    })
+    document.querySelectorAll('[data-text-value]').forEach(i => {
+      i.value = ConstText.get(i.dataset.textValue)
+    })
   }
 }
 
@@ -1080,7 +1242,8 @@ class RootLogic {
     accessories: [],
     albumLevel: 0,
     albumExtra: [],
-    version: 1,
+    theaterLevel: new TheaterLevelData(),
+    version: 2,
   }
   nonPersistentState = {
     characterOptions: {},
@@ -1097,9 +1260,9 @@ class RootLogic {
     document.getElementById('app').appendChild(_('div', {}, [
       _('div', {className: 'margin-box'}),
       this.calcTypeSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'normal' }), _('text', '通常（Audition/League）')]),
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'highscore' }), _('text', '高分')]),
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'keiko' }), _('text', '稽古')]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'normal' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_NORMAL'})]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'highscore' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_HIGHSCORE'})]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'keiko' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_KEIKO'})]),
       ]),
       this.normalCalcTabContent = _('div', {}, [
         this.senseNoteSelect = _('select', {event: {change: _=>this.renderSenseNote()}}),
@@ -1125,19 +1288,43 @@ class RootLogic {
 
       _('div', {className: 'margin-box'}),
 
-      _('div', {}, [_('text', 'Album Level: '), this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])])]),
+      _('div', {}, [_('span', {'data-text-key':'ALBUM_LEVEL_LABEL'}), this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])])]),
       this.photoEffectContainer = _('div'),
       _('div', {}, [
         this.addPhotoEffectSelect = _('select'),
-        _('input', { type: 'button', value: '追加', event: { click: e=>this.addPhotoEffect() }}),
+        _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.addPhotoEffect() }}),
+      ]),
+
+      _('div', {className: 'margin-box'}),
+
+      _('div', {}, [
+        _('div', {'data-text-key':'THEATER_LEVEL_LABEL'}),
+        this.theaterLevelForm = _('form', { event: { change: e=>this.setTheaterLevel(e) }}, [
+          _('div', {}, [
+            _('select', { name: 'Sirius' }, ([0,1,2,3,4]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'SIRIUS' }),
+          ]),
+          _('div', {}, [
+            _('select', { name: 'Eden' }, ([0,1,2,3,4]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'EDEN' }),
+          ]),
+          _('div', {}, [
+            _('select', { name: 'Gingaza' }, ([0,1,2,3,4]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'GINGAZA' }),
+          ]),
+          _('div', {}, [
+            _('select', { name: 'Denki' }, ([0,1,2,3,4]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'DENKI' }),
+          ]),
+        ])
       ]),
 
       _('div', {className: 'margin-box'}),
 
       this.tabSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'character' }), _('text', 'キャラ')]),
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'poster' }), _('text', 'ポスター')]),
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'accessory' }), _('text', 'アクセサリー')]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'character' }), _('span', {'data-text-key': 'TAB_CHARA'})]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'poster' }), _('span', {'data-text-key': 'TAB_POSTER'})]),
+        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'accessory' }), _('span', {'data-text-key': 'TAB_ACCESSORY'})]),
       ]),
 
       this.characterTabContent = _('div', {}, [
@@ -1182,7 +1369,7 @@ class RootLogic {
     Object.values(GameDb.SenseNotation).forEach(i => {
       this.senseNoteSelect.appendChild(_('option', { value: i.Id }, [_('text', i.Id)]))
     })
-    this.keikoSelect.appendChild(_('option', { value: '' }, [_('text', '未選択')]))
+    this.keikoSelect.appendChild(_('option', { value: '', 'data-text-key': 'NOT_SELECTED' }, [_('text', '未選択')]))
     Object.values(GameDb.CharacterBase).forEach(i => {
       this.keikoSelect.appendChild(_('option', { value: i.Id }, [_('text', i.Name)]))
     })
@@ -1250,6 +1437,8 @@ class RootLogic {
     window.addEventListener('blur', _=>this.saveState())
     window.addEventListener('unload', _=>this.saveState())
     //window.addEventListener('focus', _=>this.loadState())
+
+    ConstText.fillText()
   }
   saveState() {
     if (window.DEBUG_NO_SAVE) return;
@@ -1271,16 +1460,21 @@ class RootLogic {
       this.appState.albumLevel = data.albumLevel
       removeAllChilds(this.photoEffectContainer)
       this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
+      this.appState.theaterLevel = TheaterLevelData.fromJSON(data.theaterLevel)
     }
     this.update({
       chara: true,
       poster: true,
       accessory: true,
       album: true,
+      theaterLevel: true,
     })
   }
   addMissingFields(data) {
-    // if (data.version < 2) {}
+    if (data.version < 2) {
+      data.version = 2
+      data.theaterLevel = (new TheaterLevelData).toJSON()
+    }
   }
 
   changeTab() {
@@ -1356,6 +1550,11 @@ class RootLogic {
     this.update({ accessory: true })
   }
 
+  setTheaterLevel(e) {
+    this.appState.theaterLevel.setLevel(e.target.name, e.target.value)
+    this.update({ theaterLevel: true })
+  }
+
   update(parts) {
     try {
 
@@ -1388,6 +1587,11 @@ class RootLogic {
     }
     if (parts.album) {
       this.appState.albumExtra.forEach(i => i.update())
+    }
+    if (parts.theaterLevel) {
+      (['Sirius', 'Eden', 'Gingaza', 'Denki']).forEach(i => {
+        this.theaterLevelForm[i].value = this.appState.theaterLevel.getLevel(i)
+      })
     }
 
     this.keikoFillChara()
@@ -1427,7 +1631,7 @@ class RootLogic {
     this.keikoBox.style.display = ''
     for (let select of this.keikoBox.children) {
       removeAllChilds(select)
-      select.appendChild(_('option', { value: '' }, [_('text', '未選択')]))
+      select.appendChild(_('option', { value: '', 'data-text-key': 'NOT_SELECTED' }, [_('text', '未選択')]))
       for (let i=0; i<this.appState.characters.length; i++) {
         if (this.appState.characters[i].data.CharacterBaseMasterId !== keikoCharaId) continue;
         const chara = this.appState.characters[i]
