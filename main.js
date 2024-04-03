@@ -569,7 +569,9 @@ class CharacterData {
     })
 
     this.sense.level = this.senselv
-    this.senseDescNode.textContent = this.sense.desc
+    try { this.senseDescNode.textContent = this.sense.desc } catch {
+      this.senseDescNode.textContent = this.sense.data.Description
+    }
     this.senseDescNode.dataset.senseType = this.sense.getType()
     this.ctValNode.textContent = this.sense.ct
 
@@ -1178,6 +1180,189 @@ class StatCalculator {
   }
 }
 
+class Party {
+  constructor() {
+    this.name = ConstText.get('PARTY_DEFAULT_NAME') + ' 1'
+    this.characters = [null,null,null,null,null]
+    this.posters = [null,null,null,null,null]
+    this.accessories = [null,null,null,null,null]
+  }
+
+  toJSON() {
+    return [
+      this.name,
+      this.characters.map(i => root.appState.characters.indexOf(i)),
+      this.posters.map(i => root.appState.posters.indexOf(i)),
+      this.accessories.map(i => root.appState.accessories.indexOf(i)),
+    ]
+  }
+  static fromJSON(data) {
+    const party = new Party()
+    party.name = data[0]
+    party.characters = data[1].map(i => root.appState.characters[i] || null)
+    party.posters = data[2].map(i => root.appState.posters[i] || null)
+    party.accessories = data[3].map(i => root.appState.accessories[i] || null)
+    return party
+  }
+}
+class PartyManager {
+  constructor() {
+    this.parties = [new Party()]
+    this.currentSelection = 0
+  }
+  addParty() {
+    let currentParty = this.parties[this.currentSelection]
+    let cloneParty = Party.fromJSON(currentParty.toJSON())
+    cloneParty.name = `${ConstText.get('PARTY_DEFAULT_NAME')} ${this.parties.length + 1}`
+    this.parties.push(cloneParty)
+    this.currentSelection = this.parties.length - 1
+    this.fillPartySelect()
+  }
+  removeParty() {
+    if (this.parties.length === 1) return alert(ConstText.get('PARTY_DELETE_LAST'))
+    if (confirm(ConstText.get('PARTY_DELETE_CONFIRM')) === false) return
+    this.parties.splice(this.currentSelection, 1)
+    if (this.currentSelection >= this.parties.length) {
+      this.currentSelection = this.parties.length - 1
+    }
+    this.fillPartySelect()
+  }
+
+  init() {
+    const container = root.partyManagerContainer
+    removeAllChilds(container)
+
+    container.appendChild(_('div', {}, [
+      this.partySelect = _('select', { event: { change: e=>{
+        this.currentSelection = e.target.value
+        this.changeParty(e)
+      } }}),
+      _('input', { type: 'button', value: ConstText.get('ADD'), event: { click: _=>this.addParty() }}),
+      _('input', { type: 'button', value: ConstText.get('DELETE'), event: { click: _=>this.removeParty() }}),
+      this.partyNameInput = _('input', { type: 'text', event: { blur: e=>{
+        this.parties[this.currentSelection].name = e.target.value
+        this.fillPartySelect()
+      }
+    }}),
+    ]))
+
+    this.fillPartySelect()
+
+    this.charaSlot = []
+    this.posterSlot = []
+    this.accessorySlot = []
+    // create table with 5 rows of select
+    this.partyTable = container.appendChild(_('table', {}, [
+      _('thead', {}, [
+        _('tr', {}, [
+          _('th', {}, [_('text', ConstText.get('TAB_CHARA'))]),
+          _('th', {}, [_('text', ConstText.get('TAB_POSTER'))]),
+          _('th', {}, [_('text', ConstText.get('TAB_ACCESSORY'))]),
+        ]),
+      ]),
+      _('tbody', {}, Array(5).fill(0).map((__, idx) => _('tr', {}, [
+          _('td', {}, [this.charaSlot[idx] = _('select', { event: { change: e=>this.changeChara(e, idx) }})]),
+          _('td', {}, [this.posterSlot[idx] = _('select', { event: { change: e=>this.changePoster(e, idx) }})]),
+          _('td', {}, [this.accessorySlot[idx] = _('select', { event: { change: e=>this.changeAccessory(e, idx) }})]),
+        ])),
+      ),
+    ]))
+  }
+  fillPartySelect() {
+    removeAllChilds(this.partySelect)
+    this.parties.forEach((party, idx) => {
+      this.partySelect.appendChild(_('option', { value: idx }, [_('text', party.name)]))
+    })
+    this.partySelect.value = this.currentSelection
+  }
+  changeParty() {
+    const party = this.parties[this.currentSelection]
+    this.charaSlot.forEach((select, idx) => {
+      removeAllChilds(select)
+      select.appendChild(_('option', { value: -1 }, [_('text', ConstText.get('NOT_SELECTED'))]))
+      root.appState.characters.forEach((chara, charaIdx) => {
+        select.appendChild(_('option', { value: charaIdx }, [_('text', chara.fullCardName)]))
+      })
+      select.value = root.appState.characters.indexOf(party.characters[idx])
+    })
+    this.posterSlot.forEach((select, idx) => {
+      removeAllChilds(select)
+      select.appendChild(_('option', { value: -1 }, [_('text', ConstText.get('NOT_SELECTED'))]))
+      root.appState.posters.forEach((poster, posterIdx) => {
+        select.appendChild(_('option', { value: posterIdx }, [_('text', poster.fullPosterName)]))
+      })
+      select.value = root.appState.posters.indexOf(party.posters[idx])
+    })
+    this.accessorySlot.forEach((select, idx) => {
+      removeAllChilds(select)
+      select.appendChild(_('option', { value: -1 }, [_('text', ConstText.get('NOT_SELECTED'))]))
+      root.appState.accessories.forEach((accessory, accessoryIdx) => {
+        select.appendChild(_('option', { value: accessoryIdx }, [_('text', accessory.fullAccessoryName)]))
+      })
+      select.value = root.appState.accessories.indexOf(party.accessories[idx])
+    })
+    this.partyNameInput.value = this.parties[this.currentSelection].name
+  }
+
+  changeChara(e, idx) {
+    const party = this.parties[this.currentSelection]
+    party.characters[idx] = root.appState.characters[e.target.value] || null
+    root.update({ party: true })
+  }
+  changePoster(e, idx) {
+    const party = this.parties[this.currentSelection]
+    party.posters[idx] = root.appState.posters[e.target.value] || null
+    root.update({ party: true })
+  }
+  changeAccessory(e, idx) {
+    const party = this.parties[this.currentSelection]
+    party.accessories[idx] = root.appState.accessories[e.target.value] || null
+    root.update({ party: true })
+  }
+
+  update() {
+    this.changeParty()
+    // disable select same item in other slots
+    const charaSelected = this.charaSlot.map(i => i.value)
+    const posterSelected = this.posterSlot.map(i => i.value)
+    const accessorySelected = this.accessorySlot.map(i => i.value)
+    this.charaSlot.forEach((select, idx) => {
+      if (charaSelected[idx] === '-1') return
+      this.charaSlot.forEach((otherSelect, otherIdx) => {
+        if (idx === otherIdx) return
+        otherSelect.children[charaSelected[idx]*1+1].setAttribute('disabled', '')
+      })
+    })
+    this.posterSlot.forEach((select, idx) => {
+      if (posterSelected[idx] === '-1') return
+      this.posterSlot.forEach((otherSelect, otherIdx) => {
+        if (idx === otherIdx) return
+        otherSelect.children[posterSelected[idx]*1+1].setAttribute('disabled', '')
+      })
+    })
+    this.accessorySlot.forEach((select, idx) => {
+      if (accessorySelected[idx] === '-1') return
+      this.accessorySlot.forEach((otherSelect, otherIdx) => {
+        if (idx === otherIdx) return
+        otherSelect.children[accessorySelected[idx]*1+1].setAttribute('disabled', '')
+      })
+    })
+  }
+
+  toJSON() {
+    return [
+      this.parties.map(i => i.toJSON()),
+      this.currentSelection,
+    ]
+  }
+  static fromJSON(data) {
+    const manager = new PartyManager()
+    manager.parties = data[0].map(i => Party.fromJSON(i))
+    manager.currentSelection = data[1]
+    return manager
+  }
+}
+
 class ConstText {
   static language = 'zh'
 
@@ -1218,6 +1403,10 @@ class ConstText {
     CALC_TABLE_FINAL_STAT: '最终值',
     CALC_TOTAL_STAT: '总演技力：',
     CALC_BASE_SCORE: '基础分: ',
+
+    PARTY_DEFAULT_NAME: '队伍',
+    PARTY_DELETE_CONFIRM: '确定删除队伍吗？',
+    PARTY_DELETE_LAST: '最后一个队伍不能删除',
   }
 
   static get(key) {
@@ -1243,7 +1432,8 @@ class RootLogic {
     albumLevel: 0,
     albumExtra: [],
     theaterLevel: new TheaterLevelData(),
-    version: 2,
+    partyManager: new PartyManager(),
+    version: 3,
   }
   nonPersistentState = {
     characterOptions: {},
@@ -1270,6 +1460,7 @@ class RootLogic {
         this.highscoreCalcTabContent = _('div', {}, [
           _('text', 'スコアボーナス: '),
         ]),
+        this.partyManagerContainer = _('div'),
         this.calcResult = _('div'),
       ]),
       this.keikoCalcTabContent = _('div', {}, [
@@ -1461,6 +1652,8 @@ class RootLogic {
       removeAllChilds(this.photoEffectContainer)
       this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
       this.appState.theaterLevel = TheaterLevelData.fromJSON(data.theaterLevel)
+      this.appState.partyManager = PartyManager.fromJSON(data.partyManager)
+      this.appState.partyManager.init()
     }
     this.update({
       chara: true,
@@ -1474,6 +1667,10 @@ class RootLogic {
     if (data.version < 2) {
       data.version = 2
       data.theaterLevel = (new TheaterLevelData).toJSON()
+    }
+    if (data.version < 3) {
+      data.version = 3
+      data.partyManager = (new PartyManager).toJSON()
     }
   }
 
@@ -1592,6 +1789,9 @@ class RootLogic {
       (['Sirius', 'Eden', 'Gingaza', 'Denki']).forEach(i => {
         this.theaterLevelForm[i].value = this.appState.theaterLevel.getLevel(i)
       })
+    }
+    if (parts.chara || parts.poster || parts.album || parts.party) {
+      this.appState.partyManager.update()
     }
 
     this.keikoFillChara()
