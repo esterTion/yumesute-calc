@@ -783,12 +783,14 @@ class AccessoryData {
     if (!this.data) throw new Error(`Accessory ${id} not found`)
 
     if (!parent) return
-    this.node = parent.appendChild(_('div', {}, [
-      _('div', {}, [_('text', this.fullAccessoryName)]),
-      _('div', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
-      this.effectBox = _('div'),
-      this.randomEffectSelect = _('select', { event: { change: e=>this.setRandomEffect(e) } }),
-      _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
+    this.node = parent.appendChild(_('tbody', {}, [
+      _('tr', {}, [_('td', {}, [_('text', this.fullAccessoryName)]), _('td', { rowspan: 3, style: {textAlign: 'center', verticalAlign: 'top'} }, [_('span', {className: 'spriteatlas-accessories', 'data-id': this.id})])]),
+      _('tr', {}, [_('td', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })])]),
+      this.effectBox = _('tr'),
+      _('tr', {}, [
+        this.randomEffectSelect = _('select', { event: { change: e=>this.setRandomEffect(e) } }),
+        _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
+      ]),
     ]))
 
     this.mainEffects = this.data.FixedAccessoryEffects.map(i => new AccessoryEffectData(i, this.effectBox))
