@@ -784,7 +784,7 @@ class AccessoryData {
 
     if (!parent) return
     this.node = parent.appendChild(_('tbody', {}, [
-      _('tr', {}, [_('td', {}, [_('text', this.fullAccessoryName)]), _('td', { rowspan: 3, style: {textAlign: 'center', verticalAlign: 'top'} }, [_('span', {className: 'spriteatlas-accessories', 'data-id': this.id})])]),
+      _('tr', {}, [_('td', { rowspan: 4, style: {textAlign: 'center', verticalAlign: 'top'} }, [_('span', {className: 'spriteatlas-accessories', 'data-id': this.id})]), _('td', {}, [_('text', this.fullAccessoryName)])]),
       _('tr', {}, [_('td', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })])]),
       this.effectBox = _('tr'),
       _('tr', {}, [
