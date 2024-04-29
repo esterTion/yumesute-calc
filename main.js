@@ -231,7 +231,6 @@ class PerformanceUpEffect {
 }
 class BaseScoreUpEffect {
   static applyEffect(effect, calc, targets, type) {
-    if (!effect.conditionSatified(calc, idx)) return
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`BaseScoreUp calc type: ${effect.CalculationType}`)
     calc.passiveEffects.baseScoreUp += effect.activeEffect.Value
   }
@@ -269,7 +268,11 @@ class SenseData {
       case 'None': return ''
       case 'Alternative': {
         if (!members) return ''
-        return '?'
+        // 应该读SenseAlternative的，但是130380没有
+        // 反正只有szk是，直接查找kkn
+        const kokona = members.find(i => i && i.data.CharacterBaseMasterId === 101)
+        if (!kokona) return '?'
+        return kokona.sense.getType()
       }
     }
   }
@@ -1185,6 +1188,7 @@ class StatCalculator {
 class Party {
   constructor() {
     this.name = ConstText.get('PARTY_DEFAULT_NAME') + ' 1'
+    this.leader = null
     this.characters = [null,null,null,null,null]
     this.posters = [null,null,null,null,null]
     this.accessories = [null,null,null,null,null]
@@ -1196,6 +1200,7 @@ class Party {
       this.characters.map(i => root.appState.characters.indexOf(i)),
       this.posters.map(i => root.appState.posters.indexOf(i)),
       this.accessories.map(i => root.appState.accessories.indexOf(i)),
+      this.characters.indexOf(this.leader)
     ]
   }
   static fromJSON(data) {
@@ -1204,6 +1209,7 @@ class Party {
     party.characters = data[1].map(i => root.appState.characters[i] || null)
     party.posters = data[2].map(i => root.appState.posters[i] || null)
     party.accessories = data[3].map(i => root.appState.accessories[i] || null)
+    party.leader = party.characters[data[4]]
     return party
   }
 }
@@ -1228,6 +1234,7 @@ class PartyManager {
       this.currentSelection = this.parties.length - 1
     }
     this.fillPartySelect()
+    root.update({ party: true })
   }
 
   init() {
@@ -1250,6 +1257,7 @@ class PartyManager {
 
     this.fillPartySelect()
 
+    this.leaderSelection = []
     this.charaSlot = []
     this.posterSlot = []
     this.accessorySlot = []
@@ -1257,12 +1265,14 @@ class PartyManager {
     this.partyTable = container.appendChild(_('table', {}, [
       _('thead', {}, [
         _('tr', {}, [
+          _('th'),
           _('th', {}, [_('text', ConstText.get('TAB_CHARA'))]),
           _('th', {}, [_('text', ConstText.get('TAB_POSTER'))]),
           _('th', {}, [_('text', ConstText.get('TAB_ACCESSORY'))]),
         ]),
       ]),
       _('tbody', {}, Array(5).fill(0).map((__, idx) => _('tr', {}, [
+          _('td', {}, [this.leaderSelection[idx] = _('input', { type: 'radio', name: 'leader', event: { change: e=>this.changeLeader(e, idx) }})]),
           _('td', {}, [this.charaSlot[idx] = _('select', { event: { change: e=>this.changeChara(e, idx) }})]),
           _('td', {}, [this.posterSlot[idx] = _('select', { event: { change: e=>this.changePoster(e, idx) }})]),
           _('td', {}, [this.accessorySlot[idx] = _('select', { event: { change: e=>this.changeAccessory(e, idx) }})]),
@@ -1279,6 +1289,9 @@ class PartyManager {
   }
   changeParty() {
     const party = this.parties[this.currentSelection]
+    this.leaderSelection.forEach((select, idx) => {
+      select.checked = null !== party.leader && party.characters[idx] === party.leader
+    })
     this.charaSlot.forEach((select, idx) => {
       removeAllChilds(select)
       select.appendChild(_('option', { value: -1 }, [_('text', ConstText.get('NOT_SELECTED'))]))
@@ -1286,6 +1299,9 @@ class PartyManager {
         select.appendChild(_('option', { value: charaIdx }, [_('text', chara.fullCardName)]))
       })
       select.value = root.appState.characters.indexOf(party.characters[idx])
+      const senseLane = root.senseBox.children[idx]
+      if (!senseLane) return
+      senseLane.dataset.senseType = party.characters[idx] === null ? '' : party.characters[idx].sense.getType(party.characters)
     })
     this.posterSlot.forEach((select, idx) => {
       removeAllChilds(select)
@@ -1321,6 +1337,15 @@ class PartyManager {
     party.accessories[idx] = root.appState.accessories[e.target.value] || null
     root.update({ party: true })
   }
+  changeLeader(e, idx) {
+    const party = this.parties[this.currentSelection]
+    this.leaderSelection.forEach((select, otherIdx) => {
+      if (idx === otherIdx) return
+      select.checked = false
+    })
+    party.leader = party.characters[idx]
+    root.update({ party: true })
+  }
 
   update() {
     this.changeParty()
@@ -1330,9 +1355,14 @@ class PartyManager {
     const accessorySelected = this.accessorySlot.map(i => i.value)
     this.charaSlot.forEach((select, idx) => {
       if (charaSelected[idx] === '-1') return
+      const charaId = root.appState.characters[charaSelected[idx]].data.CharacterBaseMasterId
       this.charaSlot.forEach((otherSelect, otherIdx) => {
         if (idx === otherIdx) return
-        otherSelect.children[charaSelected[idx]*1+1].setAttribute('disabled', '')
+        root.appState.characters.forEach((chara, charaIdx) => {
+          if (chara.data.CharacterBaseMasterId === charaId) {
+            otherSelect.children[charaIdx+1].setAttribute('disabled', '')
+          }
+        })
       })
     })
     this.posterSlot.forEach((select, idx) => {
@@ -1769,6 +1799,8 @@ class RootLogic {
           this.nonPersistentState.characterOptions[i.Id].setAttribute('disabled', '')
         }
       })
+
+      this.keikoFillChara()
     }
 
     if (parts.poster) {
@@ -1796,8 +1828,6 @@ class RootLogic {
       this.appState.partyManager.update()
     }
 
-    this.keikoFillChara()
-
     } catch (e) {
       window.error_message.textContent = [e.toString(), e.stack].join('\n')
       window.scrollTo(0, 0)
@@ -1821,7 +1851,7 @@ class RootLogic {
       .map(lane => lane.sort((a,b) => a.TimingSecond - b.TimingSecond)
         .reduce((acc, cur) => ([Math.min(acc[0], cur.TimingSecond - acc[1]), cur.TimingSecond]), [Infinity, -Infinity])[0])
       .forEach((i, idx) => this.senseBox.children[idx].children[0].textContent = i === Infinity ? 'N/A' : i)
-    //
+    this.update({ party: true })
   }
 
   keikoFillChara() {
