@@ -192,6 +192,7 @@ class Effect {
       case 'ConcentrationUp': { return ConcentrationUpEffect.applyEffect(this, calc, targets, type) }
       case 'PerformanceUp': { return PerformanceUpEffect.applyEffect(this, calc, targets, type) }
       case 'BaseScoreUp': { return BaseScoreUpEffect.applyEffect(this, calc, targets, type) }
+      case 'SenseRecastDown': { return SenseRecastDown.applyEffect(this, calc, targets, type) }
       default: {console.log(this.Type, index)}
     }
   }
@@ -233,6 +234,15 @@ class BaseScoreUpEffect {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`BaseScoreUp calc type: ${effect.CalculationType}`)
     calc.passiveEffects.baseScoreUp += effect.activeEffect.Value
+  }
+}
+class SenseRecastDown {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`SenseRecastDown calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.members[idx].sense.recastDown.push(effect.activeEffect.Value)
+    })
   }
 }
 
@@ -280,7 +290,7 @@ class SenseData {
     this.recastDown = []
   }
   get ct() {
-    return this.CoolTime - this.recastDown.reduce((acc, cur) => acc + cur, 0)
+    return Math.max(1, this.CoolTime - this.recastDown.reduce((acc, cur) => acc + cur, 0))
   }
   get scoreUp() {
     return (this.AcquirableScorePercent + (this.level- 1) * this.ScoreUpPerLevel) / 100
@@ -995,6 +1005,11 @@ class StatBonus {
   static Concentration = 2;
   static Performance = 3;
 }
+class ScoreCalculationType {
+  static Normal = 'Normal';
+  static HighScoreChallenge = 'HighScoreChallenge';
+  static Keiko = 'Keiko';
+}
 class ScoreCalculator {
   constructor(members, posters, accessories, extra) {
     this.members = members;
@@ -1019,9 +1034,13 @@ class ScoreCalculator {
     })
     this.properties.companyCount = (new Set(this.properties.company.filter(i => i!==null))).size;
     this.properties.attributeCount = (new Set(this.properties.attribute.filter(i => i!==null))).size;
+
+    this.liveSim = new LiveSimulator(this)
   }
   calc(node) {
     removeAllChilds(node)
+
+    this.members.forEach(i => i && i.sense.resetRecastDown())
 
     const passiveEffects = this.passiveEffects
     Object.values(GameDb.AlbumEffect).forEach(i => {
@@ -1080,6 +1099,13 @@ class ScoreCalculator {
       _('text', `${baseScore[0]} / ${baseScore[1]} / ${baseScore[2]} / ${baseScore[3]}`)
     ]))
 
+    this.liveSim.runSimulation()
+
+    if (this.extra.type === ScoreCalculationType.Keiko) {
+      ConstText.fillText()
+      return;
+    }
+
     ConstText.fillText()
 
     console.log(this)
@@ -1126,6 +1152,18 @@ class ScoreCalculator {
         ])]),
       ])
     ]))))
+  }
+}
+class LiveSimulator {
+  constructor(calc) {
+    this.calc = calc
+    this.senseTiming = GameDb.SenseNotation[root.senseNoteSelect.value | 0]
+    if (!this.senseTiming) throw new Error('Sense timeline not found')
+    this.lastSenseTime = new Array(5).fill(0)
+  }
+  runSimulation() {
+    this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
+    console.log(this.senseCt)
   }
 }
 class StatCalculator {
@@ -1218,8 +1256,11 @@ class PartyManager {
     this.parties = [new Party()]
     this.currentSelection = 0
   }
+  get currentParty() {
+    return this.parties[this.currentSelection]
+  }
   addParty() {
-    let currentParty = this.parties[this.currentSelection]
+    let currentParty = this.currentParty
     let cloneParty = Party.fromJSON(currentParty.toJSON())
     cloneParty.name = `${ConstText.get('PARTY_DEFAULT_NAME')} ${this.parties.length + 1}`
     this.parties.push(cloneParty)
@@ -1288,7 +1329,7 @@ class PartyManager {
     this.partySelect.value = this.currentSelection
   }
   changeParty() {
-    const party = this.parties[this.currentSelection]
+    const party = this.currentParty
     this.leaderSelection.forEach((select, idx) => {
       select.checked = null !== party.leader && party.characters[idx] === party.leader
     })
@@ -1524,19 +1565,19 @@ class RootLogic {
         _('div', {'data-text-key':'THEATER_LEVEL_LABEL'}),
         this.theaterLevelForm = _('form', { event: { change: e=>this.setTheaterLevel(e) }}, [
           _('div', {}, [
-            _('select', { name: 'Sirius' }, ([0,1,2,3,4]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Sirius' }, ([0,1,2,3,4,5]).map(i => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'SIRIUS' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Eden' }, ([0,1,2,3,4]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Eden' }, ([0,1,2,3,4,5]).map(i => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'EDEN' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Gingaza' }, ([0,1,2,3,4]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Gingaza' }, ([0,1,2,3,4,5]).map(i => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'GINGAZA' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Denki' }, ([0,1,2,3,4]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Denki' }, ([0,1,2,3,4,5]).map(i => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'DENKI' }),
           ]),
         ])
@@ -1544,7 +1585,7 @@ class RootLogic {
 
       _('div', {className: 'margin-box'}),
 
-      this.tabSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
+      this.tabSelectForm = _('form', { style: { display: 'flex', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.8)', padding: '10px 0' }, event: {change: _=>this.changeTab()}}, [
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'character' }), _('span', {'data-text-key': 'TAB_CHARA'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'poster' }), _('span', {'data-text-key': 'TAB_POSTER'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'accessory' }), _('span', {'data-text-key': 'TAB_ACCESSORY'})]),
@@ -1828,6 +1869,29 @@ class RootLogic {
       this.appState.partyManager.update()
     }
 
+    if ('keiko' === this.calcTypeSelectForm.tab.value) {
+      if (parts.chara || parts.album || parts.theaterLevel) {
+        this.keikoCalcResult()
+      }
+    } else {
+      if (parts.chara || parts.poster || parts.album || parts.theaterLevel || parts.party) {
+        const party = this.appState.partyManager.currentParty
+        const extra = {
+          albumLevel: this.appState.albumLevel,
+          albumExtra: this.appState.albumExtra,
+          type: ScoreCalculationType.Normal,
+        }
+
+        if ('highscore' === this.calcTypeSelectForm.tab.value) {
+          extra.type = ScoreCalculationType.Highscore
+          // extra.highscoreBonus = ...
+        }
+
+        const calc = new ScoreCalculator(party.characters, party.posters, party.accessories, extra)
+        calc.calc(this.keikoResult)
+      }
+    }
+
     } catch (e) {
       window.error_message.textContent = [e.toString(), e.stack].join('\n')
       window.scrollTo(0, 0)
@@ -1875,7 +1939,6 @@ class RootLogic {
       let idx = this.appState.characters.indexOf(this.keikoSelection[i])
       this.keikoBox.children[i].value = idx > -1 && this.keikoSelection[i].data.CharacterBaseMasterId == keikoCharaId ? idx : ''
     }
-    this.keikoCalcResult()
   }
   keikoSelection = []
   keikoCalcResult() {
@@ -1900,6 +1963,7 @@ class RootLogic {
       albumLevel: this.appState.albumLevel,
       albumExtra: this.appState.albumExtra,
       starRankScoreBonus: this.appState.characterStarRank.get(keikoCharaId),
+      type: ScoreCalculationType.Keiko,
     })
     calc.calc(this.keikoResult)
 
