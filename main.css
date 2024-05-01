@@ -121,3 +121,8 @@ table.stat-details {
 table.stat-details td {
   padding: 4px 10px;
 }
+
+.live-log-phase {
+  white-space: pre-wrap;
+  margin-bottom: .8em;
+}

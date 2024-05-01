@@ -193,7 +193,14 @@ class Effect {
       case 'PerformanceUp': { return PerformanceUpEffect.applyEffect(this, calc, targets, type) }
       case 'BaseScoreUp': { return BaseScoreUpEffect.applyEffect(this, calc, targets, type) }
       case 'SenseRecastDown': { return SenseRecastDown.applyEffect(this, calc, targets, type) }
-      default: {console.log(this.Type, index)}
+      case 'DecreaseRequireSupportLight': { return DecreaseRequireSupportLight.applyEffect(this, calc, targets, type) }
+      case 'DecreaseRequireControlLight': { return DecreaseRequireControlLight.applyEffect(this, calc, targets, type) }
+      case 'DecreaseRequireAmplificationLight': { return DecreaseRequireAmplificationLight.applyEffect(this, calc, targets, type) }
+      case 'DecreaseRequireSpecialLight': { return DecreaseRequireSpecialLight.applyEffect(this, calc, targets, type) }
+      case 'LifeHealing': { return LifeHealing.applyEffect(this, calc, targets, type) }
+      case 'PrincipalGaugeGain': { return PrincipalGaugeGain.applyEffect(this, calc, targets, type) }
+      case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, targets, type) }
+      default: {console.log(this.Type, this.FireTimingType, index)}
     }
   }
 
@@ -243,6 +250,60 @@ class SenseRecastDown {
       if (!effect.conditionSatified(calc, idx)) return
       calc.members[idx].sense.recastDown.push(effect.activeEffect.Value)
     })
+  }
+}
+class DecreaseRequireSupportLight {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`DecreaseRequireSupportLight calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.members[idx].staract.requireDecrease[0] += effect.activeEffect.Value
+    })
+  }
+}
+class DecreaseRequireControlLight {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`DecreaseRequireControlLight calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.members[idx].staract.requireDecrease[1] += effect.activeEffect.Value
+    })
+  }
+}
+class DecreaseRequireAmplificationLight {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`DecreaseRequireAmplificationLight calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.members[idx].staract.requireDecrease[2] += effect.activeEffect.Value
+    })
+  }
+}
+class DecreaseRequireSpecialLight {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`DecreaseRequireSpecialLight calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.members[idx].staract.requireDecrease[3] += effect.activeEffect.Value
+    })
+  }
+}
+class LifeHealing {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`LifeHealing calc type: ${effect.CalculationType}`)
+    calc.liveSim.addLife(effect.activeEffect.Value)
+  }
+}
+class PrincipalGaugeGain {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`PrincipalGaugeGain calc type: ${effect.CalculationType}`)
+    calc.liveSim.addPGauge(effect.activeEffect.Value)
+  }
+}
+class PrincipalGaugeLimitUp {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`PrincipalGaugeLimitUp calc type: ${effect.CalculationType}`)
+    calc.liveSim.addPGaugeLimit(effect.activeEffect.Value)
   }
 }
 
@@ -334,7 +395,7 @@ class StarActData {
     this.requireDecrease = [0,0,0,0]
   }
   get actualRequirements() {
-    return this.requirements.map((req, i) => req - this.requireDecrease[i])
+    return this.requirements.map((req, i) => (req > 0 ? Math.max(1, req - this.requireDecrease[i]) : 0))
   }
   clone() {
     const staract = new StarActData(this.id, this.level)
@@ -1040,13 +1101,21 @@ class ScoreCalculator {
   calc(node) {
     removeAllChilds(node)
 
-    this.members.forEach(i => i && i.sense.resetRecastDown())
+    if (this.extra.type === ScoreCalculationType.Keiko) {
+      this.extra.leader = this.members.find(i => i)
+    }
+    const leader = this.extra.leader;
+    if (!leader) {
+      // 没有队长
+      return
+    }
+
+    this.members.forEach(i => i && (i.sense.resetRecastDown(), i.staract.resetRequireDecrease()))
 
     const passiveEffects = this.passiveEffects
     Object.values(GameDb.AlbumEffect).forEach(i => {
       if (this.extra.albumLevel < i.Level) return
       const effect = Effect.get(i.EffectMasterId, 1)
-      if (effect.FireTimingType !== 'Passive') return
       if (!effect.canTrigger(this, -1)) return
       passiveEffects.album.push({effect, source:-1})
     })
@@ -1099,12 +1168,20 @@ class ScoreCalculator {
       _('text', `${baseScore[0]} / ${baseScore[1]} / ${baseScore[2]} / ${baseScore[3]}`)
     ]))
 
-    this.liveSim.runSimulation()
-
     if (this.extra.type === ScoreCalculationType.Keiko) {
       ConstText.fillText()
       return;
     }
+
+    this.liveSim.baseScore = baseScore[3]
+
+    this.liveSim.starActRequirements = leader.staract.actualRequirements
+    node.appendChild(_('div', {}, [
+      _('span', { 'data-text-key': 'CALC_STAR_ACT_REQUIREMENTS'}),
+      this.createStarActDisplay(this.liveSim.starActRequirements),
+    ]))
+
+    this.liveSim.runSimulation(node)
 
     ConstText.fillText()
 
@@ -1153,17 +1230,76 @@ class ScoreCalculator {
       ])
     ]))))
   }
+  createStarActDisplay(data) {
+    return _('span', {}, [
+      _('span', { className: 'sense-star', style: { display: data[0] > 0 ? '' : 'none' }, 'data-sense-type': 'support'}, [_('text', data[0])]),
+      _('span', { className: 'sense-star', style: { display: data[1] > 0 ? '' : 'none' }, 'data-sense-type': 'control'}, [_('text', data[1])]),
+      _('span', { className: 'sense-star', style: { display: data[2] > 0 ? '' : 'none' }, 'data-sense-type': 'amplification'}, [_('text', data[2])]),
+      _('span', { className: 'sense-star', style: { display: data[3] > 0 ? '' : 'none' }, 'data-sense-type': 'special'}, [_('text', data[3])]),
+    ])
+  }
 }
 class LiveSimulator {
+  /**
+   * @type {ScoreCalculator}
+   */
+  calc;
+  /**
+   * @type {number[]}
+   * @description sense发动冷却
+   */
+  senseTiming;
+  /**
+   * @type {number[]}
+   * @description sense上次发动时间
+   */
+  lastSenseTime;
+  /**
+   * @type {number}
+   * @description 基础分（海报按当前分加分计算用，反正在不拿谱面的情况下算不准，为了简化计算只存stella分数）
+   */
+  baseScore;
+  starActRequirements;
+  starActCurrent;
+  life;
+  pGauge;
+  pGaugeLimit;
+  phase;
+  phaseLog;
+
   constructor(calc) {
     this.calc = calc
     this.senseTiming = GameDb.SenseNotation[root.senseNoteSelect.value | 0]
     if (!this.senseTiming) throw new Error('Sense timeline not found')
     this.lastSenseTime = new Array(5).fill(0)
+    this.baseScore = 0
+    this.life = 1000
+    this.pGauge = 0
+    this.pGaugeLimit = 1000
+    this.phase = ConstText.get('LIVE_PHASE_START')
+    this.phaseLog = []
   }
-  runSimulation() {
+  runSimulation(node) {
     this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
-    console.log(this.senseCt)
+    node.appendChild(_('details', { className: 'live-log-phase' }, [
+      _('summary', {}, [_('text', this.phase)]),
+      _('text', this.phaseLog.join('\n'))
+    ]))
+    this.phaseLog = []
+    console.log(this)
+  }
+
+  addLife(amount) {
+    this.life += amount
+    this.phaseLog.push(ConstText.get('LIVE_LOG_LIFE').replace('{0}', amount).replace('{1}', this.life))
+  }
+  addPGauge(amount) {
+    this.pGauge += amount
+    this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE').replace('{0}', amount).replace('{1}', this.pGauge).replace('{2}', this.pGaugeLimit))
+  }
+  addPGaugeLimit(amount) {
+    this.pGaugeLimit += amount
+    this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE_LIMIT').replace('{0}', amount).replace('{1}', this.pGauge).replace('{2}', this.pGaugeLimit))
   }
 }
 class StatCalculator {
@@ -1285,7 +1421,7 @@ class PartyManager {
     container.appendChild(_('div', {}, [
       this.partySelect = _('select', { event: { change: e=>{
         this.currentSelection = e.target.value
-        this.changeParty(e)
+        root.update({ party: true })
       } }}),
       _('input', { type: 'button', value: ConstText.get('ADD'), event: { click: _=>this.addParty() }}),
       _('input', { type: 'button', value: ConstText.get('DELETE'), event: { click: _=>this.removeParty() }}),
@@ -1365,7 +1501,14 @@ class PartyManager {
 
   changeChara(e, idx) {
     const party = this.parties[this.currentSelection]
+    const prevLeaderIdx = party.characters.indexOf(party.leader)
     party.characters[idx] = root.appState.characters[e.target.value] || null
+    if (prevLeaderIdx === idx) {
+      party.leader = null
+      if (e.target.value !== '-1') {
+        party.leader = party.characters[idx]
+      }
+    }
     root.update({ party: true })
   }
   changePoster(e, idx) {
@@ -1476,6 +1619,12 @@ class ConstText {
     CALC_TABLE_FINAL_STAT: '最终值',
     CALC_TOTAL_STAT: '总演技力：',
     CALC_BASE_SCORE: '基础分: ',
+    CALC_STAR_ACT_REQUIREMENTS: 'StarAct需求：',
+
+    LIVE_PHASE_START: '开场前：',
+    LIVE_LOG_LIFE: '生命值变化：{0} => {1}/1000',
+    LIVE_LOG_PGUAGE: 'P槽变化：{0} => {1}/{2}',
+    LIVE_LOG_PGUAGE_LIMIT: 'P槽上限变化：{0} => {1}/{2}',
 
     PARTY_DEFAULT_NAME: '队伍',
     PARTY_DELETE_CONFIRM: '确定删除队伍吗？',
@@ -1879,6 +2028,7 @@ class RootLogic {
         const extra = {
           albumLevel: this.appState.albumLevel,
           albumExtra: this.appState.albumExtra,
+          leader: party.leader,
           type: ScoreCalculationType.Normal,
         }
 
@@ -1888,7 +2038,7 @@ class RootLogic {
         }
 
         const calc = new ScoreCalculator(party.characters, party.posters, party.accessories, extra)
-        calc.calc(this.keikoResult)
+        calc.calc(this.calcResult)
       }
     }
 
@@ -1966,8 +2116,6 @@ class RootLogic {
       type: ScoreCalculationType.Keiko,
     })
     calc.calc(this.keikoResult)
-
-    //this.keikoResult.textContent = calc.result.baseScore.join(' ')
   }
 }
 
