@@ -200,6 +200,11 @@ class Effect {
       case 'LifeHealing': { return LifeHealing.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeGain': { return PrincipalGaugeGain.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, targets, type) }
+
+      case 'SenseAlternative': { return }
+      case 'RewardUp': { return }
+      case 'SenseScoreUp': { return SenseScoreUp.applyEffect(this, calc, targets, type) }
+      case 'ScoreUpByHighLife': { return ScoreUpByHighLife.applyEffect(this, calc, targets, type) }
       default: {console.log(this.Type, this.FireTimingType, index)}
     }
   }
@@ -306,6 +311,33 @@ class PrincipalGaugeLimitUp {
     calc.liveSim.addPGaugeLimit(effect.activeEffect.Value)
   }
 }
+class SenseScoreUp {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`SenseScoreUp calc type: ${effect.CalculationType}`)
+    const bonus = 1 + 0.0001 * effect.activeEffect.Value
+    calc.liveSim.activeBuff.sense.push({
+      targets,
+      effect,
+      bonus,
+      lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+    })
+  }
+}
+class ScoreUpByHighLife {
+  static LifeCap = 3000
+  static PowerValue = 1.25
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`ScoreUpByHighLife calc type: ${effect.CalculationType}`)
+    const life = Math.min(calc.liveSim.life, ScoreUpByHighLife.LifeCap)
+    const bonus = 1 + 0.0001 * effect.activeEffect.Value * Math.pow(life / ScoreUpByHighLife.LifeCap, ScoreUpByHighLife.PowerValue)
+    calc.liveSim.activeBuff.sense.push({
+      targets,
+      effect,
+      bonus,
+      lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+    })
+  }
+}
 
 class EpisodeReadState {
   static None = 0;
@@ -359,6 +391,36 @@ class SenseData {
   get gaugeUp() {
     return this.AcquirableGauge
   }
+
+  getActiveBranch(liveSim) {
+    const branches = this.data.Branches
+    let result = null
+    for (let branch of branches) {
+      let conditionMet = true
+      if (this.data.BranchCondition1 !== 'None') {
+        switch (this.data.BranchCondition1) {
+          case 'LifeGuardCount':
+          default: { console.log(`Sense branch condition ${this.data.BranchCondition1}`); return null }
+        }
+        switch (branch.JudgeType1) {
+          case 'Equal':
+          case 'MoreThan':
+          case 'LessThan':
+        }
+      }
+      if (this.data.BranchCondition2 !== 'None') {
+        switch (this.data.BranchCondition2) {
+          default: { console.log(`Sense branch condition ${this.data.BranchCondition2}`); return null }
+        }
+      }
+      if (conditionMet) {
+        result = branch
+        break
+      }
+    }
+    return result
+  }
+
   clone() {
     const sense = new SenseData(this.id, this.level)
     sense.recastDown = this.recastDown.slice()
@@ -1147,6 +1209,25 @@ class ScoreCalculator {
       statExtra = 1 + this.extra.starRankScoreBonus * 30 / 100
     }
 
+    if (this.extra.type !== ScoreCalculationType.Keiko) {
+      const notation = GameDb.SenseNotation[root.senseNoteSelect.value | 0]
+      if (notation && notation.Buffs[0]) {
+        const notationBuff = notation.Buffs[0]
+        for (let i=0; i<5; i++) {
+          if (!this.members[i]) continue
+          let isBuffTarget = false
+          switch (notationBuff.Type) {
+            case "Attribute": { isBuffTarget = this.members[i].data.Attribute === AttributeEnum[notationBuff.TargetValue]; break;}
+            case "Company":   { isBuffTarget = GameDb.CharacterBase[this.members[i].data.CharacterBaseMasterId].CompanyMasterId === notationBuff.TargetValue; break;}
+            case "Character": { isBuffTarget = this.members[i].data.CharacterBaseMasterId === notationBuff.TargetValue; break;}
+          }
+          if (isBuffTarget) {
+            this.stat.buffAfterCalc[i][StatBonus.Performance] += notationBuff.BuffValue * 100
+          }
+        }
+      }
+    }
+
     this.stat.calc()
 
     const baseScore = [0.95, 0.97, 1, 1.05].map(coef => Math.floor(Math.floor(this.stat.finalTotal * statExtra) * 10 * (1 + passiveEffects.baseScoreUp/10000) * coef))
@@ -1173,19 +1254,32 @@ class ScoreCalculator {
       return;
     }
 
+    if (this.members.some(i => !i)) {
+      return
+    }
+
+    const senseScoreNode = node.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_SENSE_SCORE'})]))
+    const starActScoreNode = node.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_STARACT_SCORE'})]))
+    const totalScoreNode = node.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_TOTAL_SCORE'})]))
+
     this.liveSim.baseScore = baseScore[3]
 
+    this.liveSim.leader = leader
     this.liveSim.starActRequirements = leader.staract.actualRequirements
     node.appendChild(_('div', {}, [
       _('span', { 'data-text-key': 'CALC_STAR_ACT_REQUIREMENTS'}),
-      this.createStarActDisplay(this.liveSim.starActRequirements),
+      ScoreCalculator.createStarActDisplay(this.liveSim.starActRequirements),
     ]))
 
     this.liveSim.runSimulation(node)
 
-    ConstText.fillText()
+    let finalSenseScore = this.result.senseScore.reduce((acc, cur) => acc + cur, 0)
+    let finalStarActScore = this.result.starActScore.reduce((acc, cur) => acc + cur, 0)
+    senseScoreNode.appendChild(_('text', finalSenseScore))
+    starActScoreNode.appendChild(_('text', finalStarActScore))
+    totalScoreNode.appendChild(_('text', this.result.baseScore.map(i => i + finalSenseScore + finalStarActScore).join(' / ')))
 
-    console.log(this)
+    ConstText.fillText()
   }
   createStatDetailsTable() {
     let rowNumber;
@@ -1230,12 +1324,13 @@ class ScoreCalculator {
       ])
     ]))))
   }
-  createStarActDisplay(data) {
+  static createStarActDisplay(data, alwaysShow = false) {
     return _('span', {}, [
-      _('span', { className: 'sense-star', style: { display: data[0] > 0 ? '' : 'none' }, 'data-sense-type': 'support'}, [_('text', data[0])]),
-      _('span', { className: 'sense-star', style: { display: data[1] > 0 ? '' : 'none' }, 'data-sense-type': 'control'}, [_('text', data[1])]),
-      _('span', { className: 'sense-star', style: { display: data[2] > 0 ? '' : 'none' }, 'data-sense-type': 'amplification'}, [_('text', data[2])]),
-      _('span', { className: 'sense-star', style: { display: data[3] > 0 ? '' : 'none' }, 'data-sense-type': 'special'}, [_('text', data[3])]),
+      _('span', { className: 'sense-star', style: { display: (data[0] > 0 || alwaysShow) ? '' : 'none' }, 'data-sense-type': 'support'}, [_('text', data[0])]),
+      _('span', { className: 'sense-star', style: { display: (data[1] > 0 || alwaysShow) ? '' : 'none' }, 'data-sense-type': 'control'}, [_('text', data[1])]),
+      _('span', { className: 'sense-star', style: { display: (data[2] > 0 || alwaysShow) ? '' : 'none' }, 'data-sense-type': 'amplification'}, [_('text', data[2])]),
+      _('span', { className: 'sense-star', style: { display: (data[3] > 0 || alwaysShow) ? '' : 'none' }, 'data-sense-type': 'special'}, [_('text', data[3])]),
+      _('span', { className: 'sense-star', style: { display: (data[4] > 0 || alwaysShow) ? '' : 'none' }, 'data-sense-type': 'variable'}, [_('text', data[4])]),
     ])
   }
 }
@@ -1248,6 +1343,7 @@ class LiveSimulator {
    * @type {number[]}
    * @description sense发动冷却
    */
+  senseCt;
   senseTiming;
   /**
    * @type {number[]}
@@ -1266,40 +1362,197 @@ class LiveSimulator {
   pGaugeLimit;
   phase;
   phaseLog;
+  pendingActions;
+  currentTiming;
+  activeBuff;
 
   constructor(calc) {
     this.calc = calc
     this.senseTiming = GameDb.SenseNotation[root.senseNoteSelect.value | 0]
     if (!this.senseTiming) throw new Error('Sense timeline not found')
-    this.lastSenseTime = new Array(5).fill(0)
+    this.senseTiming = this.senseTiming.Details.slice()
+    this.senseTiming.sort((a,b) => a.TimingSecond - b.TimingSecond)
+    this.lastSenseTime = new Array(5).fill(-100)
+    this.skipSense = new Array(5).fill(false)
     this.baseScore = 0
     this.life = 1000
     this.pGauge = 0
     this.pGaugeLimit = 1000
     this.phase = ConstText.get('LIVE_PHASE_START')
     this.phaseLog = []
+    this.pendingActions = []
+    this.activeBuff = { sense: [], starAct: [] }
   }
   runSimulation(node) {
+    this.applyPendingActions()
     this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
-    node.appendChild(_('details', { className: 'live-log-phase' }, [
+    node.appendChild(_('details', { className: 'live-log-phase odd-row' }, [
       _('summary', {}, [_('text', this.phase)]),
       _('text', this.phaseLog.join('\n'))
     ]))
-    this.phaseLog = []
-    console.log(this)
+
+    this.starActCurrent = [0,0,0,0,0]
+    let oddRow = false
+    this.senseTiming.forEach(timing => {
+      this.currentTiming = timing.TimingSecond
+      this.currentSenseType = 'none';
+      this.purgeExpiredBuff(timing.TimingSecond)
+      this.phase = ConstText.get('LIVE_PHASE_SENSE').replace('{time}', timing.TimingSecond)
+      this.phaseLog = []
+      if (!this.trySense(timing)) {
+        this.starActCurrent = [0,0,0,0,0]
+      } else {
+        this.lastSenseTime[timing.Position - 1] = timing.TimingSecond
+      }
+
+      if (this.tryStarAct()) {
+        this.phase = ConstText.get('LIVE_PHASE_SENSE_WITH_STARACT').replace('{time}', timing.TimingSecond)
+        this.starActCurrent = [0,0,0,0,0]
+      }
+      node.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : ''), open: '' }, [
+        _('summary', { className: 'sense-star', 'data-sense-type': this.currentSenseType }, [_('text', this.phase)]),
+        _('text', this.phaseLog.join('\n'))
+      ])).appendChild(_('div', {}, [ScoreCalculator.createStarActDisplay(this.starActCurrent, true)]))
+
+      oddRow = !oddRow
+    })
   }
 
-  addLife(amount) {
+  applyPendingActions() {
+    let action
+    while (action = this.pendingActions.shift()) {
+      action()
+    }
+  }
+  addLife(amount, immediateAction = false) {
+    if (!immediateAction) {
+      this.pendingActions.push(() => this.addLife(amount, true))
+      return
+    }
     this.life += amount
     this.phaseLog.push(ConstText.get('LIVE_LOG_LIFE').replace('{0}', amount).replace('{1}', this.life))
   }
-  addPGauge(amount) {
+  addPGauge(amount, immediateAction = false) {
+    if (!immediateAction) {
+      this.pendingActions.push(() => this.addPGauge(amount, true))
+      return
+    }
     this.pGauge += amount
+    this.pGauge = Math.min(this.pGauge, this.pGaugeLimit)
     this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE').replace('{0}', amount).replace('{1}', this.pGauge).replace('{2}', this.pGaugeLimit))
   }
-  addPGaugeLimit(amount) {
+  addPGaugeLimit(amount, immediateAction = false) {
+    if (!immediateAction) {
+      this.pendingActions.push(() => this.addPGaugeLimit(amount, true))
+      return
+    }
     this.pGaugeLimit += amount
     this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE_LIMIT').replace('{0}', amount).replace('{1}', this.pGauge).replace('{2}', this.pGaugeLimit))
+  }
+  addSenseLight(type, amount = 1) {
+    switch (type) {
+      case 'Support':       { this.starActCurrent[0] += amount; break }
+      case 'Control':       { this.starActCurrent[1] += amount; break }
+      case 'Amplification': { this.starActCurrent[2] += amount; break }
+      case 'Special':       { this.starActCurrent[3] += amount; break }
+      case 'Variable':      { this.starActCurrent[4] += amount; break }
+    }
+    for (let i=0; i<4; i++) {
+      this.starActCurrent[i] = Math.min(this.starActCurrent[i], this.starActRequirements[i])
+    }
+  }
+  trySense(timing) {
+    let idx = timing.Position - 1
+    // irh或电姬团报 跳过
+    if (this.skipSense[idx]) {
+      this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_SKIP'))
+      return true
+    }
+    let chara = this.calc.members[idx]
+    if (chara.data.CharacterBaseMasterId === 102) {
+      // 发动加分效果
+      chara.sense.data.PreEffects.forEach(effect => {
+        effect = Effect.get(effect.EffectMasterId, chara.senselv)
+        effect.applyEffect(this.calc, idx, null)
+      })
+      chara = this.calc.members.find(i => i && i.data.CharacterBaseMasterId === 101)
+      if (!chara) {
+        // szk发动但没有kkn时，始终失败
+        this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_FAILED'))
+        return false
+      }
+      idx = this.calc.members.indexOf(chara)
+    }
+    const sense = chara.sense
+    const ct = this.senseCt[idx]
+    const timeSinceLast = timing.TimingSecond - this.lastSenseTime[idx]
+    if (ct > timeSinceLast) {
+      this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_FAILED'))
+      return false
+    }
+
+    sense.data.PreEffects.forEach(effect => {
+      effect = Effect.get(effect.EffectMasterId, chara.senselv)
+      effect.applyEffect(this.calc, idx, null)
+    })
+    const senseEffectBranch = sense.getActiveBranch(this)
+    if (senseEffectBranch) {
+      senseEffectBranch.BranchEffects.forEach(effect => {
+        effect = Effect.get(effect.EffectMasterId, chara.senselv)
+        effect.applyEffect(this.calc, idx, null)
+      })
+    }
+    this.currentSenseType = sense.Type.toLowerCase();
+    this.addSenseLight(sense.Type, sense.data.LightCount)
+    if (sense.scoreUp) {
+      let multiplier = sense.scoreUp
+      let scoreLine = multiplier
+      multiplier *= 1 + this.pGauge / 1000
+      scoreLine = `${scoreLine} × ${1 + this.pGauge / 1000}`
+      this.activeBuff.sense.forEach(buff => {
+        const targets = buff.targets
+        if (targets && !targets.includes(idx)) return
+        const effect = buff.effect
+        if (!effect.conditionSatified(this.calc, idx)) return
+        multiplier *= buff.bonus
+        scoreLine = `${scoreLine} × ${buff.bonus.toFixed(2)}`
+      })
+      const stat = this.calc.stat.final[idx]
+      const score = Math.floor(stat.total * multiplier)
+      scoreLine = `${stat.total} × ${scoreLine} = ${score}`
+      this.calc.result.senseScore.push(score)
+      this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_SCORE').replace('{0}', scoreLine))
+    }
+    if (sense.gaugeUp) {
+      let amount = sense.gaugeUp
+      this.addPGauge(amount, true)
+    }
+    this.applyPendingActions()
+
+    // 海报效果
+
+    return true
+  }
+  tryStarAct() {
+    const requirement = this.starActRequirements.reduce((sum, i) => sum+i, 0)
+    const current = this.starActCurrent.reduce((sum, i) => sum+i, 0)
+    if (current < requirement) {
+      return false
+    }
+    const stat = this.calc.stat.finalTotal
+    let multiplier = this.leader.staract.scoreUp
+    let scoreLine = multiplier
+    multiplier *= 1 + this.pGauge / 1000
+    scoreLine = `${scoreLine} × ${1 + this.pGauge / 1000}`
+    const score = Math.floor(stat * multiplier)
+    scoreLine = `${stat} × ${scoreLine} = ${score}`
+    this.calc.result.starActScore.push(score)
+    this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_SCORE').replace('{0}', scoreLine))
+    return true
+  }
+  purgeExpiredBuff(time) {
+    this.activeBuff.sense = this.activeBuff.sense.filter(i => i.lastUntil <= time)
+    this.activeBuff.starAct = this.activeBuff.starAct.filter(i => i.lastUntil <= time)
   }
 }
 class StatCalculator {
@@ -1325,6 +1578,7 @@ class StatCalculator {
      */
     this.buff = members.map(_ => ([0,0,0,0,0].map(_ => ([[0,0,0,0], [0,0,0,0]]))))
     this.buffLimit = members.map(_ => ([[20000,20000,20000,20000], [Infinity,Infinity,Infinity,Infinity]]))
+    this.buffAfterCalc = members.map(_ => [0,0,0,0])
   }
   calc() {
     const buffRemaining = this.buffLimit.map(i=>i.map(i=>i.map(i=>i)))
@@ -1355,6 +1609,8 @@ class StatCalculator {
       }, [[0,0,0,0],[0,0,0,0]]))
     })
     this.final = this.initial.map((i, idx) => i.add(this.bonus[idx][StatBonusType.Total]))
+    this.bonusAfterCalc = this.final.map((i, idx) => i.mulPerformance(this.buffAfterCalc[idx]))
+    this.final = this.final.map((i, idx) => i.add(this.bonusAfterCalc[idx]))
     this.finalTotal = this.final.reduce((s, i) => s+i.total, 0)
   }
 }
@@ -1619,12 +1875,21 @@ class ConstText {
     CALC_TABLE_FINAL_STAT: '最终值',
     CALC_TOTAL_STAT: '总演技力：',
     CALC_BASE_SCORE: '基础分: ',
+    CALC_SENSE_SCORE: 'Sense分: ',
+    CALC_STARACT_SCORE: 'StarAct分: ',
+    CALC_TOTAL_SCORE: '总分：',
     CALC_STAR_ACT_REQUIREMENTS: 'StarAct需求：',
 
     LIVE_PHASE_START: '开场前：',
+    LIVE_PHASE_SENSE: 'Sense发动：{time}',
+    LIVE_PHASE_SENSE_WITH_STARACT: 'Sense发动：{time} | StarAct发动',
     LIVE_LOG_LIFE: '生命值变化：{0} => {1}/1000',
     LIVE_LOG_PGUAGE: 'P槽变化：{0} => {1}/{2}',
     LIVE_LOG_PGUAGE_LIMIT: 'P槽上限变化：{0} => {1}/{2}',
+    LIVE_LOG_SENSE_FAILED: 'Sense发动失败',
+    LIVE_LOG_SENSE_SKIP: 'Sense未发动',
+    LIVE_LOG_SENSE_SCORE: 'Sense加分：{0}',
+    LIVE_LOG_STARACT_SCORE: 'StarAct发动，加分：{0}',
 
     PARTY_DEFAULT_NAME: '队伍',
     PARTY_DELETE_CONFIRM: '确定删除队伍吗？',
