@@ -200,6 +200,7 @@ class Effect {
       case 'LifeHealing': { return LifeHealing.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeGain': { return PrincipalGaugeGain.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, targets, type) }
+      case 'FinalPerformanceUpCancelSense': { return FinalPerformanceUpCancelSense.applyEffect(this, calc, targets, type) }
 
       case 'SenseAlternative': { return }
       case 'RewardUp': { return }
@@ -320,6 +321,16 @@ class PrincipalGaugeLimitUp {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'FixedAddition') throw new Error(`PrincipalGaugeLimitUp calc type: ${effect.CalculationType}`)
     calc.liveSim.addPGaugeLimit(effect.activeEffect.Value)
+  }
+}
+class FinalPerformanceUpCancelSense {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'Multiplication') throw new Error(`FinalPerformanceUpCancelSense calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.stat.buffAfterCalc[idx][StatBonus.Performance] *= effect.activeEffect.Value / 100
+      calc.liveSim.skipSense[idx] = true
+    })
   }
 }
 class SenseScoreUp {
@@ -1318,7 +1329,7 @@ class ScoreCalculator {
             case "Character": { isBuffTarget = this.members[i].data.CharacterBaseMasterId === notationBuff.TargetValue; break;}
           }
           if (isBuffTarget) {
-            this.stat.buffAfterCalc[i][StatBonus.Performance] += notationBuff.BuffValue * 100
+            this.stat.buffAfterCalc[i][StatBonus.Performance] *= 1 + notationBuff.BuffValue / 100
           }
         }
       }
@@ -1716,7 +1727,7 @@ class StatCalculator {
      */
     this.buff = members.map(_ => ([0,0,0,0,0].map(_ => ([[0,0,0,0], [0,0,0,0]]))))
     this.buffLimit = members.map(_ => ([[20000,20000,20000,20000], [Infinity,Infinity,Infinity,Infinity]]))
-    this.buffAfterCalc = members.map(_ => [0,0,0,0])
+    this.buffAfterCalc = members.map(_ => [10000,10000,10000,10000])
   }
   calc() {
     const buffRemaining = this.buffLimit.map(i=>i.map(i=>i.map(i=>i)))
@@ -1747,8 +1758,9 @@ class StatCalculator {
       }, [[0,0,0,0],[0,0,0,0]]))
     })
     this.final = this.initial.map((i, idx) => i.add(this.bonus[idx][StatBonusType.Total]))
-    this.bonusAfterCalc = this.final.map((i, idx) => i.mulPerformance(this.buffAfterCalc[idx]))
-    this.final = this.final.map((i, idx) => i.add(this.bonusAfterCalc[idx]))
+    // 时间轴效果 / 电姬海报（FinalPerformanceUpCancelSense）
+    // 目前只有演技力加成
+    this.final = this.final.map((i, idx) => i.mulPerformance(this.buffAfterCalc[idx]))
     this.finalTotal = this.final.reduce((s, i) => s+i.total, 0)
   }
 }
