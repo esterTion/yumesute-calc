@@ -207,6 +207,11 @@ class Effect {
       case "AddSenseLightControl": { return AddSenseLightControl.applyEffect(this, calc, targets, type) }
       case "AddSenseLightAmplification": { return AddSenseLightAmplification.applyEffect(this, calc, targets, type) }
       case "AddSenseLightSpecial": { return AddSenseLightSpecial.applyEffect(this, calc, targets, type) }
+
+      case "ScoreGainOnScore": { return ScoreGainOnScore.applyEffect(this, calc, [index], type) }
+      case "ScoreGainOnVocal": { return ScoreGainOnVocal.applyEffect(this, calc, [index], type) }
+      case "ScoreGainOnExpression": { return ScoreGainOnExpression.applyEffect(this, calc, [index], type) }
+      case "ScoreGainOnConcentration": { return ScoreGainOnConcentration.applyEffect(this, calc, [index], type) }
       default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_NOT_IMPLEMENTED', {type: this.Type, id: this.Id})) }
     }
   }
@@ -426,6 +431,58 @@ class AddSenseLightSpecial {
       if (!effect.conditionSatified(calc, idx)) return
       const type = 'Special'
       calc.liveSim.addSenseLight(type, effect.activeEffect.Value)
+    })
+  }
+}
+class ScoreGainOnScore {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'Multiplication') throw new Error(`ScoreGainOnScore calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const liveSim = calc.liveSim
+      const scoreRightNow = liveSim.baseScore * liveSim.currentTiming / liveSim.lastSenseTiming
+      + calc.result.senseScore.reduce((acc, cur) => acc + cur, 0)
+      + calc.result.starActScore.reduce((acc, cur) => acc + cur, 0)
+      const score = Math.floor(scoreRightNow * effect.activeEffect.Value / 100)
+      calc.result.senseScore.push(score)
+      liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [score]))
+      root.addWarningMessage(ConstText.get('LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE'))
+    })
+  }
+}
+class ScoreGainOnVocal {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'Multiplication') throw new Error(`ScoreGainOnVocal calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const val = calc.stat.final[idx].vo
+      const score = Math.floor(val * effect.activeEffect.Value / 100)
+      calc.result.senseScore.push(score)
+      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [score]))
+    })
+  }
+}
+class ScoreGainOnExpression {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'Multiplication') throw new Error(`ScoreGainOnExpression calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const val = calc.stat.final[idx].ex
+      const score = Math.floor(val * effect.activeEffect.Value / 100)
+      calc.result.senseScore.push(score)
+      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [score]))
+    })
+  }
+}
+class ScoreGainOnConcentration {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'Multiplication') throw new Error(`ScoreGainOnConcentration calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const val = calc.stat.final[idx].co
+      const score = Math.floor(val * effect.activeEffect.Value / 100)
+      calc.result.senseScore.push(score)
+      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [score]))
     })
   }
 }
@@ -2114,6 +2171,7 @@ class ConstText {
     LIVE_LOG_SENSE_SKIP: '跳过发动',
     LIVE_LOG_SENSE_SCORE: 'Sense加分：{0}',
     LIVE_LOG_STARACT_SCORE: 'StarAct发动，加分：{0}',
+    LIVE_LOG_POSTER_SCORE: '海报加分：{0}',
 
     PARTY_DEFAULT_NAME: '队伍',
     PARTY_DELETE_CONFIRM: '确定删除队伍吗？',
@@ -2121,6 +2179,7 @@ class ConstText {
 
     LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '未支持的效果：{type} ({id})',
     LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '未支持的效果触发：{trigger} @ {range} ({id})',
+    LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '按当前得分加分的效果无法精确计算分数',
     UNDEFINED_STRING: '缺失的文本：{0}',
   }
 
