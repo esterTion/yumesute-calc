@@ -194,6 +194,11 @@ class Effect {
       case 'PrincipalGaugeGain': { return PrincipalGaugeGain.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, targets, type) }
       case 'FinalPerformanceUpCancelSense': { return FinalPerformanceUpCancelSense.applyEffect(this, calc, targets, type) }
+      case "VocalLimitUp": { return VocalLimitUp.applyEffect(this, calc, targets, type) }
+      case "ExpressionLimitUp": { return ExpressionLimitUp.applyEffect(this, calc, targets, type) }
+      case "ConcentrationLimitUp": { return ConcentrationLimitUp.applyEffect(this, calc, targets, type) }
+      case "PerformanceLimitUp": { return PerformanceLimitUp.applyEffect(this, calc, targets, type) }
+      case "LifeGuard": { return LifeGuard.applyEffect(this, calc, targets, type) }
 
       case 'SenseAlternative': { return }
       case 'RewardUp': { return }
@@ -212,6 +217,8 @@ class Effect {
       case "ScoreGainOnVocal": { return ScoreGainOnVocal.applyEffect(this, calc, [index], type) }
       case "ScoreGainOnExpression": { return ScoreGainOnExpression.applyEffect(this, calc, [index], type) }
       case "ScoreGainOnConcentration": { return ScoreGainOnConcentration.applyEffect(this, calc, [index], type) }
+
+      case "StarActScoreUp": { return StarActScoreUp.applyEffect(this, calc, targets, type) }
       default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_NOT_IMPLEMENTED', {type: this.Type, id: this.Id})) }
     }
   }
@@ -345,7 +352,7 @@ class SenseScoreUp {
       targets,
       effect,
       bonus,
-      skipCurrent: true,
+      skipCurrent: effect.Range === 'All',
       lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
     })
   }
@@ -488,6 +495,61 @@ class ScoreGainOnConcentration {
     })
   }
 }
+class VocalLimitUp {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`VocalLimitUp calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.stat.buffLimit[idx][0][StatBonus.Vocal] += effect.activeEffect.Value
+    })
+  }
+}
+class ExpressionLimitUp {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`ExpressionLimitUp calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.stat.buffLimit[idx][0][StatBonus.Expression] += effect.activeEffect.Value
+    })
+  }
+}
+class ConcentrationLimitUp {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`ConcentrationLimitUp calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.stat.buffLimit[idx][0][StatBonus.Concentration] += effect.activeEffect.Value
+    })
+  }
+}
+class PerformanceLimitUp {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`PerformanceLimitUp calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.stat.buffLimit[idx][0][StatBonus.Performance] += effect.activeEffect.Value
+    })
+  }
+}
+class LifeGuard {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`LifeGuard calc type: ${effect.CalculationType}`)
+    calc.liveSim.lifeGuardCount += effect.activeEffect.Value
+  }
+}
+class StarActScoreUp {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`SenseScoreUp calc type: ${effect.CalculationType}`)
+    const bonus = 1 + 0.0001 * effect.activeEffect.Value
+    calc.liveSim.activeBuff.starAct.push({
+      targets,
+      effect,
+      bonus,
+      skipCurrent: false,
+      lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+    })
+  }
+}
 
 class EpisodeReadState {
   static None = 0;
@@ -548,14 +610,15 @@ class SenseData {
     for (let branch of branches) {
       let conditionMet = true
       if (this.data.BranchCondition1 !== 'None') {
+        let judgeValue
         switch (this.data.BranchCondition1) {
-          case 'LifeGuardCount':
+          case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; break }
           default: { console.log(`Sense branch condition ${this.data.BranchCondition1}`); return null }
         }
         switch (branch.JudgeType1) {
-          case 'Equal':
-          case 'MoreThan':
-          case 'LessThan':
+          case 'Equal': { conditionMet = judgeValue === branch.Parameter1; break }
+          case 'MoreThan': { conditionMet = judgeValue >= branch.Parameter1; break }
+          case 'LessThan': { conditionMet = judgeValue <= branch.Parameter1; break }
         }
       }
       if (this.data.BranchCondition2 !== 'None') {
@@ -613,6 +676,36 @@ class StarActData {
     const staract = new StarActData(this.id, this.level)
     staract.requireDecrease = this.requireDecrease.slice()
     return staract
+  }
+
+  getActiveBranch(liveSim) {
+    const branches = this.data.Branches
+    let result = null
+    for (let branch of branches) {
+      let conditionMet = true
+      if (this.data.BranchCondition1 !== 'None') {
+        let judgeValue
+        switch (this.data.BranchCondition1) {
+          case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; break }
+          default: { console.log(`StarAct branch condition ${this.data.BranchCondition1}`); return null }
+        }
+        switch (branch.JudgeType1) {
+          case 'Equal': { conditionMet = judgeValue === branch.Parameter1; break }
+          case 'MoreThan': { conditionMet = judgeValue >= branch.Parameter1; break }
+          case 'LessThan': { conditionMet = judgeValue <= branch.Parameter1; break }
+        }
+      }
+      if (this.data.BranchCondition2 !== 'None') {
+        switch (this.data.BranchCondition2) {
+          default: { console.log(`StarAct branch condition ${this.data.BranchCondition2}`); return null }
+        }
+      }
+      if (conditionMet) {
+        result = branch
+        break
+      }
+    }
+    return result
   }
 }
 class CharacterStat {
@@ -1583,6 +1676,7 @@ class LiveSimulator {
   starActRequirements;
   starActCurrent;
   life;
+  lifeGuardCount;
   pGauge;
   pGaugeLimit;
   phase;
@@ -1602,6 +1696,7 @@ class LiveSimulator {
     this.skipSense = new Array(5).fill(false)
     this.baseScore = 0
     this.life = 1000
+    this.lifeGuardCount = 0
     this.pGauge = 0
     this.pGaugeLimit = 1000
     this.phase = ConstText.get('LIVE_PHASE_START')
@@ -1817,10 +1912,26 @@ class LiveSimulator {
       return false
     }
     const stat = this.calc.stat.finalTotal
+    const staractEffectBranch = this.leader.staract.getActiveBranch(this)
+    if (staractEffectBranch) {
+      staractEffectBranch.BranchEffects.forEach(effect => {
+        effect = Effect.get(effect.EffectMasterId, chara.senselv)
+        effect.applyEffect(this.calc, this.calc.members.indexOf(this.leader), null)
+      })
+    }
     let multiplier = this.leader.staract.scoreUp
     let scoreLine = multiplier
     multiplier *= 1 + this.pGauge / 1000
     scoreLine = `${scoreLine} × ${1 + this.pGauge / 1000}`
+    this.activeBuff.starAct.forEach(buff => {
+      if (buff.skipCurrent) return
+      const targets = buff.targets
+      if (targets && !targets.includes(idx)) return
+      const effect = buff.effect
+      if (!effect.conditionSatified(this.calc, idx)) return
+      multiplier *= buff.bonus
+      scoreLine = `${scoreLine} × ${buff.bonus}`
+    })
     const score = Math.floor(stat * multiplier)
     scoreLine = `${stat} × ${scoreLine} = ${score}`
     this.calc.result.starActScore.push(score)
