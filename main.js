@@ -929,12 +929,46 @@ class PosterAbilityData {
 
   update() {
     this.descNode.innerHTML = this.desc
-    this.node.style.opacity = this.data.ReleaseLevelAt > this.level ? 0.5 : 1
+    this.node.style.opacity = this.unlocked ? 1 : 0.5
   }
 
+  get unlocked() {
+    return this.data.ReleaseLevelAt <= this.level
+  }
   get desc() {
     return BeautyText.convertGameTextToValidDom(this.data.Description)
     .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.data.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level + this.release).activeEffectValueStr)
+  }
+
+  getActiveBranch(liveSim) {
+    const branches = this.data.Branches
+    let result = null
+    for (let branch of branches) {
+      let conditionMet = true
+      if (this.data.BranchConditionType1 !== 'None') {
+        let judgeValue
+        switch (this.data.BranchConditionType1) {
+          case 'AttributeCount': { judgeValue = liveSim.calc.properties.attributeCount; break }
+          case 'CompanyMemberCount': { judgeValue = liveSim.calc.properties.companyCount; break }
+          default: { console.log(`Sense branch condition ${this.data.BranchConditionType1}`); return null }
+        }
+        switch (branch.JudgeType1) {
+          case 'Equal': { conditionMet = judgeValue === branch.Parameter1; break }
+          case 'MoreThan': { conditionMet = judgeValue >= branch.Parameter1; break }
+          case 'LessThan': { conditionMet = judgeValue <= branch.Parameter1; break }
+        }
+      }
+      if (this.data.BranchConditionType2 !== 'None') {
+        switch (this.data.BranchConditionType2) {
+          default: { console.log(`Sense branch condition ${this.data.BranchConditionType2}`); return null }
+        }
+      }
+      if (conditionMet) {
+        result = branch
+        break
+      }
+    }
+    return result
   }
 }
 
@@ -1224,9 +1258,42 @@ class ScoreCalculator {
     })
     passiveEffects.album.forEach(i => i.effect.applyEffect(this, i.source, StatBonusType.Album))
 
-    // bloom effect
-    this.members.filter(i => i !== null).forEach((chara, idx) => {
+    // chara
+    this.members.forEach((chara, idx) => {
+      if (!chara) return
+      this.liveSim.skipSense[idx] = chara.data.CharacterBaseMasterId === 401
       chara.bloomBonusEffects.forEach(effect => effect.applyEffect(this, idx, StatBonusType.Album))
+    })
+
+    // poster
+    this.posters.forEach((poster, idx) => {
+      if (!poster) return
+      poster.abilities.forEach(ability => {
+        if (!ability.unlocked) return
+        const abilityEffectBranch = ability.getActiveBranch(this.liveSim)
+        if (!abilityEffectBranch) return
+        abilityEffectBranch.BranchEffects.forEach(effect => {
+          effect = Effect.get(effect.EffectMasterId, poster.level)
+          if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') return
+          effect.applyEffect(this, idx, StatBonusType.Poster)
+        })
+      })
+    })
+
+    // accessory
+    this.accessories.forEach((accessory, idx) => {
+      if (!accessory) return
+      for (let effect of accessory.mainEffects) {
+        effect = effect.effect
+        if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') continue
+        effect.applyEffect(this, idx, StatBonusType.Accessory)
+      }
+      if (accessory.randomEffect) {
+        let effect = accessory.randomEffect.effect
+        if (effect.FireTimingType === 'Passive' || effect.FireTimingType === 'StartLive') {
+          effect.applyEffect(this, idx, StatBonusType.Accessory)
+        }
+      }
     })
 
     // theater effect
@@ -1565,6 +1632,35 @@ class LiveSimulator {
       this.calc.result.senseScore.push(score)
       this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_SCORE').replace('{0}', scoreLine))
     }
+
+    const poster = this.calc.posters[idx]
+    if (poster) {
+      for (let ability of poster.abilities) {
+        if (!ability.unlocked) continue
+        const abilityEffectBranch = ability.getActiveBranch(this)
+        if (!abilityEffectBranch) continue
+        abilityEffectBranch.BranchEffects.forEach(effect => {
+          effect = Effect.get(effect.EffectMasterId, poster.level)
+          if (effect.FireTimingType !== 'Sense') return
+          effect.applyEffect(this.calc, idx, null)
+        })
+      }
+    }
+    const accessory = this.calc.accessories[idx]
+    if (accessory) {
+      for (let effect of accessory.mainEffects) {
+        effect = effect.effect
+        if (effect.FireTimingType !== 'Sense') continue
+        effect.applyEffect(this.calc, idx, null)
+      }
+      if (accessory.randomEffect) {
+        let effect = accessory.randomEffect.effect
+        if (effect.FireTimingType === 'Sense') {
+          effect.applyEffect(this.calc, idx, null)
+        }
+      }
+    }
+
     if (sense.gaugeUp) {
       let amount = sense.gaugeUp
       this.addPGauge(amount, true)
@@ -1924,12 +2020,13 @@ class ConstText {
 
     LIVE_PHASE_START: '开场前：',
     LIVE_PHASE_SENSE: 'Sense发动：{time}',
+    LIVE_PHASE_SENSE_FAILED: 'Sense发动失败：{time}',
     LIVE_PHASE_SENSE_WITH_STARACT: 'Sense发动：{time} | StarAct发动',
     LIVE_LOG_LIFE: '生命值变化：{0} => {1}/1000',
     LIVE_LOG_PGUAGE: 'P槽变化：{0} => {1}/{2}',
     LIVE_LOG_PGUAGE_LIMIT: 'P槽上限变化：{0} => {1}/{2}',
     LIVE_LOG_SENSE_FAILED: 'Sense发动失败',
-    LIVE_LOG_SENSE_SKIP: 'Sense未发动',
+    LIVE_LOG_SENSE_SKIP: '跳过发动',
     LIVE_LOG_SENSE_SCORE: 'Sense加分：{0}',
     LIVE_LOG_STARACT_SCORE: 'StarAct发动，加分：{0}',
 
