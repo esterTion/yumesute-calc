@@ -205,6 +205,8 @@ class Effect {
       case 'RewardUp': { return }
       case 'SenseScoreUp': { return SenseScoreUp.applyEffect(this, calc, targets, type) }
       case 'ScoreUpByHighLife': { return ScoreUpByHighLife.applyEffect(this, calc, targets, type) }
+      case 'ScoreUpByLowLife': { return ScoreUpByLowLife.applyEffect(this, calc, targets, type) }
+      case 'SenseCoolTimeRecastDown': { return SenseCoolTimeRecastDown.applyEffect(this, calc, targets, type) }
       default: {console.log(this.Type, this.FireTimingType, index)}
     }
   }
@@ -254,6 +256,15 @@ class SenseRecastDown {
     targets.forEach(idx => {
       if (!effect.conditionSatified(calc, idx)) return
       calc.members[idx].sense.recastDown.push(effect.activeEffect.Value)
+    })
+  }
+}
+class SenseCoolTimeRecastDown {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'FixedAddition') throw new Error(`SenseCoolTimeRecastDown calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.liveSim.lastSenseTime[idx] -= effect.activeEffect.Value
     })
   }
 }
@@ -330,6 +341,21 @@ class ScoreUpByHighLife {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`ScoreUpByHighLife calc type: ${effect.CalculationType}`)
     const life = Math.min(calc.liveSim.life, ScoreUpByHighLife.LifeCap)
     const bonus = 1 + 0.0001 * effect.activeEffect.Value * Math.pow(life / ScoreUpByHighLife.LifeCap, ScoreUpByHighLife.PowerValue)
+    calc.liveSim.activeBuff.sense.push({
+      targets,
+      effect,
+      bonus,
+      lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+    })
+  }
+}
+class ScoreUpByLowLife {
+  static LifeCap = 1000
+  static PowerValue = 2
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`ScoreUpByLowLife calc type: ${effect.CalculationType}`)
+    const life = Math.min(calc.liveSim.life, ScoreUpByLowLife.LifeCap)
+    const bonus = 1 + 0.0001 * effect.activeEffect.Value * Math.pow((1001 - life) / ScoreUpByLowLife.LifeCap, ScoreUpByLowLife.PowerValue)
     calc.liveSim.activeBuff.sense.push({
       targets,
       effect,
