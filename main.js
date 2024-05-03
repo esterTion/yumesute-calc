@@ -191,6 +191,7 @@ class Effect {
       case 'DecreaseRequireAmplificationLight': { return DecreaseRequireAmplificationLight.applyEffect(this, calc, targets, type) }
       case 'DecreaseRequireSpecialLight': { return DecreaseRequireSpecialLight.applyEffect(this, calc, targets, type) }
       case 'LifeHealing': { return LifeHealing.applyEffect(this, calc, targets, type) }
+      case "PrincipalGaugeUp": { return PrincipalGaugeUp.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeGain': { return PrincipalGaugeGain.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, targets, type) }
       case 'FinalPerformanceUpCancelSense': { return FinalPerformanceUpCancelSense.applyEffect(this, calc, targets, type) }
@@ -320,6 +321,15 @@ class LifeHealing {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'FixedAddition') throw new Error(`LifeHealing calc type: ${effect.CalculationType}`)
     calc.liveSim.addLife(effect.activeEffect.Value)
+  }
+}
+class PrincipalGaugeUp {
+  static applyEffect(effect, calc, targets, type) {
+    if (effect.CalculationType !== 'PercentageAddition') throw new Error(`PrincipalGaugeUp calc type: ${effect.CalculationType}`)
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.liveSim.pGaugeBonus[idx] += effect.activeEffect.Value
+    })
   }
 }
 class PrincipalGaugeGain {
@@ -1679,6 +1689,7 @@ class LiveSimulator {
   lifeGuardCount;
   pGauge;
   pGaugeLimit;
+  pGaugeBonus;
   phase;
   phaseLog;
   pendingActions;
@@ -1699,6 +1710,7 @@ class LiveSimulator {
     this.lifeGuardCount = 0
     this.pGauge = 0
     this.pGaugeLimit = 1000
+    this.pGaugeBonus = [0,0,0,0,0]
     this.phase = ConstText.get('LIVE_PHASE_START')
     this.phaseLog = []
     this.pendingActions = []
@@ -1897,6 +1909,8 @@ class LiveSimulator {
 
     if (sense.gaugeUp) {
       let amount = sense.gaugeUp
+      amount *= 1 + this.pGaugeBonus[idx] / 10000
+      amount = Math.floor(amount)
       this.addPGauge(amount, true)
     }
     this.applyPendingActions()
