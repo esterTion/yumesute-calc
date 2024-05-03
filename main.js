@@ -207,7 +207,7 @@ class Effect {
       case 'ScoreUpByHighLife': { return ScoreUpByHighLife.applyEffect(this, calc, targets, type) }
       case 'ScoreUpByLowLife': { return ScoreUpByLowLife.applyEffect(this, calc, targets, type) }
       case 'SenseCoolTimeRecastDown': { return SenseCoolTimeRecastDown.applyEffect(this, calc, targets, type) }
-      default: {console.log(this.Type, this.FireTimingType, index)}
+      default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_NOT_IMPLEMENTED').replace('{0}', this.Type)) }
     }
   }
 
@@ -2037,10 +2037,13 @@ class ConstText {
     PARTY_DEFAULT_NAME: '队伍',
     PARTY_DELETE_CONFIRM: '确定删除队伍吗？',
     PARTY_DELETE_LAST: '最后一个队伍不能删除',
+
+    LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '未支持的效果：{0}',
+    UNDEFINED_STRING: '缺失的文本：{0}',
   }
 
   static get(key) {
-    return ConstText[ConstText.language][key]
+    return ConstText[ConstText.language][key] || ConstText[ConstText.language]['UNDEFINED_STRING'].replace('{0}', key)
   }
 
   static fillText() {
@@ -2078,6 +2081,8 @@ class RootLogic {
 
     document.getElementById('loading').remove()
     document.getElementById('app').appendChild(_('div', {}, [
+      _('div', {className: 'margin-box'}),
+      this.warningMessageBox = _('div', { id: 'warning_message_box'}),
       _('div', {className: 'margin-box'}),
       this.calcTypeSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'normal' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_NORMAL'})]),
@@ -2264,6 +2269,7 @@ class RootLogic {
   }
   saveState() {
     if (window.DEBUG_NO_SAVE) return;
+    if (this.errorOccured) return;
     console.log('save')
     localStorage.setItem('appState', JSON.stringify(this.appState))
   }
@@ -2296,6 +2302,18 @@ class RootLogic {
       data.version = 3
       data.partyManager = (new PartyManager).toJSON()
     }
+  }
+
+  warningMessages = []
+  addWarningMessage(msg) {
+    this.warningMessages.push(msg)
+  }
+  printWarningMessages() {
+    removeAllChilds(this.warningMessageBox)
+    this.warningMessages.forEach(i => {
+      this.warningMessageBox.appendChild(_('div', {}, [_('text', i)]))
+    })
+    this.warningMessages = []
   }
 
   changeTab() {
@@ -2379,6 +2397,7 @@ class RootLogic {
   update(parts) {
     try {
 
+    this.errorOccured = false
     const displaySortValue = (tbl, key, a, b) => (
       tbl[a][key] === tbl[b][key] ? 0 : tbl[a][key] > tbl[b][key] ? 1 : -1
     )
@@ -2444,9 +2463,12 @@ class RootLogic {
       }
     }
 
+    this.printWarningMessages()
+
     } catch (e) {
       window.error_message.textContent = [e.toString(), e.stack].join('\n')
       window.scrollTo(0, 0)
+      this.errorOccured = true
       throw e
     }
   }
