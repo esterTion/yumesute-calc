@@ -144,23 +144,16 @@ class Effect {
 
   canTrigger(calc, index) {
     for (let trigger of this.Triggers) {
-      if (this.Range === 'All') {
-        switch (trigger.Trigger) {
-          case 'CompanyCount': { return calc.properties.companyCount == trigger.Value;}
-          case 'AttributeCount': { return calc.properties.attributeCount == trigger.Value;}
-          default: { console.log(`Trigger ${trigger.Trigger} for All`) }
-        }
-      }
-      if (this.Range === 'Self') {
-        switch (trigger.Trigger) {
-          case 'CharacterBase': { return calc.members[index].data.CharacterBaseMasterId == trigger.Value;}
-          default: { console.log(`Trigger ${trigger.Trigger} for Self`) }
-        }
-      }
-      if (this.Range === 'None') {
-        switch (trigger.Trigger) {
-          default: { console.log(`Trigger ${trigger.Trigger} for None`) }
-        }
+      switch (trigger.Trigger) {
+        case 'CompanyCount': { return calc.properties.companyCount == trigger.Value;}
+        case 'AttributeCount': { return calc.properties.attributeCount == trigger.Value;}
+        case 'CharacterBase': { return calc.members[index].data.CharacterBaseMasterId == trigger.Value;}
+        case "Company": { return GameDb.CharacterBase[calc.members[index].data.CharacterBaseMasterId].CompanyMasterId == trigger.Value; }
+        case "Attribute": { return calc.members[index].data.Attribute == AttributeEnum[trigger.Value];}
+        case "SenseType": { return calc.members[index].sense.data.Type == SenseTypeEnum[trigger.Value];}
+        case "OverLife":
+        case "BelowLife":
+        default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED', {trigger:trigger.Trigger, range: this.Range, id: this.Id})) }
       }
       return false;
     }
@@ -208,7 +201,13 @@ class Effect {
       case 'ScoreUpByHighLife': { return ScoreUpByHighLife.applyEffect(this, calc, targets, type) }
       case 'ScoreUpByLowLife': { return ScoreUpByLowLife.applyEffect(this, calc, targets, type) }
       case 'SenseCoolTimeRecastDown': { return SenseCoolTimeRecastDown.applyEffect(this, calc, targets, type) }
-      default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_NOT_IMPLEMENTED').replace('{0}', this.Type)) }
+      case "AddSenseLightSelf": { return AddSenseLightSelf.applyEffect(this, calc, targets, type) }
+      case "AddSenseLightVariable": { return AddSenseLightVariable.applyEffect(this, calc, targets, type) }
+      case "AddSenseLightSupport": { return AddSenseLightSupport.applyEffect(this, calc, targets, type) }
+      case "AddSenseLightControl": { return AddSenseLightControl.applyEffect(this, calc, targets, type) }
+      case "AddSenseLightAmplification": { return AddSenseLightAmplification.applyEffect(this, calc, targets, type) }
+      case "AddSenseLightSpecial": { return AddSenseLightSpecial.applyEffect(this, calc, targets, type) }
+      default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_NOT_IMPLEMENTED', {type: this.Type, id: this.Id})) }
     }
   }
 
@@ -372,6 +371,61 @@ class ScoreUpByLowLife {
       effect,
       bonus,
       lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+    })
+  }
+}
+class AddSenseLightSelf {
+  static applyEffect(effect, calc, targets, type) {
+    // 为什么有 PercentageAddition ？
+    // 全部视为 FixedAddition
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      calc.liveSim.senseExtraAmount[idx] += effect.activeEffect.Value
+    })
+  }
+}
+class AddSenseLightVariable {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const type = 'Variable'
+      calc.liveSim.addSenseLight(type, effect.activeEffect.Value)
+    })
+  }
+}
+class AddSenseLightSupport {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const type = 'Support'
+      calc.liveSim.addSenseLight(type, effect.activeEffect.Value)
+    })
+  }
+}
+class AddSenseLightControl {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const type = 'Control'
+      calc.liveSim.addSenseLight(type, effect.activeEffect.Value)
+    })
+  }
+}
+class AddSenseLightAmplification {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const type = 'Amplification'
+      calc.liveSim.addSenseLight(type, effect.activeEffect.Value)
+    })
+  }
+}
+class AddSenseLightSpecial {
+  static applyEffect(effect, calc, targets, type) {
+    targets.forEach(idx => {
+      if (!effect.conditionSatified(calc, idx)) return
+      const type = 'Special'
+      calc.liveSim.addSenseLight(type, effect.activeEffect.Value)
     })
   }
 }
@@ -1245,6 +1299,8 @@ class ScoreCalculator {
       // 没有队长
       return
     }
+    this.liveSim.leader = leader
+    this.liveSim.starActRequirements = leader.staract.actualRequirements
 
     this.members.forEach(i => i && (i.sense.resetRecastDown(), i.staract.resetRequireDecrease()))
 
@@ -1286,6 +1342,7 @@ class ScoreCalculator {
         abilityEffectBranch.BranchEffects.forEach(effect => {
           effect = Effect.get(effect.EffectMasterId, poster.level)
           if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') return
+          if (!effect.canTrigger(this, idx)) return
           effect.applyEffect(this, idx, StatBonusType.Poster)
         })
       })
@@ -1297,11 +1354,12 @@ class ScoreCalculator {
       for (let effect of accessory.mainEffects) {
         effect = effect.effect
         if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') continue
+        if (!effect.canTrigger(this, idx)) return
         effect.applyEffect(this, idx, StatBonusType.Accessory)
       }
       if (accessory.randomEffect) {
         let effect = accessory.randomEffect.effect
-        if (effect.FireTimingType === 'Passive' || effect.FireTimingType === 'StartLive') {
+        if (effect.canTrigger(this, idx) && (effect.FireTimingType === 'Passive' || effect.FireTimingType === 'StartLive')) {
           effect.applyEffect(this, idx, StatBonusType.Accessory)
         }
       }
@@ -1371,8 +1429,6 @@ class ScoreCalculator {
 
     this.liveSim.baseScore = baseScore[3]
 
-    this.liveSim.leader = leader
-    this.liveSim.starActRequirements = leader.staract.actualRequirements
     node.appendChild(_('div', {}, [
       _('div', { className: 'spriteatlas-characters', 'data-id': leader.cardIconId, style: {float: 'left', margin: '0 5px 5px 0'}}),
       _('div', { 'data-text-key': 'CALC_STAR_ACT_REQUIREMENTS'}),
@@ -1491,6 +1547,8 @@ class LiveSimulator {
     this.phaseLog = []
     this.pendingActions = []
     this.activeBuff = { sense: [], starAct: [] }
+    this.starActCurrent = [0,0,0,0,0]
+    this.senseExtraAmount = [0,0,0,0,0]
   }
   runSimulation(node) {
     this.applyPendingActions()
@@ -1500,7 +1558,6 @@ class LiveSimulator {
       _('text', this.phaseLog.join('\n'))
     ]))
 
-    this.starActCurrent = [0,0,0,0,0]
     let oddRow = false
     this.senseTiming.forEach(timing => {
       this.currentTiming = timing.TimingSecond
@@ -1570,12 +1627,12 @@ class LiveSimulator {
     this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE_LIMIT').replace('{0}', amount).replace('{1}', this.pGauge).replace('{2}', this.pGaugeLimit))
   }
   addSenseLight(type, amount = 1) {
-    switch (type) {
-      case 'Support':       { this.starActCurrent[0] += amount; break }
-      case 'Control':       { this.starActCurrent[1] += amount; break }
-      case 'Amplification': { this.starActCurrent[2] += amount; break }
-      case 'Special':       { this.starActCurrent[3] += amount; break }
-      case 'Variable':      { this.starActCurrent[4] += amount; break }
+    switch (type.toLowerCase()) {
+      case 'support':       { this.starActCurrent[0] += amount; break }
+      case 'control':       { this.starActCurrent[1] += amount; break }
+      case 'amplification': { this.starActCurrent[2] += amount; break }
+      case 'special':       { this.starActCurrent[3] += amount; break }
+      case 'variable':      { this.starActCurrent[4] += amount; break }
     }
     for (let i=0; i<4; i++) {
       this.starActCurrent[i] = Math.min(this.starActCurrent[i], this.starActRequirements[i])
@@ -1623,7 +1680,7 @@ class LiveSimulator {
       })
     }
     this.currentSenseType = sense.Type.toLowerCase();
-    this.addSenseLight(sense.Type, sense.data.LightCount)
+    this.addSenseLight(sense.Type, sense.data.LightCount + this.senseExtraAmount[idx])
     if (sense.scoreUp) {
       let multiplier = sense.scoreUp
       let scoreLine = multiplier
@@ -2050,12 +2107,14 @@ class ConstText {
     PARTY_DELETE_CONFIRM: '确定删除队伍吗？',
     PARTY_DELETE_LAST: '最后一个队伍不能删除',
 
-    LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '未支持的效果：{0}',
+    LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '未支持的效果：{type} ({id})',
+    LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '未支持的效果触发：{trigger} @ {range} ({id})',
     UNDEFINED_STRING: '缺失的文本：{0}',
   }
 
-  static get(key) {
-    return ConstText[ConstText.language][key] || ConstText[ConstText.language]['UNDEFINED_STRING'].replace('{0}', key)
+  static get(key, replaces = {}) {
+    return (ConstText[ConstText.language][key] || ConstText.get('UNDEFINED_STRING', [key]))
+      .replace(/{([^{}}]+)}/g, (ori, name) => replaces[name] || ori)
   }
 
   static fillText() {
