@@ -2150,6 +2150,16 @@ class RootLogic {
     await GameDb.load()
     this.loaded = true;
 
+    // 追加常驻时间轴
+    GameDb.SenseNotation[0] = {
+      Id: 0,
+      Details: [[10,1],[20,2],[30,3],[40,4],[50,5],[60,3],[70,2],[80,1]].map(i => ({
+        Position: i[1],
+        TimingSecond: i[0],
+      })),
+      Buffs: [],
+    }
+
     document.getElementById('loading').remove()
     document.getElementById('app').appendChild(_('div', {}, [
       _('div', {className: 'margin-box'}),
