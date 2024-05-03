@@ -1886,7 +1886,11 @@ class PartyManager {
       removeAllChilds(select)
       select.appendChild(_('option', { value: -1 }, [_('text', ConstText.get('NOT_SELECTED'))]))
       root.appState.accessories.forEach((accessory, accessoryIdx) => {
-        select.appendChild(_('option', { value: accessoryIdx }, [_('text', accessory.fullAccessoryName)]))
+        let displayName = accessory.fullAccessoryName
+        if (accessory.randomEffect) {
+          displayName = `${displayName} (${accessory.randomEffect.data.Name})`
+        }
+        select.appendChild(_('option', { value: accessoryIdx }, [_('text', displayName)]))
       })
       select.value = root.appState.accessories.indexOf(party.accessories[idx])
     })
@@ -2239,12 +2243,13 @@ class RootLogic {
       this.addPhotoEffectSelect.appendChild(_('option', { value: i.Id }, [_('text', pe.selectName)]))
     })
 
-    this.renderSenseNote()
+    this.renderSenseNote(true)
     this.update({
       chara: true,
       poster: true,
       accessory: true,
       album: true,
+      theaterLevel: true,
     })
 
     this.calcTypeSelectForm.tab.value = 'normal'
@@ -2281,13 +2286,6 @@ class RootLogic {
       this.appState.partyManager = PartyManager.fromJSON(data.partyManager)
       this.appState.partyManager.init()
     }
-    this.update({
-      chara: true,
-      poster: true,
-      accessory: true,
-      album: true,
-      theaterLevel: true,
-    })
   }
   addMissingFields(data) {
     if (data.version < 2) {
@@ -2453,7 +2451,7 @@ class RootLogic {
     }
   }
 
-  renderSenseNote() {
+  renderSenseNote(skipUpdate = false) {
     const id = this.senseNoteSelect.value | 0;
     const data = GameDb.SenseNotation[id];
     removeAllChilds(this.senseBox)
@@ -2469,7 +2467,10 @@ class RootLogic {
       .map(lane => lane.sort((a,b) => a.TimingSecond - b.TimingSecond)
         .reduce((acc, cur) => ([Math.min(acc[0], cur.TimingSecond - acc[1]), cur.TimingSecond]), [Infinity, -Infinity])[0])
       .forEach((i, idx) => this.senseBox.children[idx].children[0].textContent = i === Infinity ? 'N/A' : i)
-    this.update({ party: true })
+
+    if (!skipUpdate) {
+      this.update({ party: true })
+    }
   }
 
   keikoFillChara() {
