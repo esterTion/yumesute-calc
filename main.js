@@ -345,6 +345,7 @@ class SenseScoreUp {
       targets,
       effect,
       bonus,
+      skipCurrent: true,
       lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
     })
   }
@@ -355,11 +356,12 @@ class ScoreUpByHighLife {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`ScoreUpByHighLife calc type: ${effect.CalculationType}`)
     const life = Math.min(calc.liveSim.life, ScoreUpByHighLife.LifeCap)
-    const bonus = 1 + 0.0001 * effect.activeEffect.Value * Math.pow(life / ScoreUpByHighLife.LifeCap, ScoreUpByHighLife.PowerValue)
+    const bonus = 1 + Math.floor(0.01 * effect.activeEffect.Value * Math.pow(life / ScoreUpByHighLife.LifeCap, ScoreUpByHighLife.PowerValue)) / 100
     calc.liveSim.activeBuff.sense.push({
       targets,
       effect,
       bonus,
+      skipCurrent: false,
       lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
     })
   }
@@ -1394,10 +1396,11 @@ class ScoreCalculator {
       if (!poster) return
       poster.abilities.forEach(ability => {
         if (!ability.unlocked) return
+        if (ability.data.Type === 'Leader' && this.members[idx] !== leader) return
         const abilityEffectBranch = ability.getActiveBranch(this.liveSim)
         if (!abilityEffectBranch) return
         abilityEffectBranch.BranchEffects.forEach(effect => {
-          effect = Effect.get(effect.EffectMasterId, poster.level)
+          effect = Effect.get(effect.EffectMasterId, ability.level + ability.release)
           if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') return
           if (!effect.canTrigger(this, idx)) return
           effect.applyEffect(this, idx, StatBonusType.Poster)
@@ -1724,6 +1727,7 @@ class LiveSimulator {
         return false
       }
       idx = this.calc.members.indexOf(chara)
+      this.purgeExpiredBuff(timing.TimingSecond)
     }
     const sense = chara.sense
     const ct = this.senseCt[idx]
@@ -1752,12 +1756,13 @@ class LiveSimulator {
       multiplier *= 1 + this.pGauge / 1000
       scoreLine = `${scoreLine} × ${1 + this.pGauge / 1000}`
       this.activeBuff.sense.forEach(buff => {
+        if (buff.skipCurrent) return
         const targets = buff.targets
         if (targets && !targets.includes(idx)) return
         const effect = buff.effect
         if (!effect.conditionSatified(this.calc, idx)) return
         multiplier *= buff.bonus
-        scoreLine = `${scoreLine} × ${buff.bonus.toFixed(2)}`
+        scoreLine = `${scoreLine} × ${buff.bonus}`
       })
       const stat = this.calc.stat.final[idx]
       const score = Math.floor(stat.total * multiplier)
@@ -1770,10 +1775,11 @@ class LiveSimulator {
     if (poster) {
       for (let ability of poster.abilities) {
         if (!ability.unlocked) continue
+        if (ability.data.Type === 'Leader' && this.calc.members[idx] !== this.leader) continue
         const abilityEffectBranch = ability.getActiveBranch(this)
         if (!abilityEffectBranch) continue
         abilityEffectBranch.BranchEffects.forEach(effect => {
-          effect = Effect.get(effect.EffectMasterId, poster.level)
+          effect = Effect.get(effect.EffectMasterId, ability.level + ability.release)
           if (effect.FireTimingType !== 'Sense') return
           effect.applyEffect(this.calc, idx, null)
         })
@@ -1824,8 +1830,8 @@ class LiveSimulator {
     return true
   }
   purgeExpiredBuff(time) {
-    this.activeBuff.sense = this.activeBuff.sense.filter(i => i.lastUntil <= time)
-    this.activeBuff.starAct = this.activeBuff.starAct.filter(i => i.lastUntil <= time)
+    this.activeBuff.sense = this.activeBuff.sense.filter(i => (i.skipCurrent = false, i.lastUntil <= time))
+    this.activeBuff.starAct = this.activeBuff.starAct.filter(i => (i.skipCurrent = false, i.lastUntil <= time))
   }
 }
 class StatCalculator {
