@@ -617,6 +617,9 @@ class CharacterData {
   get attributeName() {
     return this.data.Attribute.toLowerCase()
   }
+  get cardIconId() {
+    return `${this.Id}_${this.awaken&&this.data.Rarity==='Rare4'?1:0}`
+  }
   get cardName() {
     return this.data.Name
   }
@@ -684,7 +687,7 @@ class CharacterData {
     this.senseInput.value = this.senselv;
     this.bloomInput.value = this.bloom;
 
-    this.cardImg.src = `https://redive.estertion.win/wds/card/${this.Id}_${this.awaken&&this.data.Rarity==='Rare4'?1:0}.webp@w200`
+    this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w200`
 
     const stat = this.statFinal
     this.voValNode.textContent = stat.vo
