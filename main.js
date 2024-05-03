@@ -1267,8 +1267,10 @@ class ScoreCalculator {
     this.liveSim.leader = leader
     this.liveSim.starActRequirements = leader.staract.actualRequirements
     node.appendChild(_('div', {}, [
-      _('span', { 'data-text-key': 'CALC_STAR_ACT_REQUIREMENTS'}),
+      _('div', { className: 'spriteatlas-characters', 'data-id': leader.cardIconId, style: {float: 'left', margin: '0 5px 5px 0'}}),
+      _('div', { 'data-text-key': 'CALC_STAR_ACT_REQUIREMENTS'}),
       ScoreCalculator.createStarActDisplay(this.liveSim.starActRequirements),
+      _('div', { style: {clear: 'both'}}),
     ]))
 
     this.liveSim.runSimulation(node)
@@ -1411,8 +1413,12 @@ class LiveSimulator {
       }
       node.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : ''), open: '' }, [
         _('summary', { className: 'sense-star', 'data-sense-type': this.currentSenseType }, [_('text', this.phase)]),
-        _('text', this.phaseLog.join('\n'))
-      ])).appendChild(_('div', {}, [ScoreCalculator.createStarActDisplay(this.starActCurrent, true)]))
+        _('div', { className: 'spriteatlas-characters', 'data-id': this.calc.members[timing.Position - 1].cardIconId, style: {float: 'left', margin: '0 5px 5px 0'}}),
+        _('text', this.phaseLog.join('\n')),
+      ])).appendChild(_('div', {}, [
+        ScoreCalculator.createStarActDisplay(this.starActCurrent, true),
+        _('div', { style: {clear: 'both'}}),
+      ]))
 
       oddRow = !oddRow
     })
