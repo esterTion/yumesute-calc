@@ -357,13 +357,13 @@ class FinalPerformanceUpCancelSense {
 class SenseScoreUp {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`SenseScoreUp calc type: ${effect.CalculationType}`)
-    const bonus = 1 + 0.0001 * effect.activeEffect.Value
+    const bonus = 0.0001 * effect.activeEffect.Value
     calc.liveSim.activeBuff.sense.push({
       targets,
       effect,
       bonus,
       skipCurrent: effect.Range === 'All',
-      lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+      lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
   }
 }
@@ -373,13 +373,13 @@ class ScoreUpByHighLife {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`ScoreUpByHighLife calc type: ${effect.CalculationType}`)
     const life = Math.min(calc.liveSim.life, ScoreUpByHighLife.LifeCap)
-    const bonus = 1 + Math.floor(0.01 * effect.activeEffect.Value * Math.pow(life / ScoreUpByHighLife.LifeCap, ScoreUpByHighLife.PowerValue)) / 100
+    const bonus = Math.floor(0.01 * effect.activeEffect.Value * Math.pow(life / ScoreUpByHighLife.LifeCap, ScoreUpByHighLife.PowerValue)) / 100
     calc.liveSim.activeBuff.sense.push({
       targets,
       effect,
       bonus,
       skipCurrent: false,
-      lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+      lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
   }
 }
@@ -389,12 +389,12 @@ class ScoreUpByLowLife {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`ScoreUpByLowLife calc type: ${effect.CalculationType}`)
     const life = Math.min(calc.liveSim.life, ScoreUpByLowLife.LifeCap)
-    const bonus = 1 + 0.0001 * effect.activeEffect.Value * Math.pow((1001 - life) / ScoreUpByLowLife.LifeCap, ScoreUpByLowLife.PowerValue)
+    const bonus = Math.floor(0.01 * effect.activeEffect.Value * Math.pow((1001 - life) / ScoreUpByLowLife.LifeCap, ScoreUpByLowLife.PowerValue)) / 100
     calc.liveSim.activeBuff.sense.push({
       targets,
       effect,
       bonus,
-      lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+      lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
   }
 }
@@ -550,13 +550,13 @@ class LifeGuard {
 class StarActScoreUp {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`SenseScoreUp calc type: ${effect.CalculationType}`)
-    const bonus = 1 + 0.0001 * effect.activeEffect.Value
+    const bonus = 0.0001 * effect.activeEffect.Value
     calc.liveSim.activeBuff.starAct.push({
       targets,
       effect,
       bonus,
       skipCurrent: false,
-      lastUntil: calc.liveSim.currentTime + effect.DurationSecond,
+      lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
   }
 }
@@ -1862,15 +1862,21 @@ class LiveSimulator {
       let scoreLine = multiplier
       multiplier *= 1 + this.pGauge / 1000
       scoreLine = `${scoreLine} × ${1 + this.pGauge / 1000}`
+      let extraBuffMul = 0
+      let extraBuffLine = '1'
       this.activeBuff.sense.forEach(buff => {
         if (buff.skipCurrent) return
         const targets = buff.targets
         if (targets && !targets.includes(idx)) return
         const effect = buff.effect
         if (!effect.conditionSatified(this.calc, idx)) return
-        multiplier *= buff.bonus
-        scoreLine = `${scoreLine} × ${buff.bonus}`
+        extraBuffMul += buff.bonus
+        extraBuffLine = `${extraBuffLine} + ${buff.bonus.toFixed(2)}`
       })
+      if (extraBuffMul) {
+        multiplier *= 1 + extraBuffMul
+        scoreLine = `${scoreLine} × (${extraBuffLine})`
+      }
       const stat = this.calc.stat.final[idx]
       const score = Math.floor(stat.total * multiplier)
       scoreLine = `${stat.total} × ${scoreLine} = ${score}`
@@ -1937,15 +1943,21 @@ class LiveSimulator {
     let scoreLine = multiplier
     multiplier *= 1 + this.pGauge / 1000
     scoreLine = `${scoreLine} × ${1 + this.pGauge / 1000}`
+    let extraBuffMul = 0
+    let extraBuffLine = '1'
     this.activeBuff.starAct.forEach(buff => {
       if (buff.skipCurrent) return
       const targets = buff.targets
       if (targets && !targets.includes(idx)) return
       const effect = buff.effect
       if (!effect.conditionSatified(this.calc, idx)) return
-      multiplier *= buff.bonus
-      scoreLine = `${scoreLine} × ${buff.bonus}`
+      extraBuffMul += buff.bonus
+      extraBuffLine = `${extraBuffLine} + ${buff.bonus.toFixed(2)}`
     })
+    if (extraBuffMul) {
+      multiplier *= 1 + extraBuffMul
+      scoreLine = `${scoreLine} × (${extraBuffLine})`
+    }
     const score = Math.floor(stat * multiplier)
     scoreLine = `${stat} × ${scoreLine} = ${score}`
     this.calc.result.starActScore.push(score)
@@ -1955,8 +1967,8 @@ class LiveSimulator {
     return true
   }
   purgeExpiredBuff(time) {
-    this.activeBuff.sense = this.activeBuff.sense.filter(i => (i.skipCurrent = false, i.lastUntil <= time))
-    this.activeBuff.starAct = this.activeBuff.starAct.filter(i => (i.skipCurrent = false, i.lastUntil <= time))
+    this.activeBuff.sense = this.activeBuff.sense.filter(i => (i.skipCurrent = false, i.lastUntil >= time))
+    this.activeBuff.starAct = this.activeBuff.starAct.filter(i => (i.skipCurrent = false, i.lastUntil >= time))
   }
 }
 class StatCalculator {
