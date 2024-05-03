@@ -1401,8 +1401,15 @@ class LiveSimulator {
       this.purgeExpiredBuff(timing.TimingSecond)
       this.phase = ConstText.get('LIVE_PHASE_SENSE').replace('{time}', timing.TimingSecond)
       this.phaseLog = []
+      const timelineNode = root.senseBox.children[timing.Position - 1].children[1].children[
+        this.senseTiming.filter(i => i.Position === timing.Position).indexOf(timing)
+      ]
+      timelineNode.classList.remove('failed')
       if (!this.trySense(timing)) {
+        this.phase = ConstText.get('LIVE_PHASE_SENSE_FAILED').replace('{time}', timing.TimingSecond)
         this.starActCurrent = [0,0,0,0,0]
+
+        timelineNode.classList.add('failed')
       } else {
         this.lastSenseTime[timing.Position - 1] = timing.TimingSecond
       }

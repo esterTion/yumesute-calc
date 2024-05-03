@@ -47,6 +47,9 @@ img {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(177,177,177)' stroke='rgb(145,145,145)' stroke-width='1.5' y='39'>✦</text></svg>");
   color: white;
 }
+.sense-node.failed {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(177,177,177)' stroke='rgb(145,145,145)' stroke-width='1.5' y='39'>✦</text><path fill='rgba(0,0,0,0.5)' d='M32,3L3,32L8,37L37,8Z'></path></svg>");
+}
 *[data-sense-type="support"] .sense-node {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(141,229,83)' stroke='rgb(98,187,69)' stroke-width='1.5' y='39'>✦</text></svg>");
 }
@@ -58,6 +61,18 @@ img {
 }
 *[data-sense-type="special"] .sense-node {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(52,90,212)' stroke='rgb(40,80,188)' stroke-width='1.5' y='39'>✦</text></svg>");
+}
+*[data-sense-type="support"] .sense-node.failed {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(141,229,83)' stroke='rgb(98,187,69)' stroke-width='1.5' y='39'>✦</text><path fill='rgba(0,0,0,0.5)' d='M32,3L3,32L8,37L37,8Z'></path></svg>");
+}
+*[data-sense-type="control"] .sense-node.failed {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(235,67,64)' stroke='rgb(192,54,54)' stroke-width='1.5' y='39'>✦</text><path fill='rgba(0,0,0,0.5)' d='M32,3L3,32L8,37L37,8Z'></path></svg>");
+}
+*[data-sense-type="amplification"] .sense-node.failed {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(255,199,63)' stroke='rgb(236,180,35)' stroke-width='1.5' y='39'>✦</text><path fill='rgba(0,0,0,0.5)' d='M32,3L3,32L8,37L37,8Z'></path></svg>");
+}
+*[data-sense-type="special"] .sense-node.failed {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text style='font:54px Arial' text-anchor='middle' x='20' fill='rgb(52,90,212)' stroke='rgb(40,80,188)' stroke-width='1.5' y='39'>✦</text><path fill='rgba(0,0,0,0.5)' d='M32,3L3,32L8,37L37,8Z'></path></svg>");
 }
 .sense-star::before {
   content: "✦";
