@@ -1441,7 +1441,7 @@ class ScoreCalculator {
     let finalSenseScore = this.result.senseScore.reduce((acc, cur) => acc + cur, 0)
     let finalStarActScore = this.result.starActScore.reduce((acc, cur) => acc + cur, 0)
     senseScoreNode.appendChild(_('text', finalSenseScore))
-    starActScoreNode.appendChild(_('text', finalStarActScore))
+    starActScoreNode.appendChild(_('text', ConstText.get('CALC_RESULT_STARACT').replace('{times}', this.result.starActScore.length).replace('{score}', finalStarActScore)))
     totalScoreNode.appendChild(_('text', this.result.baseScore.map(i => i + finalSenseScore + finalStarActScore).join(' / ')))
 
     ConstText.fillText()
@@ -1529,6 +1529,7 @@ class LiveSimulator {
   phaseLog;
   pendingActions;
   currentTiming;
+  lastSenseTiming;
   activeBuff;
 
   constructor(calc) {
@@ -1546,13 +1547,20 @@ class LiveSimulator {
     this.phase = ConstText.get('LIVE_PHASE_START')
     this.phaseLog = []
     this.pendingActions = []
+    this.currentTiming = 0
+    this.lastSenseTiming = this.senseTiming[this.senseTiming.length - 1].TimingSecond
     this.activeBuff = { sense: [], starAct: [] }
     this.starActCurrent = [0,0,0,0,0]
     this.senseExtraAmount = [0,0,0,0,0]
   }
   runSimulation(node) {
     this.applyPendingActions()
+    Array.from(root.senseBox.querySelectorAll('.sense-add-light,.staract-line')).forEach(i => i.remove())
     this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
+    if (this.tryStarAct()) {
+      this.phase = ConstText.get('LIVE_PHASE_START_WITH_STARACT')
+      this.starActCurrent = [0,0,0,0,0]
+    }
     node.appendChild(_('details', { className: 'live-log-phase odd-row' }, [
       _('summary', {}, [_('text', this.phase)]),
       _('text', this.phaseLog.join('\n'))
@@ -1754,6 +1762,8 @@ class LiveSimulator {
     scoreLine = `${stat} × ${scoreLine} = ${score}`
     this.calc.result.starActScore.push(score)
     this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_SCORE').replace('{0}', scoreLine))
+    const leftPixel = this.currentTiming ? 21 : 10
+    root.senseBox.children[0].children[1].appendChild(_('div', { className: 'staract-line', style: { left: `calc(${this.currentTiming/this.lastSenseTiming*100}% - ${leftPixel}px)` } }))
     return true
   }
   purgeExpiredBuff(time) {
@@ -2088,10 +2098,12 @@ class ConstText {
     CALC_BASE_SCORE: '基础分: ',
     CALC_SENSE_SCORE: 'Sense分: ',
     CALC_STARACT_SCORE: 'StarAct分: ',
+    CALC_RESULT_STARACT: '{times}次 / {score}',
     CALC_TOTAL_SCORE: '总分：',
     CALC_STAR_ACT_REQUIREMENTS: 'StarAct需求：',
 
-    LIVE_PHASE_START: '开场前：',
+    LIVE_PHASE_START: '开场前',
+    LIVE_PHASE_START_WITH_STARACT: '开场前 | StarAct发动',
     LIVE_PHASE_SENSE: 'Sense发动：{time}',
     LIVE_PHASE_SENSE_FAILED: 'Sense发动失败：{time}',
     LIVE_PHASE_SENSE_WITH_STARACT: 'Sense发动：{time} | StarAct发动',
