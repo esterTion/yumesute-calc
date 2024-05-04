@@ -143,21 +143,21 @@ class Effect {
   }
 
   canTrigger(calc, index) {
+    let result = true
     for (let trigger of this.Triggers) {
       switch (trigger.Trigger) {
-        case 'CompanyCount': { return calc.properties.companyCount == trigger.Value;}
-        case 'AttributeCount': { return calc.properties.attributeCount == trigger.Value;}
-        case 'CharacterBase': { return calc.members[index].data.CharacterBaseMasterId == trigger.Value;}
-        case "Company": { return GameDb.CharacterBase[calc.members[index].data.CharacterBaseMasterId].CompanyMasterId == trigger.Value; }
-        case "Attribute": { return calc.members[index].data.Attribute == AttributeEnum[trigger.Value];}
-        case "SenseType": { return calc.members[index].sense.data.Type == SenseTypeEnum[trigger.Value];}
+        case 'CompanyCount': { result = result && calc.properties.companyCount == trigger.Value; break }
+        case 'AttributeCount': { result = result && calc.properties.attributeCount == trigger.Value; break }
+        case 'CharacterBase': { result = result && calc.members[index].data.CharacterBaseMasterId == trigger.Value; break }
+        case "Company": { result = result && GameDb.CharacterBase[calc.members[index].data.CharacterBaseMasterId].CompanyMasterId == trigger.Value;  break }
+        case "Attribute": { result = result && calc.members[index].data.Attribute == AttributeEnum[trigger.Value]; break }
+        case "SenseType": { result = result && calc.members[index].sense.data.Type == SenseTypeEnum[trigger.Value]; break }
         case "OverLife":
         case "BelowLife":
-        default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED', {trigger:trigger.Trigger, range: this.Range, id: this.Id})) }
+        default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED', {trigger:trigger.Trigger, range: this.Range, id: this.Id})); return false }
       }
-      return false;
     }
-    return true
+    return result
   }
   conditionSatified(calc, index) {
     const member = calc.members[index]
@@ -207,12 +207,12 @@ class Effect {
       case 'ScoreUpByHighLife': { return ScoreUpByHighLife.applyEffect(this, calc, targets, type) }
       case 'ScoreUpByLowLife': { return ScoreUpByLowLife.applyEffect(this, calc, targets, type) }
       case 'SenseCoolTimeRecastDown': { return SenseCoolTimeRecastDown.applyEffect(this, calc, targets, type) }
-      case "AddSenseLightSelf": { return AddSenseLightSelf.applyEffect(this, calc, targets, type) }
-      case "AddSenseLightVariable": { return AddSenseLightVariable.applyEffect(this, calc, targets, type) }
-      case "AddSenseLightSupport": { return AddSenseLightSupport.applyEffect(this, calc, targets, type) }
-      case "AddSenseLightControl": { return AddSenseLightControl.applyEffect(this, calc, targets, type) }
-      case "AddSenseLightAmplification": { return AddSenseLightAmplification.applyEffect(this, calc, targets, type) }
-      case "AddSenseLightSpecial": { return AddSenseLightSpecial.applyEffect(this, calc, targets, type) }
+      case "AddSenseLightSelf": { return AddSenseLightSelf.applyEffect(this, calc, [index], type) }
+      case "AddSenseLightVariable": { return AddSenseLightVariable.applyEffect(this, calc, [index], type) }
+      case "AddSenseLightSupport": { return AddSenseLightSupport.applyEffect(this, calc, [index], type) }
+      case "AddSenseLightControl": { return AddSenseLightControl.applyEffect(this, calc, [index], type) }
+      case "AddSenseLightAmplification": { return AddSenseLightAmplification.applyEffect(this, calc, [index], type) }
+      case "AddSenseLightSpecial": { return AddSenseLightSpecial.applyEffect(this, calc, [index], type) }
 
       case "ScoreGainOnScore": { return ScoreGainOnScore.applyEffect(this, calc, [index], type) }
       case "ScoreGainOnVocal": { return ScoreGainOnVocal.applyEffect(this, calc, [index], type) }
@@ -1632,7 +1632,10 @@ class ScoreCalculator {
   createStatDetailsTable() {
     let rowNumber;
     return _('div', {}, this.members.map((chara, idx) => (rowNumber = 0, chara === null ? _('text', '') : _('details', {}, [
-      _('summary', {}, [_('text', chara.fullCardName)]),
+      _('summary', {}, [
+        _('span', {className: `card-attribute-${chara.attributeName}`}),
+        _('text', `${chara.fullCardName} CT: ${chara.sense.ct}`)
+      ]),
       _('table', { className: 'stat-details'}, [
         _('thead', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('th'),
@@ -1750,7 +1753,9 @@ class LiveSimulator {
     }
     node.appendChild(_('details', { className: 'live-log-phase odd-row' }, [
       _('summary', {}, [_('text', this.phase)]),
-      _('text', this.phaseLog.join('\n'))
+      _('text', this.phaseLog.join('\n')),
+      _('br'),
+      ScoreCalculator.createStarActDisplay(this.starActCurrent, true),
     ]))
 
     let oddRow = false
@@ -1890,7 +1895,7 @@ class LiveSimulator {
       let multiplier = sense.scoreUp
       let scoreLine = multiplier
       multiplier *= 1 + this.pGauge / 1000
-      scoreLine = `${scoreLine} × ${1 + this.pGauge / 1000}`
+      scoreLine = `${scoreLine} × ${(1 + this.pGauge / 1000).toFixed(3).replace(/0+$/, '')}`
       let extraBuffMul = 0
       let extraBuffLine = '1'
       this.activeBuff.sense.forEach(buff => {
@@ -1971,7 +1976,7 @@ class LiveSimulator {
     let multiplier = this.leader.staract.scoreUp
     let scoreLine = multiplier
     multiplier *= 1 + this.pGauge / 1000
-    scoreLine = `${scoreLine} × ${1 + this.pGauge / 1000}`
+    scoreLine = `${scoreLine} × ${(1 + this.pGauge / 1000).toFixed(3).replace(/0+$/, '')}`
     let extraBuffMul = 0
     let extraBuffLine = '1'
     this.activeBuff.starAct.forEach(buff => {
@@ -2296,6 +2301,7 @@ class ConstText {
     SENSE_NOTATION_TAB_KEIKO: '稽古',
 
     ALBUM_LEVEL_LABEL: '相册等级：',
+    PARTY_LABEL: '编队',
 
     THEATER_LEVEL_LABEL: '剧场等级：',
     SIRIUS: 'Sirius',
@@ -2421,8 +2427,11 @@ class RootLogic {
         this.highscoreCalcTabContent = _('div', {}, [
           _('text', 'スコアボーナス: '),
         ]),
-        this.partyManagerContainer = _('div'),
-        this.calcResult = _('div'),
+        _('details', {}, [
+          _('summary', {'data-text-key':'PARTY_LABEL'}),
+          this.partyManagerContainer = _('div'),
+          this.calcResult = _('div'),
+        ]),
       ]),
       this.keikoCalcTabContent = _('div', {}, [
         _('div', {}, [
