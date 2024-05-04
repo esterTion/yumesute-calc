@@ -1764,7 +1764,7 @@ class LiveSimulator {
         this.senseTiming.filter(i => i.Position === timing.Position).indexOf(timing)
       ]
       timelineNode.classList.remove('failed')
-      if (!this.trySense(timing)) {
+      if (!this.trySense(timing, timelineNode)) {
         this.phase = ConstText.get('LIVE_PHASE_SENSE_FAILED').replace('{time}', timing.TimingSecond)
         this.starActCurrent = [0,0,0,0,0]
 
@@ -1839,7 +1839,7 @@ class LiveSimulator {
       this.starActCurrent[i] = Math.min(this.starActCurrent[i], this.starActRequirements[i])
     }
   }
-  trySense(timing) {
+  trySense(timing, timelineNode) {
     let idx = timing.Position - 1
     // irh或电姬团报 跳过
     if (this.skipSense[idx]) {
@@ -1883,6 +1883,9 @@ class LiveSimulator {
     }
     this.currentSenseType = sense.Type.toLowerCase();
     this.addSenseLight(sense.Type, sense.data.LightCount + this.senseExtraAmount[idx])
+    for (let i=0; i<this.senseExtraAmount[idx]; i++) {
+      timelineNode.appendChild(_('div', { className: 'sense-add-light', style: { top: `calc(100% + ${i*8}px)` } }))
+    }
     if (sense.scoreUp) {
       let multiplier = sense.scoreUp
       let scoreLine = multiplier

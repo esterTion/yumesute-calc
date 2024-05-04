@@ -150,3 +150,26 @@ table.stat-details td {
 	background-size: 2px 12px, 2px 100%;
 	z-index: 5;
 }
+
+.sense-add-light {
+  position: absolute;
+  left: 13.5px;
+  font-size: 16px;
+  line-height: 10px;
+  color: rgb(177,177,177);
+}
+*[data-sense-type="support"] .sense-add-light {
+  color: rgb(98,187,69);
+}
+*[data-sense-type="control"] .sense-add-light {
+  color: rgb(192,54,54);
+}
+*[data-sense-type="amplification"] .sense-add-light {
+  color: rgb(236,180,35);
+}
+*[data-sense-type="special"] .sense-add-light {
+  color: rgb(40,80,188);
+}
+.sense-add-light::before {
+  content: "✦";
+}
