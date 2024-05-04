@@ -220,6 +220,20 @@ class Effect {
       case "ScoreGainOnConcentration": { return ScoreGainOnConcentration.applyEffect(this, calc, [index], type) }
 
       case "StarActScoreUp": { return StarActScoreUp.applyEffect(this, calc, targets, type) }
+
+      case "BaseVocalUp":
+      case "BaseExpressionUp":
+      case "BaseConcentrationUp":
+
+      case "ChangeWrongLightToSpLight":
+
+      case "ScoreUpByBuff":
+      case "BuffTimeExtend":
+
+      case "LifeFixedValue":
+      case "LightGuard":
+
+      case "ScoreGainOnPerformance":
       default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_NOT_IMPLEMENTED', {type: this.Type, id: this.Id})) }
     }
   }
@@ -365,6 +379,7 @@ class SenseScoreUp {
       skipCurrent: effect.Range === 'All',
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
+    calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_UP', [bonus * 100, effect.DurationSecond]))
   }
 }
 class ScoreUpByHighLife {
@@ -381,6 +396,8 @@ class ScoreUpByHighLife {
       skipCurrent: false,
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
+    const bonusLine = `${effect.activeEffect.Value / 100} × (${life} / ${ScoreUpByHighLife.LifeCap}) ^ ${ScoreUpByHighLife.PowerValue} = ${Math.round(bonus * 100)}`
+    calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_UP', [bonusLine, effect.DurationSecond]))
   }
 }
 class ScoreUpByLowLife {
@@ -396,6 +413,8 @@ class ScoreUpByLowLife {
       bonus,
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
+    const bonusLine = `${effect.activeEffect.Value / 100} × ((1001 -${life}) / ${ScoreUpByLowLife.LifeCap}) ^ ${ScoreUpByLowLife.PowerValue} = ${Math.round(bonus * 100)}`
+    calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_UP', [bonusLine, effect.DurationSecond]))
   }
 }
 class AddSenseLightSelf {
@@ -464,7 +483,7 @@ class ScoreGainOnScore {
       + calc.result.starActScore.reduce((acc, cur) => acc + cur, 0)
       const score = Math.floor(scoreRightNow * effect.activeEffect.Value / 100)
       calc.result.senseScore.push(score)
-      liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [score]))
+      liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [scoreRightNow, effect.activeEffect.Value / 100, score, 'score']))
       root.addWarningMessage(ConstText.get('LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE'))
     })
   }
@@ -477,7 +496,7 @@ class ScoreGainOnVocal {
       const val = calc.stat.final[idx].vo
       const score = Math.floor(val * effect.activeEffect.Value / 100)
       calc.result.senseScore.push(score)
-      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [score]))
+      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [val, effect.activeEffect.Value / 100, score, 'vo']))
     })
   }
 }
@@ -489,7 +508,7 @@ class ScoreGainOnExpression {
       const val = calc.stat.final[idx].ex
       const score = Math.floor(val * effect.activeEffect.Value / 100)
       calc.result.senseScore.push(score)
-      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [score]))
+      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [val, effect.activeEffect.Value / 100, score, 'ex']))
     })
   }
 }
@@ -501,7 +520,7 @@ class ScoreGainOnConcentration {
       const val = calc.stat.final[idx].co
       const score = Math.floor(val * effect.activeEffect.Value / 100)
       calc.result.senseScore.push(score)
-      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [score]))
+      calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [val, effect.activeEffect.Value / 100, score, 'co']))
     })
   }
 }
@@ -558,6 +577,7 @@ class StarActScoreUp {
       skipCurrent: false,
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
+    calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_UP', [bonus * 100, effect.DurationSecond]))
   }
 }
 
@@ -1759,11 +1779,14 @@ class LiveSimulator {
       }
       node.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : ''), open: '' }, [
         _('summary', { className: 'sense-star', 'data-sense-type': this.currentSenseType }, [_('text', this.phase)]),
-        _('div', { className: 'spriteatlas-characters', 'data-id': this.calc.members[timing.Position - 1].cardIconId, style: {float: 'left', margin: '0 5px 5px 0'}}),
-        _('text', this.phaseLog.join('\n')),
-      ])).appendChild(_('div', {}, [
-        ScoreCalculator.createStarActDisplay(this.starActCurrent, true),
-        _('div', { style: {clear: 'both'}}),
+        _('table', {}, [_('tr', { style: {verticalAlign: 'top'} }, [
+          _('td', {}, [_('div', { className: 'spriteatlas-characters', 'data-id': this.calc.members[timing.Position - 1].cardIconId})]),
+          _('td', {}, [
+            _('text', this.phaseLog.join('\n')),
+            _('br'),
+            ScoreCalculator.createStarActDisplay(this.starActCurrent, true),
+          ]),
+        ])]),
       ]))
 
       oddRow = !oddRow
@@ -1781,25 +1804,28 @@ class LiveSimulator {
       this.pendingActions.push(() => this.addLife(amount, true))
       return
     }
+    const before = this.life
     this.life += amount
-    this.phaseLog.push(ConstText.get('LIVE_LOG_LIFE').replace('{0}', amount).replace('{1}', this.life))
+    this.phaseLog.push(ConstText.get('LIVE_LOG_LIFE', [before, amount, this.life]))
   }
   addPGauge(amount, immediateAction = false) {
     if (!immediateAction) {
       this.pendingActions.push(() => this.addPGauge(amount, true))
       return
     }
+    const before = this.pGauge
     this.pGauge += amount
     this.pGauge = Math.min(this.pGauge, this.pGaugeLimit)
-    this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE').replace('{0}', amount).replace('{1}', this.pGauge).replace('{2}', this.pGaugeLimit))
+    this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE', [before, amount, this.pGauge, this.pGaugeLimit]))
   }
   addPGaugeLimit(amount, immediateAction = false) {
     if (!immediateAction) {
       this.pendingActions.push(() => this.addPGaugeLimit(amount, true))
       return
     }
+    const before = this.pGaugeLimit
     this.pGaugeLimit += amount
-    this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE_LIMIT').replace('{0}', amount).replace('{1}', this.pGauge).replace('{2}', this.pGaugeLimit))
+    this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE_LIMIT', [before, amount, this.pGauge, this.pGaugeLimit]))
   }
   addSenseLight(type, amount = 1) {
     switch (type.toLowerCase()) {
@@ -2307,14 +2333,16 @@ class ConstText {
     LIVE_PHASE_SENSE: 'Sense发动：{time}',
     LIVE_PHASE_SENSE_FAILED: 'Sense发动失败：{time}',
     LIVE_PHASE_SENSE_WITH_STARACT: 'Sense发动：{time} | StarAct发动',
-    LIVE_LOG_LIFE: '生命值变化：{0} => {1}/1000',
-    LIVE_LOG_PGUAGE: 'P槽变化：{0} => {1}/{2}',
-    LIVE_LOG_PGUAGE_LIMIT: 'P槽上限变化：{0} => {1}/{2}',
+    LIVE_LOG_LIFE: '生命值变化：{0} + {1} = {2}/1000',
+    LIVE_LOG_PGUAGE: 'P槽变化：{0} + {1} = {2}/{3}',
+    LIVE_LOG_PGUAGE_LIMIT: 'P槽上限变化：{0} + {1} = {2}/{3}',
     LIVE_LOG_SENSE_FAILED: 'Sense发动失败',
     LIVE_LOG_SENSE_SKIP: '跳过发动',
     LIVE_LOG_SENSE_SCORE: 'Sense加分：{0}',
     LIVE_LOG_STARACT_SCORE: 'StarAct发动，加分：{0}',
-    LIVE_LOG_POSTER_SCORE: '海报加分：{0}',
+    LIVE_LOG_POSTER_SCORE: '海报加分({3})：{0} × {1} = {2}',
+    LIVE_LOG_SENSE_UP: 'Sense加成：{0}%，持续{1}秒',
+    LIVE_LOG_STARACT_UP: 'StarAct加成：{0}%，持续{1}秒',
 
     PARTY_DEFAULT_NAME: '队伍',
     PARTY_DELETE_CONFIRM: '确定删除队伍吗？',
@@ -2328,7 +2356,7 @@ class ConstText {
 
   static get(key, replaces = {}) {
     return (ConstText[ConstText.language][key] || ConstText.get('UNDEFINED_STRING', [key]))
-      .replace(/{([^{}}]+)}/g, (ori, name) => replaces[name] || ori)
+      .replace(/{([^{}}]+)}/g, (ori, name) => (replaces[name]!==undefined ? replaces[name] : ori))
   }
 
   static fillText() {
