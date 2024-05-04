@@ -34,6 +34,7 @@ class GameDb {
   static CharacterBase = {};
   static CharacterLevel = {};
   static CharacterBloomBonusGroup = {};
+  static CharacterStarRank = {};
   static Sense = {};
   static StarAct = {};
   static StarActCondition = {};
@@ -65,6 +66,7 @@ class GameDb {
       this.loadKeyedMasterTable('CharacterBaseMaster').then(r => this.CharacterBase = r).then(updateProgress),
       this.loadKeyedMasterTable('CharacterLevelMaster', 'Level').then(r => this.CharacterLevel = r).then(updateProgress),
       this.loadKeyedMasterTable('CharacterBloomBonusGroupMaster').then(r => this.CharacterBloomBonusGroup = r).then(updateProgress),
+      this.loadKeyedMasterTable('CharacterStarRankMaster', 'Rank').then(r => this.CharacterStarRank = r).then(updateProgress),
       this.loadKeyedMasterTable('SenseMaster').then(r => this.Sense = r).then(updateProgress),
       this.loadKeyedMasterTable('StarActMaster').then(r => this.StarAct = r).then(updateProgress),
       this.loadKeyedMasterTable('StarActConditionMaster').then(r => this.StarActCondition = r).then(updateProgress),
@@ -869,7 +871,8 @@ class CharacterData {
     for (let lvl in GameDb.CharacterLevel) {
       this.levelSelect.appendChild(_('option', { value: lvl }, [_('text', lvl)]))
     }
-    for (let i = 0; i < 51; i++) {
+    const maxStarRank = Object.values(GameDb.CharacterStarRank).slice(-1)[0].Rank
+    for (let i = 0; i <= maxStarRank; i++) {
       this.starRankInput.appendChild(_('option', { value: i }, [_('text', i)]))
     }
     for (let i = 1; i < 6; i++) {
@@ -1967,10 +1970,11 @@ class LiveSimulator {
     }
     const stat = this.calc.stat.finalTotal
     const staractEffectBranch = this.leader.staract.getActiveBranch(this)
+    const idx = this.calc.members.indexOf(this.leader)
     if (staractEffectBranch) {
       staractEffectBranch.BranchEffects.forEach(effect => {
-        effect = Effect.get(effect.EffectMasterId, chara.senselv)
-        effect.applyEffect(this.calc, this.calc.members.indexOf(this.leader), null)
+        effect = Effect.get(effect.EffectMasterId, this.leader.bloom + 1)
+        effect.applyEffect(this.calc, idx, null)
       })
     }
     let multiplier = this.leader.staract.scoreUp
@@ -2292,6 +2296,18 @@ class PartyManager {
 
 class ConstText {
   static language = null
+  static init() {
+    if (ConstText.language) return
+    if (localStorage.getItem('wds-calc-language')) {
+      ConstText.language = localStorage.getItem('wds-calc-language')
+    }
+    ConstText.autoDetectLanguage()
+  }
+  static setLanguage(lang) {
+    ConstText.language = lang
+    localStorage.setItem('wds-calc-language', lang)
+    ConstText.fillText()
+  }
   static autoDetectLanguage() {
     for (let lang of navigator.languages) {
       if (lang.startsWith('zh')) {
@@ -2520,7 +2536,7 @@ class ConstText {
     })
   }
 }
-ConstText.autoDetectLanguage()
+ConstText.init()
 
 class RootLogic {
   appState = {
@@ -2558,6 +2574,12 @@ class RootLogic {
     document.getElementById('loading').remove()
     document.getElementById('app').appendChild(_('div', {}, [
       _('div', {className: 'margin-box'}),
+      _('div', {}, [_('select', { event: { change: e => ConstText.setLanguage(e.target.value) }}, [
+        _('option', { disabled: '', selected: '' }, [_('text', 'Language')]),
+        _('option', { value: 'en' }, [_('text', 'English')]),
+        _('option', { value: 'ja' }, [_('text', '日本語')]),
+        _('option', { value: 'zh' }, [_('text', '中文')]),
+      ])]),
       this.warningMessageBox = _('div', { id: 'warning_message_box'}),
       _('div', {className: 'margin-box'}),
       this.calcTypeSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
@@ -2943,6 +2965,7 @@ class RootLogic {
     }
 
     this.printWarningMessages()
+    ConstText.fillText()
 
     } catch (e) {
       window.error_message.textContent = [e.toString(), e.stack].join('\n')
@@ -2995,6 +3018,7 @@ class RootLogic {
       let idx = this.appState.characters.indexOf(this.keikoSelection[i])
       this.keikoBox.children[i].value = idx > -1 && this.keikoSelection[i].data.CharacterBaseMasterId == keikoCharaId ? idx : ''
     }
+    ConstText.fillText()
   }
   keikoSelection = []
   keikoCalcResult() {
