@@ -113,6 +113,8 @@ class BeautyText {
   }
 }
 class Effect {
+  // life guard分支下的效果需要单独处理。。
+  isLifeGuardBranch;
   constructor(id, level) {
     if (!GameDb.Effect[id]) {
       throw new Error(`Effect ${id} not found`)
@@ -123,6 +125,7 @@ class Effect {
       throw new Error(`Effect ${id} level ${level} not found`)
     }
     Object.assign(this, this.data)
+    this.isLifeGuardBranch = false
   }
   static get(id, level) {
     return new Effect(id, level)
@@ -373,12 +376,14 @@ class FinalPerformanceUpCancelSense {
 class SenseScoreUp {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`SenseScoreUp calc type: ${effect.CalculationType}`)
-    const bonus = 0.0001 * effect.activeEffect.Value
+    const lifeGuardFix = effect.isLifeGuardBranch ? 100 : 1
+    const bonus = lifeGuardFix * 0.0001 * effect.activeEffect.Value
     calc.liveSim.activeBuff.sense.push({
       targets,
       effect,
       bonus,
       skipCurrent: effect.Range === 'All',
+      isLifeGuardEffect: effect.isLifeGuardBranch,
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
     calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_UP', [bonus * 100, effect.DurationSecond]))
@@ -571,12 +576,14 @@ class LifeGuard {
 class StarActScoreUp {
   static applyEffect(effect, calc, targets, type) {
     if (effect.CalculationType !== 'PercentageAddition') throw new Error(`SenseScoreUp calc type: ${effect.CalculationType}`)
-    const bonus = 0.0001 * effect.activeEffect.Value
+    const lifeGuardFix = effect.isLifeGuardBranch ? 100 : 1
+    const bonus = lifeGuardFix * 0.0001 * effect.activeEffect.Value
     calc.liveSim.activeBuff.starAct.push({
       targets,
       effect,
       bonus,
       skipCurrent: false,
+      isLifeGuardEffect: effect.isLifeGuardBranch,
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
     calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_UP', [bonus * 100, effect.DurationSecond]))
@@ -639,12 +646,13 @@ class SenseData {
   getActiveBranch(liveSim) {
     const branches = this.data.Branches
     let result = null
+    let isLifeGuardBranch = false
     for (let branch of branches) {
       let conditionMet = true
       if (this.data.BranchCondition1 !== 'None') {
         let judgeValue
         switch (this.data.BranchCondition1) {
-          case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; break }
+          case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
           default: { console.log(`Sense branch condition ${this.data.BranchCondition1}`); return null }
         }
         switch (branch.JudgeType1) {
@@ -660,6 +668,7 @@ class SenseData {
       }
       if (conditionMet) {
         result = branch
+        result.isLifeGuardBranch = isLifeGuardBranch
         break
       }
     }
@@ -713,12 +722,13 @@ class StarActData {
   getActiveBranch(liveSim) {
     const branches = this.data.Branches
     let result = null
+    let isLifeGuardBranch = false
     for (let branch of branches) {
       let conditionMet = true
       if (this.data.BranchCondition1 !== 'None') {
         let judgeValue
         switch (this.data.BranchCondition1) {
-          case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; break }
+          case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
           default: { console.log(`StarAct branch condition ${this.data.BranchCondition1}`); return null }
         }
         switch (branch.JudgeType1) {
@@ -734,6 +744,7 @@ class StarActData {
       }
       if (conditionMet) {
         result = branch
+        result.isLifeGuardBranch = isLifeGuardBranch
         break
       }
     }
@@ -1886,6 +1897,7 @@ class LiveSimulator {
     if (senseEffectBranch) {
       senseEffectBranch.BranchEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, chara.senselv)
+        effect.isLifeGuardBranch = senseEffectBranch.isLifeGuardBranch
         effect.applyEffect(this.calc, idx, null)
       })
     }
@@ -1907,6 +1919,11 @@ class LiveSimulator {
         if (targets && !targets.includes(idx)) return
         const effect = buff.effect
         if (!effect.conditionSatified(this.calc, idx)) return
+        if (buff.isLifeGuardEffect) {
+          multiplier *= 1 + buff.bonus
+          scoreLine = `${scoreLine} × ${(1 + buff.bonus).toFixed(2)}`
+          return
+        }
         extraBuffMul += buff.bonus
         extraBuffLine = `${extraBuffLine} + ${buff.bonus.toFixed(2)}`
       })
@@ -1974,6 +1991,7 @@ class LiveSimulator {
     if (staractEffectBranch) {
       staractEffectBranch.BranchEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, this.leader.bloom + 1)
+        effect.isLifeGuardBranch = staractEffectBranch.isLifeGuardBranch
         effect.applyEffect(this.calc, idx, null)
       })
     }
@@ -1989,6 +2007,11 @@ class LiveSimulator {
       if (targets && !targets.includes(idx)) return
       const effect = buff.effect
       if (!effect.conditionSatified(this.calc, idx)) return
+      if (buff.isLifeGuardEffect) {
+        multiplier *= 1 + buff.bonus
+        scoreLine = `${scoreLine} × ${(1 + buff.bonus).toFixed(2)}`
+        return
+      }
       extraBuffMul += buff.bonus
       extraBuffLine = `${extraBuffLine} + ${buff.bonus.toFixed(2)}`
     })
