@@ -861,7 +861,7 @@ class CharacterData {
       ]),
       _('tr', {}, [
         _('td'),
-        _('td', { colspan: 2 }, [_('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }})]),
+        _('td', { colspan: 2 }, [_('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }})]),
         _('td'),
       ]),
     ]))
@@ -1085,7 +1085,7 @@ class PosterData {
       this.leaderAbilityBox = _('div'),
       _('div', {}, [_('text', 'Normal: ')]),
       this.normalAbilityBox = _('div'),
-      _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
+      _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
     ]), _('td', {}, [_('img', { src: this.imageUrl, style: { width: '200px' }})])]))
 
     for (let i = 1; i <= this.maxLevel; i++) {
@@ -1235,7 +1235,7 @@ class AccessoryData {
       this.effectBox = _('tr'),
       _('tr', {}, [
         this.randomEffectSelect = _('select', { event: { change: e=>this.setRandomEffect(e) } }),
-        _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
+        _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
       ]),
     ]))
 
@@ -1262,11 +1262,11 @@ class AccessoryData {
     return `${this.data.Rarity} ${this.data.Name}`
   }
 
-  setRandomEffect(e) {
+  setRandomEffect(e, skipUpdate) {
     this.randomEffect.node.remove()
     this.randomEffectId = e.target.value
     this.randomEffect = new AccessoryEffectData(this.randomEffectId, this.effectBox)
-    root.update({ accessory: true })
+    if (!skipUpdate) root.update({ accessory: true })
   }
   setLevel(e) {
     this.level = e.target.value | 0;
@@ -1294,7 +1294,7 @@ class AccessoryData {
     accessory.level = data[1]
     if (data[2]) {
       accessory.randomEffectSelect.value = data[2]
-      accessory.setRandomEffect({ target: accessory.randomEffectSelect })
+      accessory.setRandomEffect({ target: accessory.randomEffectSelect }, true)
     }
     return accessory
   }
@@ -1339,7 +1339,7 @@ class PhotoEffectData {
     this.node = parent.appendChild(_('div', {}, [
       this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } }),
       this.desc = _('span'),
-      _('input', { type: 'button', value: '削除', event: { click: _=>this.remove() }}),
+      _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
     ]))
 
     for (let i = 1; i < 26; i++) {
@@ -2130,8 +2130,8 @@ class PartyManager {
         this.currentSelection = e.target.value
         root.update({ party: true })
       } }}),
-      _('input', { type: 'button', value: ConstText.get('ADD'), event: { click: _=>this.addParty() }}),
-      _('input', { type: 'button', value: ConstText.get('DELETE'), event: { click: _=>this.removeParty() }}),
+      _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: _=>this.addParty() }}),
+      _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.removeParty() }}),
       this.partyNameInput = _('input', { type: 'text', event: { blur: e=>{
         this.parties[this.currentSelection].name = e.target.value
         this.fillPartySelect()
@@ -2291,10 +2291,153 @@ class PartyManager {
 }
 
 class ConstText {
-  static language = 'zh'
+  static language = null
+  static autoDetectLanguage() {
+    for (let lang of navigator.languages) {
+      if (lang.startsWith('zh')) {
+        return ConstText.language = 'zh'
+      }
+      if (lang.startsWith('ja')) {
+        return ConstText.language = 'ja'
+      }
+    }
+    return ConstText.language = 'en'
+  }
 
-  static en = {}
-  static ja = {}
+  static en = {
+    SENSE_NOTATION_TAB_NORMAL: 'Normal (Audition/League）',
+    SENSE_NOTATION_TAB_HIGHSCORE: 'Highscore Challenge',
+    SENSE_NOTATION_TAB_KEIKO: 'Lesson (Keiko)',
+
+    ALBUM_LEVEL_LABEL: 'Album level: ',
+    PARTY_LABEL: 'Party edit',
+
+    THEATER_LEVEL_LABEL: 'Theatre level: ',
+    SIRIUS: 'Sirius',
+    EDEN: 'Eden',
+    GINGAZA: 'Gingaza',
+    DENKI: 'Gekidan Denki',
+
+    ADD: 'Add',
+    DELETE: 'Delete',
+    NOT_SELECTED: 'Not selected',
+
+    TAB_CHARA: 'Character',
+    TAB_POSTER: 'Poster',
+    TAB_ACCESSORY: 'Accessory',
+
+    VOCAL: 'Vocal',
+    EXPRESSION: 'Expression',
+    CONCENTRATION: 'Concentration',
+    PERFORMANCE: 'Performance',
+    CALC_TABLE_INITIAL: 'Initial',
+    CALC_TABLE_ALBUM: 'Album',
+    CALC_TABLE_POSTER: 'Poster',
+    CALC_TABLE_ACCESSORY: 'Accessory',
+    CALC_TABLE_OTHER: 'Other',
+    CALC_TABLE_THEATER: 'Theatre',
+    CALC_TABLE_TOTAL_BONUS: 'Total Bonus',
+    CALC_TABLE_FINAL_STAT: 'Final Stat',
+    CALC_TOTAL_STAT: 'Total stat: ',
+    CALC_BASE_SCORE: 'Base score: ',
+    CALC_SENSE_SCORE: 'Sense score: ',
+    CALC_STARACT_SCORE: 'Star Act score: ',
+    CALC_RESULT_STARACT: '{times} times / {score}',
+    CALC_TOTAL_SCORE: 'Total score: ',
+    CALC_STAR_ACT_REQUIREMENTS: 'StarAct requirements: ',
+
+    LIVE_PHASE_START: 'Before start',
+    LIVE_PHASE_START_WITH_STARACT: 'Before start | StarAct activated',
+    LIVE_PHASE_SENSE: 'Sense activated: {time}',
+    LIVE_PHASE_SENSE_FAILED: 'Sense failed: {time}',
+    LIVE_PHASE_SENSE_WITH_STARACT: 'Sense activated: {time} | StarAct activated',
+    LIVE_LOG_LIFE: 'Life changed: {0} + {1} = {2}/1000',
+    LIVE_LOG_PGUAGE: 'P gauge changed: {0} + {1} = {2}/{3}',
+    LIVE_LOG_PGUAGE_LIMIT: 'P gauge limit changed: {0} + {1} = {2}/{3}',
+    LIVE_LOG_SENSE_FAILED: 'Sense failed',
+    LIVE_LOG_SENSE_SKIP: 'Skipped',
+    LIVE_LOG_SENSE_SCORE: 'Sense score: {0}',
+    LIVE_LOG_STARACT_SCORE: 'Star Act activated, score: {0}',
+    LIVE_LOG_POSTER_SCORE: 'Poster bonus ({3}): {0} × {1} = {2}',
+    LIVE_LOG_SENSE_UP: 'Sense bonus: {0}%, lasts {1} sec',
+    LIVE_LOG_STARACT_UP: 'Star Act bonus: {0}%, lasts{1} sec',
+
+    PARTY_DEFAULT_NAME: 'Party',
+    PARTY_DELETE_CONFIRM: 'Delete this party?',
+    PARTY_DELETE_LAST: 'Last party cannot be deleted',
+
+    LOG_WARNING_EFFECT_NOT_IMPLEMENTED: 'Effect type not implemented: {type} ({id})',
+    LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: 'Effect trigger not implemented: {trigger} @ {range} ({id})',
+    LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: 'Bonus based on current score cannot be accurately calculated',
+    UNDEFINED_STRING: 'Missing text template: {0}',
+  }
+  static ja = {
+    SENSE_NOTATION_TAB_NORMAL: 'オーディション/リーグ',
+    SENSE_NOTATION_TAB_HIGHSCORE: 'ハイスコア挑戦',
+    SENSE_NOTATION_TAB_KEIKO: '稽古',
+
+    ALBUM_LEVEL_LABEL: 'アルバムレベル：',
+    PARTY_LABEL: '編成',
+
+    THEATER_LEVEL_LABEL: '劇場レベル：',
+    SIRIUS: 'シリウス',
+    EDEN: 'Eden',
+    GINGAZA: '銀河座',
+    DENKI: '劇団電姫',
+
+    ADD: '追加',
+    DELETE: '消す',
+    NOT_SELECTED: '未選択',
+
+    TAB_CHARA: 'キャラ',
+    TAB_POSTER: 'ポスター',
+    TAB_ACCESSORY: 'アクセサリー',
+
+    VOCAL: '歌唱力',
+    EXPRESSION: '表現力',
+    CONCENTRATION: '集中力',
+    PERFORMANCE: '演技力',
+    CALC_TABLE_INITIAL: '初期',
+    CALC_TABLE_ALBUM: 'アルバム',
+    CALC_TABLE_POSTER: 'ポスター',
+    CALC_TABLE_ACCESSORY: 'アクセサリー',
+    CALC_TABLE_OTHER: 'その他',
+    CALC_TABLE_THEATER: '劇場',
+    CALC_TABLE_TOTAL_BONUS: 'ボーナス合計',
+    CALC_TABLE_FINAL_STAT: '最終',
+    CALC_TOTAL_STAT: '合計演技力：',
+    CALC_BASE_SCORE: '基礎スコア：',
+    CALC_SENSE_SCORE: 'センススコア: ',
+    CALC_STARACT_SCORE: 'スターアクトスコア: ',
+    CALC_RESULT_STARACT: '{times}回発動 / {score}',
+    CALC_TOTAL_SCORE: 'スコア：',
+    CALC_STAR_ACT_REQUIREMENTS: 'スターアクト発動条件：',
+
+    LIVE_PHASE_START: 'ライブ前',
+    LIVE_PHASE_START_WITH_STARACT: 'ライブ前 | スターアクト発動',
+    LIVE_PHASE_SENSE: 'センス発動：{time}',
+    LIVE_PHASE_SENSE_FAILED: 'センス失敗：{time}',
+    LIVE_PHASE_SENSE_WITH_STARACT: 'センス発動：{time} | スターアクト発動',
+    LIVE_LOG_LIFE: 'ライフ：{0} + {1} = {2}/1000',
+    LIVE_LOG_PGUAGE: 'P.ゲージ：{0} + {1} = {2}/{3}',
+    LIVE_LOG_PGUAGE_LIMIT: 'P.ゲージ上限：{0} + {1} = {2}/{3}',
+    LIVE_LOG_SENSE_FAILED: 'センス失敗',
+    LIVE_LOG_SENSE_SKIP: '発動しない',
+    LIVE_LOG_SENSE_SCORE: 'センススコア：{0}',
+    LIVE_LOG_STARACT_SCORE: 'スターアクト発動、スコア：{0}',
+    LIVE_LOG_POSTER_SCORE: 'ポスタースコア({3})：{0} × {1} = {2}',
+    LIVE_LOG_SENSE_UP: 'センスブースト：{0}%，{1}秒間持続',
+    LIVE_LOG_STARACT_UP: 'スターアクトブースト：{0}%，{1}秒間持続',
+
+    PARTY_DEFAULT_NAME: 'パーティー',
+    PARTY_DELETE_CONFIRM: 'パーティーを消しますか？',
+    PARTY_DELETE_LAST: '最後のパーティーは消せません',
+
+    LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '効果支援していない：{type} ({id})',
+    LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '効果の条件支援していない：{trigger} @ {range} ({id})',
+    LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '現在のスコアに基づくボーナスは正確に計算できません',
+    UNDEFINED_STRING: '不足しているテキスト：{0}',
+  }
   static zh = {
     SENSE_NOTATION_TAB_NORMAL: '通常（试音/排位）',
     SENSE_NOTATION_TAB_HIGHSCORE: '高分',
@@ -2377,6 +2520,7 @@ class ConstText {
     })
   }
 }
+ConstText.autoDetectLanguage()
 
 class RootLogic {
   appState = {
@@ -2506,7 +2650,7 @@ class RootLogic {
         ]),
         _('div', {}, [
           this.addCharacterSelect = _('select'),
-          _('input', { type: 'button', value: '追加', event: { click: e=>this.addCharacter() }}),
+          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.addCharacter() }}),
         ]),
       ]),
 
@@ -2514,7 +2658,7 @@ class RootLogic {
         this.posterContainer = _('table', { className: 'posters' }),
         _('div', {}, [
           this.addPosterSelect = _('select'),
-          _('input', { type: 'button', value: '追加', event: { click: e=>this.addPoster() }}),
+          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.addPoster() }}),
         ]),
       ]),
 
@@ -2522,7 +2666,7 @@ class RootLogic {
         this.accessoryContainer = _('table', { className: 'accessories' }),
         _('div', {}, [
           this.addAccessorySelect = _('select'),
-          _('input', { type: 'button', value: '追加', event: { click: e=>this.addAccessory() }}),
+          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.addAccessory() }}),
         ]),
       ]),
     ]))
@@ -2770,7 +2914,7 @@ class RootLogic {
         this.theaterLevelForm[i].value = this.appState.theaterLevel.getLevel(i)
       })
     }
-    if (parts.chara || parts.poster || parts.album || parts.party) {
+    if (parts.chara || parts.poster || parts.album || parts.accessory || parts.party) {
       this.appState.partyManager.update()
     }
 
@@ -2839,7 +2983,7 @@ class RootLogic {
     this.keikoBox.style.display = ''
     for (let select of this.keikoBox.children) {
       removeAllChilds(select)
-      select.appendChild(_('option', { value: '', 'data-text-key': 'NOT_SELECTED' }, [_('text', '未選択')]))
+      select.appendChild(_('option', { value: '', 'data-text-key': 'NOT_SELECTED' }))
       for (let i=0; i<this.appState.characters.length; i++) {
         if (this.appState.characters[i].data.CharacterBaseMasterId !== keikoCharaId) continue;
         const chara = this.appState.characters[i]
