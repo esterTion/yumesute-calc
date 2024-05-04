@@ -2323,6 +2323,7 @@ class ConstText {
     if (ConstText.language) return
     if (localStorage.getItem('wds-calc-language')) {
       ConstText.language = localStorage.getItem('wds-calc-language')
+      return
     }
     ConstText.autoDetectLanguage()
   }
