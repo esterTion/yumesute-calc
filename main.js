@@ -2327,6 +2327,8 @@ class ConstText {
 
     ALBUM_LEVEL_LABEL: 'Album level: ',
     PARTY_LABEL: 'Party edit',
+    IMPORT_DATA_LABEL: 'Load exported',
+    EXPORT_DATA_LABEL: 'Export',
 
     THEATER_LEVEL_LABEL: 'Theatre level: ',
     SIRIUS: 'Sirius',
@@ -2394,6 +2396,8 @@ class ConstText {
 
     ALBUM_LEVEL_LABEL: 'アルバムレベル：',
     PARTY_LABEL: '編成',
+    IMPORT_DATA_LABEL: 'データを導入',
+    EXPORT_DATA_LABEL: 'データを保存',
 
     THEATER_LEVEL_LABEL: '劇場レベル：',
     SIRIUS: 'シリウス',
@@ -2461,6 +2465,8 @@ class ConstText {
 
     ALBUM_LEVEL_LABEL: '相册等级：',
     PARTY_LABEL: '编队',
+    IMPORT_DATA_LABEL: '导入数据',
+    EXPORT_DATA_LABEL: '导出数据',
 
     THEATER_LEVEL_LABEL: '剧场等级：',
     SIRIUS: 'Sirius',
@@ -2580,6 +2586,10 @@ class RootLogic {
         _('option', { value: 'ja' }, [_('text', '日本語')]),
         _('option', { value: 'zh' }, [_('text', '中文')]),
       ])]),
+      _('div', {}, [
+        _('input', { type: 'button', 'data-text-value': 'IMPORT_DATA_LABEL', event: { click: e=>this.importState(e) }}),
+        _('input', { type: 'button', 'data-text-value': 'EXPORT_DATA_LABEL', event: { click: e=>this.exportState(e) }}),
+      ]),
       this.warningMessageBox = _('div', { id: 'warning_message_box'}),
       _('div', {className: 'margin-box'}),
       this.calcTypeSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
@@ -2741,7 +2751,9 @@ class RootLogic {
       this.addAccessorySelect.appendChild(_('option', { value: i.Id }, [_('text', (new AccessoryData(i.Id, null)).fullAccessoryName)]))
     })
 
-    this.loadState()
+    if (localStorage.getItem('appState') !== null) {
+      this.loadState(localStorage.getItem('appState'))
+    }
 
     this.albumLevelSelect.value = this.appState.albumLevel
     Object.values(GameDb.PhotoEffect).forEach(i => {
@@ -2764,7 +2776,6 @@ class RootLogic {
 
     window.addEventListener('blur', _=>this.saveState())
     window.addEventListener('unload', _=>this.saveState())
-    //window.addEventListener('focus', _=>this.loadState())
 
     ConstText.fillText()
   }
@@ -2774,25 +2785,23 @@ class RootLogic {
     console.log('save')
     localStorage.setItem('appState', JSON.stringify(this.appState))
   }
-  loadState() {
+  loadState(dataStr) {
     console.log('load')
-    if (localStorage.getItem('appState') !== null) {
-      const data = JSON.parse(localStorage.getItem('appState'))
-      this.addMissingFields(data)
-      removeAllChilds(this.characterContainer)
-      this.appState.characters = data.characters.map((i) => CharacterData.fromJSON(i, this.characterContainer))
-      this.appState.characterStarRank = CharacterStarRankData.fromJSON(data.characterStarRank)
-      removeAllChilds(this.posterContainer)
-      this.appState.posters = data.posters.map(i => PosterData.fromJSON(i, this.posterContainer))
-      removeAllChilds(this.accessoryContainer)
-      this.appState.accessories = data.accessories.map(i => AccessoryData.fromJSON(i, this.accessoryContainer))
-      this.appState.albumLevel = data.albumLevel
-      removeAllChilds(this.photoEffectContainer)
-      this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
-      this.appState.theaterLevel = TheaterLevelData.fromJSON(data.theaterLevel)
-      this.appState.partyManager = PartyManager.fromJSON(data.partyManager)
-      this.appState.partyManager.init()
-    }
+    const data = JSON.parse(dataStr)
+    this.addMissingFields(data)
+    removeAllChilds(this.characterContainer)
+    this.appState.characters = data.characters.map((i) => CharacterData.fromJSON(i, this.characterContainer))
+    this.appState.characterStarRank = CharacterStarRankData.fromJSON(data.characterStarRank)
+    removeAllChilds(this.posterContainer)
+    this.appState.posters = data.posters.map(i => PosterData.fromJSON(i, this.posterContainer))
+    removeAllChilds(this.accessoryContainer)
+    this.appState.accessories = data.accessories.map(i => AccessoryData.fromJSON(i, this.accessoryContainer))
+    this.appState.albumLevel = data.albumLevel
+    removeAllChilds(this.photoEffectContainer)
+    this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
+    this.appState.theaterLevel = TheaterLevelData.fromJSON(data.theaterLevel)
+    this.appState.partyManager = PartyManager.fromJSON(data.partyManager)
+    this.appState.partyManager.init()
   }
   addMissingFields(data) {
     if (data.version < 2) {
@@ -2803,6 +2812,37 @@ class RootLogic {
       data.version = 3
       data.partyManager = (new PartyManager).toJSON()
     }
+  }
+  importState() {
+    const fInput = _('input', { type: 'file', accept: '.json', event: { change: e => {
+      const file = e.target.files[0]
+      const reader = new FileReader()
+      reader.onload = e => {
+        this.loadState(e.target.result)
+
+        this.albumLevelSelect.value = this.appState.albumLevel
+        this.update({
+          chara: true,
+          poster: true,
+          accessory: true,
+          album: true,
+          theaterLevel: true,
+        })
+      }
+      reader.readAsText(file)
+    }}})
+    fInput.click()
+  }
+  exportState() {
+    const data = JSON.stringify(this.appState)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const dateStr = (new Date()).toISOString().replace(/:/g, '-').replace(/\..+/, '')
+    a.download = `yumesute-calc-${dateStr}.json`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   warningMessages = []
