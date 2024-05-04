@@ -2776,6 +2776,8 @@ class RootLogic {
 
     if (localStorage.getItem('appState') !== null) {
       this.loadState(localStorage.getItem('appState'))
+    } else {
+      this.appState.partyManager.init()
     }
 
     this.albumLevelSelect.value = this.appState.albumLevel
