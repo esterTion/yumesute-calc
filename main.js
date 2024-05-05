@@ -1344,13 +1344,15 @@ class AccessoryEffectData {
 }
 
 class PhotoEffectData {
-  constructor(id, level, parent) {
+  constructor(id, level, parent, enabled = false) {
     this.id = id
     this.level = level
     this.data = GameDb.PhotoEffect[id]
+    this.enabled = enabled
 
     if (!parent) return
     this.node = parent.appendChild(_('div', {}, [
+      this.enableToggle = _('input', { type: 'checkbox', event: { change: e=>this.setEnabled(e) }}),
       this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } }),
       this.desc = _('span'),
       _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
@@ -1386,6 +1388,7 @@ class PhotoEffectData {
     this.levelSelect.value = this.level;
     this.effect = Effect.get(this.data.EffectMasterId, this.effectLevel)
     this.desc.textContent = `${this.data.Name}：${this.description}`;
+    this.enableToggle.checked = this.enabled
   }
   remove() {
     this.node.remove()
@@ -1395,9 +1398,13 @@ class PhotoEffectData {
     this.level = e.target.value | 0;
     root.update({ album: true })
   }
+  setEnabled(e) {
+    this.enabled = e.target.checked;
+    root.update({ album: true })
+  }
 
   static fromJSON(data, parent) {
-    return new PhotoEffectData(data[0], data[1], parent)
+    return new PhotoEffectData(data[0], data[1], parent, data[2])
   }
   toJSON() {
     return [this.id, this.level]
@@ -2649,7 +2656,12 @@ class RootLogic {
 
       _('div', {className: 'margin-box'}),
 
-      _('div', {}, [_('span', {'data-text-key':'ALBUM_LEVEL_LABEL'}), this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])])]),
+      _('div', {}, [
+        _('span', {'data-text-key':'ALBUM_LEVEL_LABEL'}),
+        this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])]),
+        this.albumExtraCountLabel = _('span', { style: { marginLeft: '0.5em' } }),
+        _('text', ' / 25'),
+      ]),
       this.photoEffectContainer = _('div'),
       _('div', {}, [
         this.addPhotoEffectSelect = _('select'),
@@ -2830,13 +2842,20 @@ class RootLogic {
     this.appState.partyManager.init()
   }
   addMissingFields(data) {
+    // ver 2：添加剧团等级加成
     if (data.version < 2) {
       data.version = 2
       data.theaterLevel = (new TheaterLevelData).toJSON()
     }
+    // ver 3：添加编队
     if (data.version < 3) {
       data.version = 3
       data.partyManager = (new PartyManager).toJSON()
+    }
+    // ver 4：效果照片支持选择开启关闭
+    if (data.version < 4) {
+      data.version = 4
+      data.albumExtra.forEach(i => i[2] = true)
     }
   }
   importState() {
@@ -2996,6 +3015,9 @@ class RootLogic {
     }
     if (parts.album) {
       this.appState.albumExtra.forEach(i => i.update())
+      const extraCount = this.appState.albumExtra.filter(i => i.enabled).length
+      this.albumExtraCountLabel.textContent = extraCount
+      this.albumExtraCountLabel.style.color = extraCount > 25 ? 'red' : ''
     }
     if (parts.theaterLevel) {
       (['Sirius', 'Eden', 'Gingaza', 'Denki']).forEach(i => {
