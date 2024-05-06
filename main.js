@@ -1407,7 +1407,7 @@ class PhotoEffectData {
     return new PhotoEffectData(data[0], data[1], parent, data[2])
   }
   toJSON() {
-    return [this.id, this.level]
+    return [this.id, this.level, this.enabled]
   }
 }
 
@@ -1515,6 +1515,7 @@ class ScoreCalculator {
       passiveEffects.album.push({effect, source:-1})
     })
     this.extra.albumExtra.forEach(i => {
+      if (!i.enabled) return
       const effect = i.effect
       if (effect.Triggers.length === 0) {
         passiveEffects.album.push({effect, source:-1})
@@ -2360,6 +2361,7 @@ class ConstText {
     PARTY_LABEL: 'Party edit',
     IMPORT_DATA_LABEL: 'Load exported',
     EXPORT_DATA_LABEL: 'Export',
+    EXPORTER_LABEL: 'Export tool using password',
 
     THEATER_LEVEL_LABEL: 'Theatre level: ',
     SIRIUS: 'Sirius',
@@ -2429,6 +2431,7 @@ class ConstText {
     PARTY_LABEL: '編成',
     IMPORT_DATA_LABEL: 'データを導入',
     EXPORT_DATA_LABEL: 'データを保存',
+    EXPORTER_LABEL: '連携パスワードで導入するツール',
 
     THEATER_LEVEL_LABEL: '劇場レベル：',
     SIRIUS: 'シリウス',
@@ -2498,6 +2501,7 @@ class ConstText {
     PARTY_LABEL: '编队',
     IMPORT_DATA_LABEL: '导入数据',
     EXPORT_DATA_LABEL: '导出数据',
+    EXPORTER_LABEL: '引继码导出工具',
 
     THEATER_LEVEL_LABEL: '剧场等级：',
     SIRIUS: 'Sirius',
@@ -2585,7 +2589,7 @@ class RootLogic {
     albumExtra: [],
     theaterLevel: new TheaterLevelData(),
     partyManager: new PartyManager(),
-    version: 3,
+    version: 4,
   }
   nonPersistentState = {
     characterOptions: {},
@@ -2620,6 +2624,7 @@ class RootLogic {
       _('div', {}, [
         _('input', { type: 'button', 'data-text-value': 'IMPORT_DATA_LABEL', event: { click: e=>this.importState(e) }}),
         _('input', { type: 'button', 'data-text-value': 'EXPORT_DATA_LABEL', event: { click: e=>this.exportState(e) }}),
+        _('a', { href: './YumesuteExporter.exe', download: 'YumesuteExporter.exe', 'data-text-key': 'EXPORTER_LABEL' }),
       ]),
       this.warningMessageBox = _('div', { id: 'warning_message_box'}),
       _('div', {className: 'margin-box'}),
