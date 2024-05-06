@@ -879,6 +879,16 @@ class CharacterData {
       ]),
     ]))
 
+    this.iconNode = root.characterIconList.appendChild(_('span', { style: { display: 'inline-block', margin: '0 5px 5px', textAlign: 'center' }}, [
+      this.iconNodeIcon = _('span', { className: 'spriteatlas-characters', 'data-id': this.cardIconId }),
+      _('br'),
+      _('span', { className: `card-attribute-${this.attributeName}`}),
+      _('span', { className: 'sense-star', 'data-sense-type': this.sense.getType() }),
+      this.iconNodeCtLabel = _('span'),
+      _('br'),
+      this.iconNodeLevelLabel = _('span'),
+    ]))
+
     for (let lvl in GameDb.CharacterLevel) {
       this.levelSelect.appendChild(_('option', { value: lvl }, [_('text', lvl)]))
     }
@@ -974,7 +984,11 @@ class CharacterData {
     this.senseInput.value = this.senselv;
     this.bloomInput.value = this.bloom;
 
+    this.iconNodeCtLabel.textContent = this.sense.ct
+    this.iconNodeLevelLabel.textContent = [this.lvl, this.senselv, this.bloom].join(' ')
+
     this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w200`
+    this.iconNodeIcon.dataset.id = this.cardIconId
 
     const stat = this.statFinal
     this.voValNode.textContent = stat.vo
@@ -1008,8 +1022,16 @@ class CharacterData {
       this.staractRequirementsNode.children[i].style.display = req > 0 ? '' : 'none'
     })
   }
-  remove() {
+  appendNode(parent) {
+    root.characterIconList.appendChild(this.iconNode)
+    parent.appendChild(this.node)
+  }
+  removeNode() {
     this.node.remove()
+    this.iconNode.remove()
+  }
+  remove() {
+    this.removeNode()
     root.removeCharacter(this)
   }
 
@@ -2718,6 +2740,7 @@ class RootLogic {
             _('text', '降順')
           ])
         ]),
+        this.characterIconList = _('div'),
         this.characterForm = _('form', {}, [
           this.characterContainer = _('table', { className: 'characters' }),
         ]),
@@ -2943,7 +2966,7 @@ class RootLogic {
       }
       return a.data[sortKey] - b.data[sortKey]
     })
-    this.appState.characters.forEach(i => this.characterContainer.appendChild(i.node))
+    this.appState.characters.forEach(i => i.appendNode(this.characterContainer))
   }
 
   setAlbumLevel() {
