@@ -879,7 +879,7 @@ class CharacterData {
       ]),
     ]))
 
-    this.iconNode = root.characterIconList.appendChild(_('span', { style: { display: 'inline-block', margin: '0 5px 5px', textAlign: 'center' }}, [
+    this.iconNode = root.characterIconList.appendChild(_('span', { className: 'list-icon-container', event: { click: e => this.toggleSelection() } }, [
       this.iconNodeIcon = _('span', { className: 'spriteatlas-characters', 'data-id': this.cardIconId }),
       _('br'),
       _('span', { className: `card-attribute-${this.attributeName}`}),
@@ -887,7 +887,9 @@ class CharacterData {
       this.iconNodeCtLabel = _('span'),
       _('br'),
       this.iconNodeLevelLabel = _('span'),
+      this.iconSelectionInput = _('input', { type: 'checkbox', className: 'icon-selection' }),
     ]))
+    this.node.style.display = 'none'
 
     for (let lvl in GameDb.CharacterLevel) {
       this.levelSelect.appendChild(_('option', { value: lvl }, [_('text', lvl)]))
@@ -984,9 +986,6 @@ class CharacterData {
     this.senseInput.value = this.senselv;
     this.bloomInput.value = this.bloom;
 
-    this.iconNodeCtLabel.textContent = this.sense.ct
-    this.iconNodeLevelLabel.textContent = [this.lvl, this.senselv, this.bloom].join(' ')
-
     this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w200`
     this.iconNodeIcon.dataset.id = this.cardIconId
 
@@ -1021,6 +1020,9 @@ class CharacterData {
       this.staractRequirementsNode.children[i].textContent = req
       this.staractRequirementsNode.children[i].style.display = req > 0 ? '' : 'none'
     })
+
+    this.iconNodeCtLabel.textContent = this.sense.ct
+    this.iconNodeLevelLabel.textContent = [this.lvl, this.senselv, this.bloom].join(' ')
   }
   appendNode(parent) {
     root.characterIconList.appendChild(this.iconNode)
@@ -1033,6 +1035,14 @@ class CharacterData {
   remove() {
     this.removeNode()
     root.removeCharacter(this)
+  }
+  toggleSelection() {
+    this.iconSelectionInput.checked = !this.iconSelectionInput.checked
+    if (this.iconSelectionInput.checked) {
+      this.node.style.display = ''
+    } else {
+      this.node.style.display = 'none'
+    }
   }
 
   setLevel(e) {
@@ -1124,6 +1134,14 @@ class PosterData {
       _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
     ]), _('td', {}, [_('img', { src: this.imageUrl, style: { width: '200px' }})])]))
 
+    this.iconNode = root.posterIconList.appendChild(_('span', { className: 'list-icon-container', event: { click: e => this.toggleSelection() } }, [
+      this.iconNodeIcon = _('span', { className: 'spriteatlas-posters', 'data-id': this.id }),
+      _('br'),
+      this.iconNodeLevelLabel = _('span'),
+      this.iconSelectionInput = _('input', { type: 'checkbox', className: 'icon-selection' }),
+    ]))
+    this.node.style.display = 'none'
+
     for (let i = 1; i <= this.maxLevel; i++) {
       this.levelSelect.appendChild(_('option', { value: i }, [_('text', i)]))
     }
@@ -1179,10 +1197,20 @@ class PosterData {
       i.release = this.release
       i.update()
     })
+    this.iconNodeLevelLabel.textContent = `Rl.${this.release} Lv.${this.level}`
   }
   remove() {
     this.node.remove()
+    this.iconNode.remove()
     root.removePoster(this)
+  }
+  toggleSelection() {
+    this.iconSelectionInput.checked = !this.iconSelectionInput.checked
+    if (this.iconSelectionInput.checked) {
+      this.node.style.display = ''
+    } else {
+      this.node.style.display = 'none'
+    }
   }
 
   static fromJSON(data, parent) {
@@ -1275,6 +1303,14 @@ class AccessoryData {
       ]),
     ]))
 
+    this.iconNode = root.accessoryIconList.appendChild(_('span', { className: 'list-icon-container small-text', event: { click: e => this.toggleSelection() } }, [
+      this.iconNodeIcon = _('span', { className: 'spriteatlas-accessories', 'data-id': this.id }),
+      _('br'),
+      this.iconNodeLevelLabel = _('span', { style: { maxWidth: '64px' }}),
+      this.iconSelectionInput = _('input', { type: 'checkbox', className: 'icon-selection' }),
+    ]))
+    this.node.style.display = 'none'
+
     this.mainEffects = this.data.FixedAccessoryEffects.map(i => new AccessoryEffectData(i, this.effectBox))
     this.data.RandomEffectGroups.forEach(i => {
       const group = GameDb.RandomEffectGroup[i]
@@ -1315,14 +1351,24 @@ class AccessoryData {
       i.level = this.level
       i.update()
     })
+    this.iconNodeLevelLabel.textContent = this.level
     if (this.randomEffect) {
       this.randomEffect.level = this.level
       this.randomEffect.update()
+      this.iconNodeLevelLabel.textContent = [this.level, this.randomEffect.data.Name].join(' | ')
     }
   }
   remove() {
     this.node.remove()
     root.removeAccessory(this)
+  }
+  toggleSelection() {
+    this.iconSelectionInput.checked = !this.iconSelectionInput.checked
+    if (this.iconSelectionInput.checked) {
+      this.node.style.display = ''
+    } else {
+      this.node.style.display = 'none'
+    }
   }
 
   static fromJSON(data, parent) {
@@ -2723,7 +2769,7 @@ class RootLogic {
 
       _('div', {className: 'margin-box'}),
 
-      this.tabSelectForm = _('form', { style: { display: 'flex', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.8)', padding: '10px 0' }, event: {change: _=>this.changeTab()}}, [
+      this.tabSelectForm = _('form', { style: { display: 'flex', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.8)', padding: '10px 0', zIndex: 5 }, event: {change: _=>this.changeTab()}}, [
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'character' }), _('span', {'data-text-key': 'TAB_CHARA'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'poster' }), _('span', {'data-text-key': 'TAB_POSTER'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'accessory' }), _('span', {'data-text-key': 'TAB_ACCESSORY'})]),
@@ -2753,6 +2799,7 @@ class RootLogic {
       ]),
 
       this.posterTabContent = _('div', {}, [
+        this.posterIconList = _('div'),
         this.posterContainer = _('table', { className: 'posters' }),
         _('div', {}, [
           this.addPosterSelect = _('select'),
@@ -2761,6 +2808,7 @@ class RootLogic {
       ]),
 
       this.accessoryTabContent = _('div', {}, [
+        this.accessoryIconList = _('div'),
         this.accessoryContainer = _('table', { className: 'accessories' }),
         _('div', {}, [
           this.addAccessorySelect = _('select'),

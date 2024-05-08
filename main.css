@@ -173,3 +173,24 @@ table.stat-details td {
 .sense-add-light::before {
   content: "✦";
 }
+
+.list-icon-container {
+  display: inline-block;
+  margin: 5px 5px 0;
+  text-align: center;
+  position: relative;
+  max-width: 64px;
+}
+.list-icon-container.small-text {
+  font-size: 13px;
+}
+input[type=checkbox].icon-selection {
+  display: none;
+  pointer-events: none;
+}
+input[type=checkbox].icon-selection:checked {
+  display: initial;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
