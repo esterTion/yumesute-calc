@@ -1038,11 +1038,14 @@ class CharacterData {
   }
   toggleSelection() {
     this.iconSelectionInput.checked = !this.iconSelectionInput.checked
+    this.iconNode.classList[this.iconSelectionInput.checked ? 'add' : 'remove']('selected')
     if (this.iconSelectionInput.checked) {
       this.node.style.display = ''
     } else {
       this.node.style.display = 'none'
     }
+
+    root.update({ selection: true })
   }
 
   setLevel(e) {
@@ -1178,11 +1181,11 @@ class PosterData {
   }
   setRelease(e) {
     this.release = e.target.value | 0;
-    this.level = Math.min(this.level, this.currentMaxLevel)
     root.update({ poster: true })
   }
 
   update() {
+    this.level = Math.min(this.level, this.currentMaxLevel)
     this.levelSelect.value = this.level;
     for (let i = 0, currentMax = this.currentMaxLevel, max = this.maxLevel; i < max; i++) {
       if (i < currentMax) {
@@ -1197,7 +1200,7 @@ class PosterData {
       i.release = this.release
       i.update()
     })
-    this.iconNodeLevelLabel.textContent = `Rl.${this.release} Lv.${this.level}`
+    this.iconNodeLevelLabel.textContent = `Rl${this.release} Lv${this.level}`
   }
   remove() {
     this.node.remove()
@@ -1206,11 +1209,13 @@ class PosterData {
   }
   toggleSelection() {
     this.iconSelectionInput.checked = !this.iconSelectionInput.checked
+    this.iconNode.classList[this.iconSelectionInput.checked ? 'add' : 'remove']('selected')
     if (this.iconSelectionInput.checked) {
       this.node.style.display = ''
     } else {
       this.node.style.display = 'none'
     }
+    root.update({ selection: true })
   }
 
   static fromJSON(data, parent) {
@@ -1360,15 +1365,19 @@ class AccessoryData {
   }
   remove() {
     this.node.remove()
+    this.iconNode.remove()
     root.removeAccessory(this)
   }
   toggleSelection() {
     this.iconSelectionInput.checked = !this.iconSelectionInput.checked
+    this.iconNode.classList[this.iconSelectionInput.checked ? 'add' : 'remove']('selected')
     if (this.iconSelectionInput.checked) {
       this.node.style.display = ''
     } else {
       this.node.style.display = 'none'
     }
+
+    root.update({ selection: true })
   }
 
   static fromJSON(data, parent) {
@@ -2442,10 +2451,22 @@ class ConstText {
     ADD: 'Add',
     DELETE: 'Delete',
     NOT_SELECTED: 'Not selected',
+    UPDATE_SELECTION: 'Update selected',
+    DELETE_SELECTION: 'Delete selected',
+    DELETE_SELECTION_CONFIRM: 'Delete selected items?',
+    SELECTION_COUNT_LABEL: 'Selected {0} items: ',
 
     TAB_CHARA: 'Character',
     TAB_POSTER: 'Poster',
     TAB_ACCESSORY: 'Accessory',
+
+    CARD_LABEL_STORY: 'Card story: ',
+    CARD_LABEL_SENSE: 'Sense: ',
+    CARD_LABEL_BLOOM: 'Bloom: ',
+    CARD_SELECTION_EPISODE_READ_0: 'Not read',
+    CARD_SELECTION_EPISODE_READ_1: 'Read Episode 1',
+    CARD_SELECTION_EPISODE_READ_2: 'Read Episode 2',
+    POSTER_LABEL_RELEASE: 'Release: ',
 
     VOCAL: 'Vocal',
     EXPRESSION: 'Expression',
@@ -2512,10 +2533,22 @@ class ConstText {
     ADD: '追加',
     DELETE: '消す',
     NOT_SELECTED: '未選択',
+    UPDATE_SELECTION: '選択を更新',
+    DELETE_SELECTION: '選択を消す',
+    DELETE_SELECTION_CONFIRM: '選択した項目を消しますか？',
+    SELECTION_COUNT_LABEL: '選択した {0} 個：',
 
     TAB_CHARA: 'キャラ',
     TAB_POSTER: 'ポスター',
     TAB_ACCESSORY: 'アクセサリー',
+
+    CARD_LABEL_STORY: 'カードストーリー：',
+    CARD_LABEL_SENSE: 'センス：',
+    CARD_LABEL_BLOOM: '開花：',
+    CARD_SELECTION_EPISODE_READ_0: '未読',
+    CARD_SELECTION_EPISODE_READ_1: '前編読む',
+    CARD_SELECTION_EPISODE_READ_2: '後編読む',
+    POSTER_LABEL_RELEASE: '解放：',
 
     VOCAL: '歌唱力',
     EXPRESSION: '表現力',
@@ -2582,10 +2615,22 @@ class ConstText {
     ADD: '添加',
     DELETE: '删除',
     NOT_SELECTED: '未选择',
+    UPDATE_SELECTION: '更新选中',
+    DELETE_SELECTION: '删除选中',
+    DELETE_SELECTION_CONFIRM: '确定删除选中的项目吗？',
+    SELECTION_COUNT_LABEL: '选中的 {0} 个：',
 
     TAB_CHARA: '角色',
     TAB_POSTER: '海报',
     TAB_ACCESSORY: '饰品',
+
+    CARD_LABEL_STORY: '卡面故事：',
+    CARD_LABEL_SENSE: 'Sense: ',
+    CARD_LABEL_BLOOM: '突破：',
+    CARD_SELECTION_EPISODE_READ_0: '未读',
+    CARD_SELECTION_EPISODE_READ_1: '已读前篇',
+    CARD_SELECTION_EPISODE_READ_2: '已读后篇',
+    POSTER_LABEL_RELEASE: '解放：',
 
     VOCAL: '歌唱力',
     EXPRESSION: '表现力',
@@ -2788,7 +2833,44 @@ class RootLogic {
             _('text', '降順')
           ])
         ]),
-        this.characterIconList = _('div'),
+        this.characterIconList = _('div', {}, [
+          this.characterMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
+            _('span'),
+            _('br'),
+            _('text', 'Level: '),
+            _('select', { name: 'level' }),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateChara('level') }}),
+            _('span', {'data-text-key': 'CARD_LABEL_STORY'}),
+            _('select', { style: {marginRight: '1em'}, name: 'episodeReadState' }, [
+              _('option', { value: 0, 'data-text-key': 'CARD_SELECTION_EPISODE_READ_0' }),
+              _('option', { value: 1, 'data-text-key': 'CARD_SELECTION_EPISODE_READ_1' }),
+              _('option', { value: 2, 'data-text-key': 'CARD_SELECTION_EPISODE_READ_2' }),
+            ]),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateChara('episodeReadState') }}),
+            _('br'),
+            _('span', {'data-text-key': 'CARD_LABEL_SENSE'}),
+            _('select', { name: 'sense' }, [
+              _('option', { value: 1 }, [_('text', 1)]),
+              _('option', { value: 2 }, [_('text', 2)]),
+              _('option', { value: 3 }, [_('text', 3)]),
+              _('option', { value: 4 }, [_('text', 4)]),
+              _('option', { value: 5 }, [_('text', 5)]),
+            ]),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateChara('sense') }}),
+            _('span', {'data-text-key': 'CARD_LABEL_BLOOM'}),
+            _('select', { name: 'bloom' }, [
+              _('option', { value: 0 }, [_('text', 0)]),
+              _('option', { value: 1 }, [_('text', 1)]),
+              _('option', { value: 2 }, [_('text', 2)]),
+              _('option', { value: 3 }, [_('text', 3)]),
+              _('option', { value: 4 }, [_('text', 4)]),
+              _('option', { value: 5 }, [_('text', 5)]),
+            ]),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateChara('bloom') }}),
+            _('br'),
+            _('input', { type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdateChara('delete') }}),
+          ]),
+        ]),
         this.characterForm = _('form', {}, [
           this.characterContainer = _('table', { className: 'characters' }),
         ]),
@@ -2799,7 +2881,32 @@ class RootLogic {
       ]),
 
       this.posterTabContent = _('div', {}, [
-        this.posterIconList = _('div'),
+        this.posterIconList = _('div', {}, [
+          this.posterMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
+            _('span'),
+            _('br'),
+            _('text', 'Level: '),
+            _('select', { name: 'level' }, [
+              _('option', { value: 4 }, [_('text', 'MAX-4')]),
+              _('option', { value: 3 }, [_('text', 'MAX-3')]),
+              _('option', { value: 2 }, [_('text', 'MAX-2')]),
+              _('option', { value: 1 }, [_('text', 'MAX-1')]),
+              _('option', { value: 0 }, [_('text', 'MAX')]),
+            ]),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdatePoster('level') }}),
+            _('span', {'data-text-key': 'POSTER_LABEL_RELEASE'}),
+            _('select', { name: 'release' }, [
+              _('option', { value: 0 }, [_('text', 0)]),
+              _('option', { value: 1 }, [_('text', 1)]),
+              _('option', { value: 2 }, [_('text', 2)]),
+              _('option', { value: 3 }, [_('text', 3)]),
+              _('option', { value: 4 }, [_('text', 4)]),
+            ]),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdatePoster('release') }}),
+            _('br'),
+            _('input', { type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdatePoster('delete') }}),
+          ]),
+        ]),
         this.posterContainer = _('table', { className: 'posters' }),
         _('div', {}, [
           this.addPosterSelect = _('select'),
@@ -2808,7 +2915,27 @@ class RootLogic {
       ]),
 
       this.accessoryTabContent = _('div', {}, [
-        this.accessoryIconList = _('div'),
+        this.accessoryIconList = _('div', {}, [
+          this.accessoryMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
+            _('span'),
+            _('br'),
+            _('text', 'Level: '),
+            _('select', { name: 'level' }, [
+              _('option', { value: 1 }, [_('text', '1')]),
+              _('option', { value: 2 }, [_('text', '2')]),
+              _('option', { value: 3 }, [_('text', '3')]),
+              _('option', { value: 4 }, [_('text', '4')]),
+              _('option', { value: 5 }, [_('text', '5')]),
+              _('option', { value: 6 }, [_('text', '6')]),
+              _('option', { value: 7 }, [_('text', '7')]),
+              _('option', { value: 8 }, [_('text', '8')]),
+              _('option', { value: 9 }, [_('text', '9')]),
+              _('option', { value: 10 }, [_('text', '10')]),
+            ]),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateAccessory('level') }}),
+            _('input', { type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdateAccessory('delete') }}),
+          ]),
+        ]),
         this.accessoryContainer = _('table', { className: 'accessories' }),
         _('div', {}, [
           this.addAccessorySelect = _('select'),
@@ -2864,6 +2991,9 @@ class RootLogic {
     Object.values(GameDb.Accessory).forEach(i => {
       this.addAccessorySelect.appendChild(_('option', { value: i.Id }, [_('text', (new AccessoryData(i.Id, null)).fullAccessoryName)]))
     })
+    for (let lvl in GameDb.CharacterLevel) {
+      this.characterMultiUpdateForm['level'].appendChild(_('option', { value: lvl }, [_('text', lvl)]))
+    }
 
     if (localStorage.getItem('appState') !== null) {
       this.loadState(localStorage.getItem('appState'))
@@ -2884,6 +3014,7 @@ class RootLogic {
       accessory: true,
       album: true,
       theaterLevel: true,
+      selection: true
     })
 
     this.calcTypeSelectForm.tab.value = 'normal'
@@ -3058,16 +3189,19 @@ class RootLogic {
     this.update({ theaterLevel: true })
   }
 
+  batchUpdating = false
   update(parts) {
     try {
+
+    if (this.batchUpdating) return;
 
     this.errorOccured = false
     const displaySortValue = (tbl, key, a, b) => (
       tbl[a][key] === tbl[b][key] ? 0 : tbl[a][key] > tbl[b][key] ? 1 : -1
     )
 
-    Object.values(this.nonPersistentState.characterOptions).forEach(i => i.removeAttribute('disabled'))
     if (parts.chara) {
+      Object.values(this.nonPersistentState.characterOptions).forEach(i => i.removeAttribute('disabled'))
       this.appState.characters.forEach(i => {
         i.update()
         if (this.nonPersistentState.characterOptions[i.Id]) {
@@ -3130,6 +3264,12 @@ class RootLogic {
       }
     }
 
+    if (parts.selection) {
+      const selectedCharacterCount = this.appState.characters.filter(i => i.iconSelectionInput.checked).length
+      this.characterMultiUpdateForm.classList[selectedCharacterCount > 0 ? 'remove' : 'add']('empty')
+      this.characterMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedCharacterCount])
+    }
+
     this.printWarningMessages()
     ConstText.fillText()
 
@@ -3139,6 +3279,71 @@ class RootLogic {
       this.errorOccured = true
       throw e
     }
+  }
+
+  multiUpdateChara(key) {
+    this.batchUpdating = true
+    switch (key) {
+      case 'delete': {
+        if (!confirm(ConstText.get('DELETE_SELECTION_CONFIRM'))) break
+        this.appState.characters.slice().forEach(i => i.iconSelectionInput.checked && i.remove())
+        break
+      }
+      case 'level': {
+        this.appState.characters.forEach(i => i.iconSelectionInput.checked && (i.lvl = this.characterMultiUpdateForm[key].value | 0))
+        break
+      }
+      case 'episodeReadState': {
+        this.appState.characters.forEach(i => i.iconSelectionInput.checked && (i.episodeReadState = this.characterMultiUpdateForm[key].value | 0))
+        break
+      }
+      case 'sense': {
+        this.appState.characters.forEach(i => i.iconSelectionInput.checked && (i.senselv = this.characterMultiUpdateForm[key].value | 0))
+        break
+      }
+      case 'bloom': {
+        this.appState.characters.forEach(i => i.iconSelectionInput.checked && (i.bloom = this.characterMultiUpdateForm[key].value | 0))
+        break
+      }
+    }
+    this.batchUpdating = false
+    this.update({ chara: true })
+  }
+  multiUpdatePoster(key) {
+    this.batchUpdating = true
+    switch (key) {
+      case 'delete': {
+        if (!confirm(ConstText.get('DELETE_SELECTION_CONFIRM'))) break
+        this.appState.posters.slice().forEach(i => i.iconSelectionInput.checked && i.remove())
+        break
+      }
+      case 'level': {
+        this.appState.posters.forEach(i => i.iconSelectionInput.checked && (i.level = i.maxLevel - (this.posterMultiUpdateForm[key].value | 0)))
+        break
+      }
+      case 'release': {
+        this.appState.posters.forEach(i => i.iconSelectionInput.checked && (i.release = this.posterMultiUpdateForm[key].value | 0))
+        break
+      }
+    }
+    this.batchUpdating = false
+    this.update({ poster: true })
+  }
+  multiUpdateAccessory(key) {
+    this.batchUpdating = true
+    switch (key) {
+      case 'delete': {
+        if (!confirm(ConstText.get('DELETE_SELECTION_CONFIRM'))) break
+        this.appState.accessories.slice().forEach(i => i.iconSelectionInput.checked && i.remove())
+        break
+      }
+      case 'level': {
+        this.appState.accessories.forEach(i => i.iconSelectionInput.checked && (i.level = this.accessoryMultiUpdateForm[key].value | 0))
+        break
+      }
+    }
+    this.batchUpdating = false
+    this.update({ accessory: true })
   }
 
   renderSenseNote(skipUpdate = false) {

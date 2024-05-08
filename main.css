@@ -176,13 +176,33 @@ table.stat-details td {
 
 .list-icon-container {
   display: inline-block;
-  margin: 5px 5px 0;
+  padding: 5px 5px 0;
   text-align: center;
   position: relative;
   max-width: 64px;
 }
 .list-icon-container.small-text {
   font-size: 13px;
+}
+.list-icon-container.selected {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(80,80,80,0.2),
+    rgba(80,80,80,0.2) 5px,
+    rgba(150,150,150,0.2) 5px,
+    rgba(150,150,150,0.2) 10px
+  );
+  background-size: 999px 999px;
+  background-position: 50%;
+  animation: selected_bg_anim linear 10s infinite;
+}
+@keyframes selected_bg_anim {
+  0% {
+    background-position: 50%;
+  }
+  100% {
+    background-position: calc(50% + 141.42px);
+  }
 }
 input[type=checkbox].icon-selection {
   display: none;
@@ -193,4 +213,16 @@ input[type=checkbox].icon-selection:checked {
   position: absolute;
   top: 3px;
   left: 3px;
+}
+.list-multi-update-container {
+  z-index: 4;
+  background: rgba(255, 255, 255, 0.8);
+  padding-bottom: 5px;
+}
+.list-multi-update-container.empty {
+  pointer-events: none;
+}
+.list-multi-update-container:not(.empty) {
+  position: sticky;
+  top: 44px;
 }
