@@ -28,6 +28,12 @@ const SenseTypeEnum = {
   "9": "None",
   "10": "Alternative"
 }
+const SenseTypeTextEnum = {
+  支援: "support",
+  支配: "control",
+  増幅: "amplification",
+  特殊: "special",
+}
 
 class GameDb {
   static Character = {};
@@ -110,6 +116,7 @@ class BeautyText {
     return text
     .replace(/\*/g, '✦')
     .replace(/<color=(#[0-9A-Fa-f]*)>(.*?)<\/color>/g, '<span style="color: $1">$2</span>')
+    .replace(/(支援|支配|増幅|特殊)系の光/g, (text, type) => `<span class="sense-star" data-sense-type="${SenseTypeTextEnum[type]}">${text}</span>`)
   }
 }
 class Effect {
@@ -701,8 +708,9 @@ class StarActData {
     this.requireDecrease = [0,0,0,0]
   }
   get desc() {
-    return this.Description
+    return BeautyText.convertGameTextToValidDom(this.Description)
       .replace('[:score]', this.scoreUp)
+      .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level+1).activeEffectValueStr)
   }
   get scoreUp() {
     return (this.AcquirableScorePercent + this.level * this.ScoreUpPerLevel) / 100
@@ -1015,7 +1023,7 @@ class CharacterData {
     this.ctValNode.textContent = this.sense.ct
 
     this.staract.level = this.bloom
-    this.staractDescNode.textContent = this.staract.desc
+    this.staractDescNode.innerHTML = this.staract.desc
     this.staract.actualRequirements.forEach((req, i) => {
       this.staractRequirementsNode.children[i].textContent = req
       this.staractRequirementsNode.children[i].style.display = req > 0 ? '' : 'none'
@@ -2841,7 +2849,7 @@ class RootLogic {
             _('select', { name: 'level' }),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateChara('level') }}),
             _('span', {'data-text-key': 'CARD_LABEL_STORY'}),
-            _('select', { style: {marginRight: '1em'}, name: 'episodeReadState' }, [
+            _('select', { name: 'episodeReadState' }, [
               _('option', { value: 0, 'data-text-key': 'CARD_SELECTION_EPISODE_READ_0' }),
               _('option', { value: 1, 'data-text-key': 'CARD_SELECTION_EPISODE_READ_1' }),
               _('option', { value: 2, 'data-text-key': 'CARD_SELECTION_EPISODE_READ_2' }),
