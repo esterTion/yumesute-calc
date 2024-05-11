@@ -3043,7 +3043,7 @@ class RootLogic {
     this.appState.posters = data.posters.map(i => PosterData.fromJSON(i, this.posterContainer))
     removeAllChilds(this.accessoryContainer)
     this.appState.accessories = data.accessories.map(i => AccessoryData.fromJSON(i, this.accessoryContainer))
-    this.appState.albumLevel = data.albumLevel
+    this.appState.albumLevel = Math.floor(data.albumLevel / 5) * 5
     removeAllChilds(this.photoEffectContainer)
     this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
     this.appState.theaterLevel = TheaterLevelData.fromJSON(data.theaterLevel)
