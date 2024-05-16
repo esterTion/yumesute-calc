@@ -218,6 +218,7 @@ input[type=checkbox].icon-selection:checked {
   z-index: 4;
   background: rgba(255, 255, 255, 0.8);
   padding-bottom: 5px;
+  font-size: 16px;
 }
 .list-multi-update-container.empty {
   pointer-events: none;

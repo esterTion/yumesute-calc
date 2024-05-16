@@ -839,7 +839,7 @@ class CharacterData {
         _('td', {}, [_('span', {className: `card-attribute-${this.attributeName}`}), _('text', this.fullCardName)]),
         _('td', {}, [_('text', 'Vo:')]),
         this.voValNode = _('td', {className: 'stat'}),
-        _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: `https://redive.estertion.win/wds/card/${this.Id}_0.webp@w200`})])
+        _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: `https://redive.estertion.win/wds/card/${this.Id}_0.webp@w400`, loading: 'lazy' })])
       ]),
       _('tr', {}, [
         _('td', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
@@ -892,6 +892,7 @@ class CharacterData {
       _('br'),
       _('span', { className: `card-attribute-${this.attributeName}`}),
       _('span', { className: 'sense-star', 'data-sense-type': this.sense.getType() }),
+      _('text', `${this.sense.data.LightCount} `),
       this.iconNodeCtLabel = _('span'),
       _('br'),
       this.iconNodeLevelLabel = _('span'),
@@ -994,7 +995,7 @@ class CharacterData {
     this.senseInput.value = this.senselv;
     this.bloomInput.value = this.bloom;
 
-    this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w200`
+    this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w400`
     this.iconNodeIcon.dataset.id = this.cardIconId
 
     const stat = this.statFinal
@@ -1016,8 +1017,11 @@ class CharacterData {
     })
 
     this.sense.level = this.senselv
-    try { this.senseDescNode.textContent = this.sense.desc } catch {
-      this.senseDescNode.textContent = this.sense.data.Description
+    try {
+      this.senseDescNode.textContent = `${this.sense.data.LightCount} ${this.sense.desc}`
+    } catch {
+      // 缺条件时放弃替换
+      this.senseDescNode.textContent = `${this.sense.data.LightCount} ${this.sense.data.Description}`
     }
     this.senseDescNode.dataset.senseType = this.sense.getType()
     this.ctValNode.textContent = this.sense.ct
@@ -1143,7 +1147,7 @@ class PosterData {
       _('div', {}, [_('text', 'Normal: ')]),
       this.normalAbilityBox = _('div'),
       _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
-    ]), _('td', {}, [_('img', { src: this.imageUrl, style: { width: '200px' }})])]))
+    ]), _('td', {}, [_('img', { src: this.imageUrl, style: { width: '200px' }, loading: 'lazy' })])]))
 
     this.iconNode = root.posterIconList.appendChild(_('span', { className: 'list-icon-container', event: { click: e => this.toggleSelection() } }, [
       this.iconNodeIcon = _('span', { className: 'spriteatlas-posters', 'data-id': this.id }),
@@ -1167,7 +1171,7 @@ class PosterData {
   }
 
   get imageUrl() {
-    return `https://redive.estertion.win/wds/poster/${this.id}_0.webp@w200`
+    return `https://redive.estertion.win/wds/poster/${this.id}_0.webp@w400`
   }
   get currentMaxLevel() {
     return this.maxLevel - (4 - this.release)
@@ -1995,8 +1999,9 @@ class LiveSimulator {
       })
     }
     this.currentSenseType = sense.Type.toLowerCase();
-    this.addSenseLight(sense.Type, sense.data.LightCount + this.senseExtraAmount[idx])
-    for (let i=0; i<this.senseExtraAmount[idx]; i++) {
+    const totalAddLight = sense.data.LightCount + this.senseExtraAmount[idx]
+    this.addSenseLight(sense.Type, totalAddLight)
+    for (let i=0; i<totalAddLight-1; i++) {
       timelineNode.appendChild(_('div', { className: 'sense-add-light', style: { top: `calc(100% + ${i*8}px)` } }))
     }
     if (sense.scoreUp) {
@@ -3133,6 +3138,7 @@ class RootLogic {
 
   addCharacter() {
     const charaId = this.addCharacterSelect.value | 0;
+    if (this.appState.characters.find(i => i.Id === charaId)) return
     this.appState.characters.push(new CharacterData(charaId, this.characterContainer))
     this.update({ chara: true })
   }
@@ -3174,6 +3180,7 @@ class RootLogic {
 
   addPoster() {
     const posterId = this.addPosterSelect.value | 0;
+    if (this.appState.posters.find(i => i.id === posterId)) return
     this.appState.posters.push(new PosterData(posterId, this.posterContainer))
     this.update({ poster: true })
   }
@@ -3276,6 +3283,14 @@ class RootLogic {
       const selectedCharacterCount = this.appState.characters.filter(i => i.iconSelectionInput.checked).length
       this.characterMultiUpdateForm.classList[selectedCharacterCount > 0 ? 'remove' : 'add']('empty')
       this.characterMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedCharacterCount])
+
+      const selectedPosterCount = this.appState.posters.filter(i => i.iconSelectionInput.checked).length
+      this.posterMultiUpdateForm.classList[selectedPosterCount > 0 ? 'remove' : 'add']('empty')
+      this.posterMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedPosterCount])
+
+      const selectedAccessoryCount = this.appState.accessories.filter(i => i.iconSelectionInput.checked).length
+      this.accessoryMultiUpdateForm.classList[selectedAccessoryCount > 0 ? 'remove' : 'add']('empty')
+      this.accessoryMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedAccessoryCount])
     }
 
     this.printWarningMessages()
