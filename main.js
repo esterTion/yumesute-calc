@@ -61,6 +61,8 @@ class GameDb {
   static CircleTheaterLevel = {};
   static CircleSupportCompanyLevelDetail = {};
 
+  static StoryEventHighScoreBuffSetting = {};
+
   static async load() {
     let loaded = -1
     const updateProgress = () => {
@@ -92,6 +94,8 @@ class GameDb {
 
       this.loadKeyedMasterTable('CircleTheaterLevelMaster').then(r => this.CircleTheaterLevel = r).then(updateProgress),
       this.loadKeyedMasterTable('CircleSupportCompanyLevelDetailMaster').then(r => this.CircleSupportCompanyLevelDetail = r).then(updateProgress),
+
+      this.loadKeyedMasterTable('StoryEventHighScoreBuffSettingMaster').then(r => this.StoryEventHighScoreBuffSetting = r).then(updateProgress),
     ]
     const total = promises.length
     updateProgress()
@@ -660,7 +664,7 @@ class SenseData {
         let judgeValue
         switch (this.data.BranchCondition1) {
           case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
-          default: { console.log(`Sense branch condition ${this.data.BranchCondition1}`); return null }
+          default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition1, id: this.id})); return null }
         }
         switch (branch.JudgeType1) {
           case 'Equal': { conditionMet = judgeValue === branch.Parameter1; break }
@@ -670,7 +674,7 @@ class SenseData {
       }
       if (this.data.BranchCondition2 !== 'None') {
         switch (this.data.BranchCondition2) {
-          default: { console.log(`Sense branch condition ${this.data.BranchCondition2}`); return null }
+          default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition2, id: this.id})); return null }
         }
       }
       if (conditionMet) {
@@ -737,7 +741,7 @@ class StarActData {
         let judgeValue
         switch (this.data.BranchCondition1) {
           case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
-          default: { console.log(`StarAct branch condition ${this.data.BranchCondition1}`); return null }
+          default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition1, id: this.id})); return null }
         }
         switch (branch.JudgeType1) {
           case 'Equal': { conditionMet = judgeValue === branch.Parameter1; break }
@@ -747,7 +751,7 @@ class StarActData {
       }
       if (this.data.BranchCondition2 !== 'None') {
         switch (this.data.BranchCondition2) {
-          default: { console.log(`StarAct branch condition ${this.data.BranchCondition2}`); return null }
+          default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition2, id: this.id})); return null }
         }
       }
       if (conditionMet) {
@@ -1592,9 +1596,18 @@ class ScoreCalculator {
       return
     }
     this.liveSim.leader = leader
-    this.liveSim.starActRequirements = leader.staract.actualRequirements
 
     this.members.forEach(i => i && (i.sense.resetRecastDown(), i.staract.resetRequireDecrease()))
+
+    // highscore buff
+    root.appState.highScoreBuffManager.currentActiveEffects().forEach(effect => {
+      // 全部都是被动和开局效果
+      const range = effect.Range === 'All' ? 1 : 5
+      for (let idx = 0; idx < range; idx++) {
+        if (!effect.canTrigger(this, idx)) return
+        effect.applyEffect(this, idx, StatBonusType.Other)
+      }
+    })
 
     const passiveEffects = this.passiveEffects
     Object.values(GameDb.AlbumEffect).forEach(i => {
@@ -1624,6 +1637,7 @@ class ScoreCalculator {
       this.liveSim.skipSense[idx] = chara.data.CharacterBaseMasterId === 401
       chara.bloomBonusEffects.forEach(effect => effect.applyEffect(this, idx, StatBonusType.Album))
     })
+    this.liveSim.starActRequirements = leader.staract.actualRequirements
 
     // poster
     this.posters.forEach((poster, idx) => {
@@ -2417,6 +2431,95 @@ class PartyManager {
   }
 }
 
+class HighScoreBuffManager {
+  constructor() {
+    this.buffMap = {}
+  }
+
+  init() {
+    this.container = root.highScoreBuffContainer
+    this.currentBuffGroup = {}
+    this.currentBuffNodes = {}
+    this.currentBuffEffects = {}
+  }
+  changeNotation(id) {
+    if (this.buffMap[id] === this.currentBuffGroup) return
+    removeAllChilds(this.container)
+    this.currentBuffGroup = {}
+    this.currentBuffNodes = {}
+    this.currentBuffEffects = {}
+
+    const buffItems = Object.values(GameDb.StoryEventHighScoreBuffSetting).filter(i => i.StoryEventHighScoreMasterId == id)
+    if (buffItems.length == 0) {
+      return
+    }
+    if (this.buffMap[id] === undefined) {
+      this.buffMap[id] = {}
+      buffItems.forEach(i => this.buffMap[id][i.StoryEventHighScoreBuffMasterId] = 0)
+    }
+    this.currentBuffGroup = this.buffMap[id]
+
+    buffItems.forEach(i => {
+      const id = i.StoryEventHighScoreBuffMasterId
+      this.currentBuffNodes[id] = {}
+      this.currentBuffEffects[id] = {
+        effect: Effect.get(i.StoryEventHighScoreBuffMaster.EffectMasterId, 1),
+        desc: i.StoryEventHighScoreBuffMaster.EffectDescription,
+      }
+      this.container.appendChild(_('div', {}, [
+        this.currentBuffNodes[id].select = _('select', { 'data-id': id, event: { change: e=>this.setLevel(e) } }, this.generateLevelOptions()),
+        this.currentBuffNodes[id].desc = _('span'),
+      ]))
+    })
+
+    Object.keys(this.currentBuffGroup).forEach(id => {
+      this.currentBuffNodes[id].select.value = this.currentBuffGroup[id]
+      this.currentBuffEffects[id].effect.level = Math.max(1, this.currentBuffGroup[id])
+      this.updateEffectDesc(id)
+    })
+  }
+
+  updateEffectDesc(id) {
+    this.currentBuffNodes[id].desc.innerHTML = BeautyText.convertGameTextToValidDom(this.currentBuffEffects[id].desc.replace('[:param1]', this.currentBuffEffects[id].effect.activeEffectValueStr))
+    this.currentBuffNodes[id].desc.style.opacity = (this.currentBuffGroup[id] === 0) ? 0.5 : 1
+  }
+  setLevel(e) {
+    const id = e.target.dataset.id
+    this.currentBuffGroup[id] = e.target.value | 0
+    this.currentBuffEffects[id].effect.level = Math.max(1, this.currentBuffGroup[id])
+    this.updateEffectDesc(id)
+
+    root.update({ party: true })
+  }
+
+  currentActiveEffects() {
+    const list = []
+    if (root.calcType !== 'highscore') return list
+    Object.keys(this.currentBuffGroup).forEach(id => {
+      if (this.currentBuffGroup[id] === 0) return
+      list.push(this.currentBuffEffects[id].effect)
+    })
+    return list
+  }
+
+  generateLevelOptions() {
+    const list = []
+    for (let i=0; i<11; i++) {
+      list.push(_('option', { 'value': i }, [_('text', i)]))
+    }
+    return list
+  }
+
+  toJSON() {
+    return this.buffMap
+  }
+  static fromJSON(data) {
+    const manager = new HighScoreBuffManager()
+    manager.buffMap = data
+    return manager
+  }
+}
+
 class ConstText {
   static language = null
   static init() {
@@ -2454,6 +2557,7 @@ class ConstText {
     IMPORT_DATA_LABEL: 'Load exported',
     EXPORT_DATA_LABEL: 'Export',
     EXPORTER_LABEL: 'Export tool using password',
+    HIGHSCORE_BUFF_LABEL: 'Stage Boost: ',
 
     THEATER_LEVEL_LABEL: 'Theatre level: ',
     SIRIUS: 'Sirius',
@@ -2523,6 +2627,7 @@ class ConstText {
 
     LOG_WARNING_EFFECT_NOT_IMPLEMENTED: 'Effect type not implemented: {type} ({id})',
     LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: 'Effect trigger not implemented: {trigger} @ {range} ({id})',
+    LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: 'Branch condition not implemented: {condition} ({id})',
     LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: 'Bonus based on current score cannot be accurately calculated',
     UNDEFINED_STRING: 'Missing text template: {0}',
   }
@@ -2536,6 +2641,7 @@ class ConstText {
     IMPORT_DATA_LABEL: 'データを導入',
     EXPORT_DATA_LABEL: 'データを保存',
     EXPORTER_LABEL: '連携パスワードで導入するツール',
+    HIGHSCORE_BUFF_LABEL: '舞台装置：',
 
     THEATER_LEVEL_LABEL: '劇場レベル：',
     SIRIUS: 'シリウス',
@@ -2605,6 +2711,7 @@ class ConstText {
 
     LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '効果支援していない：{type} ({id})',
     LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '効果の条件支援していない：{trigger} @ {range} ({id})',
+    LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: '分岐条件支援していない：{condition} ({id})',
     LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '現在のスコアに基づくボーナスは正確に計算できません',
     UNDEFINED_STRING: '不足しているテキスト：{0}',
   }
@@ -2618,6 +2725,7 @@ class ConstText {
     IMPORT_DATA_LABEL: '导入数据',
     EXPORT_DATA_LABEL: '导出数据',
     EXPORTER_LABEL: '引继码导出工具',
+    HIGHSCORE_BUFF_LABEL: '舞台装置：',
 
     THEATER_LEVEL_LABEL: '剧场等级：',
     SIRIUS: 'Sirius',
@@ -2687,6 +2795,7 @@ class ConstText {
 
     LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '未支持的效果：{type} ({id})',
     LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '未支持的效果触发：{trigger} @ {range} ({id})',
+    LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: '未支持的分支条件：{condition} ({id})',
     LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '按当前得分加分的效果无法精确计算分数',
     UNDEFINED_STRING: '缺失的文本：{0}',
   }
@@ -2717,7 +2826,8 @@ class RootLogic {
     albumExtra: [],
     theaterLevel: new TheaterLevelData(),
     partyManager: new PartyManager(),
-    version: 4,
+    highScoreBuffManager: new HighScoreBuffManager(),
+    version: 5,
   }
   nonPersistentState = {
     characterOptions: {},
@@ -2765,7 +2875,8 @@ class RootLogic {
         this.senseNoteSelect = _('select', {event: {change: _=>this.renderSenseNote()}}),
         this.senseBox = _('div', { className: 'sense-render-box' }),
         this.highscoreCalcTabContent = _('div', {}, [
-          _('text', 'スコアボーナス: '),
+          _('span', { 'data-text-key': 'HIGHSCORE_BUFF_LABEL' }),
+          this.highScoreBuffContainer = _('div'),
         ]),
         _('details', {}, [
           _('summary', {'data-text-key':'PARTY_LABEL'}),
@@ -3012,6 +3123,7 @@ class RootLogic {
       this.loadState(localStorage.getItem('appState'))
     } else {
       this.appState.partyManager.init()
+      this.appState.highScoreBuffManager.init()
     }
 
     this.albumLevelSelect.value = this.appState.albumLevel
@@ -3062,6 +3174,8 @@ class RootLogic {
     this.appState.theaterLevel = TheaterLevelData.fromJSON(data.theaterLevel)
     this.appState.partyManager = PartyManager.fromJSON(data.partyManager)
     this.appState.partyManager.init()
+    this.appState.highScoreBuffManager = HighScoreBuffManager.fromJSON(data.highScoreBuffManager)
+    this.appState.highScoreBuffManager.init()
   }
   addMissingFields(data) {
     // ver 2：添加剧团等级加成
@@ -3078,6 +3192,11 @@ class RootLogic {
     if (data.version < 4) {
       data.version = 4
       data.albumExtra.forEach(i => i[2] = true)
+    }
+    // ver 5：添加舞台装置
+    if (data.version < 5) {
+      data.version = 5
+      data.highScoreBuffManager = (new HighScoreBuffManager).toJSON()
     }
   }
   importState() {
@@ -3124,16 +3243,25 @@ class RootLogic {
     this.warningMessages = []
   }
 
+  get calcType() { return this._calcType }
+  set calcType(val) {
+    if (this._calcType !== val) {
+      this._calcType = val
+      this.normalCalcTabContent.style.display = val !== 'keiko' ? '' : 'none'
+      this.highscoreCalcTabContent.style.display = val === 'highscore' ? '' : 'none'
+      this.keikoCalcTabContent.style.display = val === 'keiko' ? '' : 'none'
+      this.update({ party: true })
+    }
+  }
   changeTab() {
-    const calcType = this.calcTypeSelectForm.tab.value
-    this.normalCalcTabContent.style.display = calcType !== 'keiko' ? '' : 'none'
-    this.highscoreCalcTabContent.style.display = calcType === 'highscore' ? '' : 'none'
-    this.keikoCalcTabContent.style.display = calcType === 'keiko' ? '' : 'none'
+    this.calcType = this.calcTypeSelectForm.tab.value
 
     const tab = this.tabSelectForm.tab.value
     this.characterTabContent.style.display = tab === 'character' ? '' : 'none'
     this.posterTabContent.style.display = tab === 'poster' ? '' : 'none'
     this.accessoryTabContent.style.display = tab === 'accessory' ? '' : 'none'
+
+
   }
 
   addCharacter() {
@@ -3253,6 +3381,7 @@ class RootLogic {
     }
     if (parts.chara || parts.poster || parts.album || parts.accessory || parts.party) {
       this.appState.partyManager.update()
+      this.appState.highScoreBuffManager.changeNotation(this.senseNoteSelect.value | 0)
     }
 
     if ('keiko' === this.calcTypeSelectForm.tab.value) {
