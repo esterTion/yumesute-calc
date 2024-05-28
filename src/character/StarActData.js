@@ -1,0 +1,76 @@
+import GameDb from "../db/GameDb"
+import Effect from "../effect/Effect"
+import BeautyText from "../db/BeautyText"
+import ConstText from "../db/ConstText"
+
+export default class StarActData {
+  constructor(id, level) {
+    this.id = id
+    this.level = level
+    this.data = GameDb.StarAct[id]
+    if (!this.data) throw new Error(`StarAct ${id} not found`)
+    Object.assign(this, this.data)
+
+    this.condition = GameDb.StarActCondition[this.StarActConditionMasterId]
+    if (!this.condition) throw new Error(`StarActCondition ${this.StarActConditionMasterId} not found`)
+
+    this.requirements = [
+      this.condition.SupportLight,
+      this.condition.ControlLight,
+      this.condition.AmplificationLight,
+      this.condition.SpecialLight
+    ]
+    this.requireDecrease = [0,0,0,0]
+  }
+  get desc() {
+    return BeautyText.convertGameTextToValidDom(this.Description)
+      .replace('[:score]', this.scoreUp)
+      .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level+1).activeEffectValueStr)
+  }
+  get scoreUp() {
+    return (this.AcquirableScorePercent + this.level * this.ScoreUpPerLevel) / 100
+  }
+  resetRequireDecrease() {
+    this.requireDecrease = [0,0,0,0]
+  }
+  get actualRequirements() {
+    return this.requirements.map((req, i) => (req > 0 ? Math.max(1, req - this.requireDecrease[i]) : 0))
+  }
+  clone() {
+    const staract = new StarActData(this.id, this.level)
+    staract.requireDecrease = this.requireDecrease.slice()
+    return staract
+  }
+
+  getActiveBranch(liveSim) {
+    const branches = this.data.Branches
+    let result = null
+    let isLifeGuardBranch = false
+    for (let branch of branches) {
+      let conditionMet = true
+      if (this.data.BranchCondition1 !== 'None') {
+        let judgeValue
+        switch (this.data.BranchCondition1) {
+          case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
+          default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition1, id: this.id})); return null }
+        }
+        switch (branch.JudgeType1) {
+          case 'Equal': { conditionMet = judgeValue === branch.Parameter1; break }
+          case 'MoreThan': { conditionMet = judgeValue >= branch.Parameter1; break }
+          case 'LessThan': { conditionMet = judgeValue <= branch.Parameter1; break }
+        }
+      }
+      if (this.data.BranchCondition2 !== 'None') {
+        switch (this.data.BranchCondition2) {
+          default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition2, id: this.id})); return null }
+        }
+      }
+      if (conditionMet) {
+        result = branch
+        result.isLifeGuardBranch = isLifeGuardBranch
+        break
+      }
+    }
+    return result
+  }
+}
