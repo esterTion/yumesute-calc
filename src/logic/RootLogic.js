@@ -359,23 +359,25 @@ export default class RootLogic {
   }
   loadState(dataStr) {
     console.log('load')
+    this.batchUpdating = true
     const data = JSON.parse(dataStr)
     this.addMissingFields(data)
-    removeAllChilds(this.characterContainer)
+    this.appState.characters.slice().forEach(i => i.remove())
     this.appState.characters = data.characters.map((i) => CharacterData.fromJSON(i, this.characterContainer))
     this.appState.characterStarRank = CharacterStarRankData.fromJSON(data.characterStarRank)
-    removeAllChilds(this.posterContainer)
+    this.appState.posters.slice().forEach(i => i.remove())
     this.appState.posters = data.posters.map(i => PosterData.fromJSON(i, this.posterContainer))
-    removeAllChilds(this.accessoryContainer)
+    this.appState.accessories.slice().forEach(i => i.remove())
     this.appState.accessories = data.accessories.map(i => AccessoryData.fromJSON(i, this.accessoryContainer))
     this.appState.albumLevel = Math.floor(data.albumLevel / 5) * 5
-    removeAllChilds(this.photoEffectContainer)
+    this.appState.albumExtra.slice().forEach(i => i.remove())
     this.appState.albumExtra = data.albumExtra.map(i => PhotoEffectData.fromJSON(i, this.photoEffectContainer))
     this.appState.theaterLevel = TheaterLevelData.fromJSON(data.theaterLevel)
     this.appState.partyManager = PartyManager.fromJSON(data.partyManager)
     this.appState.partyManager.init()
     this.appState.highScoreBuffManager = HighScoreBuffManager.fromJSON(data.highScoreBuffManager)
     this.appState.highScoreBuffManager.init()
+    this.batchUpdating = false
   }
   addMissingFields(data) {
     // ver 2：添加剧团等级加成
