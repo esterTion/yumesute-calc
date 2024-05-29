@@ -20,10 +20,12 @@ export default class GameDb {
   static RandomEffectGroup = {};
 
   static SenseNotation = {};
+  static League = {};
 
   static CircleTheaterLevel = {};
   static CircleSupportCompanyLevelDetail = {};
 
+  static StoryEvent = {};
   static StoryEventHighScoreBuffSetting = {};
 
   static async load() {
@@ -54,10 +56,12 @@ export default class GameDb {
       this.loadKeyedMasterTable('RandomEffectGroupMaster').then(r => this.RandomEffectGroup = r).then(updateProgress),
 
       this.loadKeyedMasterTable('SenseNotationMaster').then(r => this.SenseNotation = r).then(updateProgress),
+      this.loadKeyedMasterTable('LeagueMaster').then(r => this.League = r).then(updateProgress),
 
       this.loadKeyedMasterTable('CircleTheaterLevelMaster').then(r => this.CircleTheaterLevel = r).then(updateProgress),
       this.loadKeyedMasterTable('CircleSupportCompanyLevelDetailMaster').then(r => this.CircleSupportCompanyLevelDetail = r).then(updateProgress),
 
+      this.loadKeyedMasterTable('StoryEventMaster').then(r => this.StoryEvent = r).then(updateProgress),
       this.loadKeyedMasterTable('StoryEventHighScoreBuffSettingMaster').then(r => this.StoryEventHighScoreBuffSetting = r).then(updateProgress),
     ]
     const total = promises.length

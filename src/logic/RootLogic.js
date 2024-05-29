@@ -268,8 +268,18 @@ export default class RootLogic {
       ]),
     ]))
 
+    const leagueNotationIdMap = Object.values(GameDb.League).reduce((acc, i) => {
+      acc[i.SenseNotationMasterId] = i.Id
+      return acc
+    }, {})
     Object.values(GameDb.SenseNotation).forEach(i => {
-      this.senseNoteSelect.appendChild(_('option', { value: i.Id }, [_('text', i.Id)]))
+      let text = i.Id
+      if (GameDb.StoryEvent[i.Id] !== undefined) {
+        text += ` - ${GameDb.StoryEvent[i.Id].Title}`
+      } else if (leagueNotationIdMap[i.Id] !== undefined) {
+        text += ` - League @ ${GameDb.League[leagueNotationIdMap[i.Id]].DisplayStartAt}`
+      }
+      this.senseNoteSelect.appendChild(_('option', { value: i.Id }, [_('text', text)]))
     })
     this.keikoSelect.appendChild(_('option', { value: '', 'data-text-key': 'NOT_SELECTED' }, [_('text', '未選択')]))
     Object.values(GameDb.CharacterBase).forEach(i => {
