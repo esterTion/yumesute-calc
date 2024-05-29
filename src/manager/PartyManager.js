@@ -19,6 +19,7 @@ export default class PartyManager {
     this.parties.push(cloneParty)
     this.currentSelection = this.parties.length - 1
     this.fillPartySelect()
+    this.partyNameInput.value = this.parties[this.currentSelection].name
   }
   removeParty() {
     if (this.parties.length === 1) return alert(ConstText.get('PARTY_DELETE_LAST'))
