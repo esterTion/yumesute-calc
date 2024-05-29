@@ -158,16 +158,16 @@ table.stat-details td {
   line-height: 10px;
   color: rgb(177,177,177);
 }
-*[data-sense-type="support"] .sense-add-light {
+.sense-add-light[data-sense-type="support"] {
   color: rgb(98,187,69);
 }
-*[data-sense-type="control"] .sense-add-light {
+.sense-add-light[data-sense-type="control"] {
   color: rgb(192,54,54);
 }
-*[data-sense-type="amplification"] .sense-add-light {
+.sense-add-light[data-sense-type="amplification"] {
   color: rgb(236,180,35);
 }
-*[data-sense-type="special"] .sense-add-light {
+.sense-add-light[data-sense-type="special"] {
   color: rgb(40,80,188);
 }
 .sense-add-light::before {

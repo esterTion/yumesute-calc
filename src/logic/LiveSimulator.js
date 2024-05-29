@@ -21,6 +21,7 @@ export default class LiveSimulator {
    * @description sense上次发动时间
    */
   lastSenseTime;
+  skipSense;
   /**
    * @type {number}
    * @description 基础分（海报按当前分加分计算用，反正在不拿谱面的情况下算不准，为了简化计算只存stella分数）
@@ -39,6 +40,8 @@ export default class LiveSimulator {
   currentTiming;
   lastSenseTiming;
   activeBuff;
+  senseExtraAmount;
+  senseExtraLights;
 
   constructor(calc) {
     this.calc = calc
@@ -62,6 +65,7 @@ export default class LiveSimulator {
     this.activeBuff = { sense: [], starAct: [] }
     this.starActCurrent = [0,0,0,0,0]
     this.senseExtraAmount = [0,0,0,0,0]
+    this.senseExtraLights = [[],[],[],[],[]]
   }
   runSimulation(node) {
     this.applyPendingActions()
@@ -208,10 +212,17 @@ export default class LiveSimulator {
       })
     }
     this.currentSenseType = sense.Type.toLowerCase();
-    const totalAddLight = sense.data.LightCount + this.senseExtraAmount[idx]
-    this.addSenseLight(sense.Type, totalAddLight)
-    for (let i=0; i<totalAddLight-1; i++) {
-      timelineNode.appendChild(_('div', { className: 'sense-add-light', style: { top: `calc(100% + ${i*8}px)` } }))
+    const addedLights = new Array(sense.data.LightCount + this.senseExtraAmount[idx] - 1).fill(sense.Type)
+    this.addSenseLight(sense.Type, addedLights.length + 1)
+    for (let light of this.senseExtraLights[idx]) {
+      let [addLightType, addLightAmount] = light
+      this.addSenseLight(addLightType, addLightAmount)
+      while (addLightAmount--) {
+        addedLights.push(addLightType)
+      }
+    }
+    for (let i=0; i<addedLights.length; i++) {
+      timelineNode.appendChild(_('div', { className: 'sense-add-light', 'data-sense-type': addedLights[i].toLowerCase(), style: { top: `calc(100% + ${i*8}px)` } }))
     }
     if (sense.scoreUp) {
       let multiplier = sense.scoreUp
