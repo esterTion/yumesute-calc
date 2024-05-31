@@ -192,7 +192,8 @@ export default class RootLogic {
             ]),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateChara('bloom') }}),
             _('br'),
-            _('input', { type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdateChara('delete') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdateChara('delete') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UNSELECT_ALL', event: { click: e=>this.multiUpdateChara('unselect') }}),
           ]),
         ]),
         this.characterForm = _('form', {}, [
@@ -228,7 +229,8 @@ export default class RootLogic {
             ]),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdatePoster('release') }}),
             _('br'),
-            _('input', { type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdatePoster('delete') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdatePoster('delete') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UNSELECT_ALL', event: { click: e=>this.multiUpdatePoster('unselect') }}),
           ]),
         ]),
         this.posterContainer = _('table', { className: 'posters' }),
@@ -257,7 +259,8 @@ export default class RootLogic {
               _('option', { value: 10 }, [_('text', '10')]),
             ]),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateAccessory('level') }}),
-            _('input', { type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdateAccessory('delete') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdateAccessory('delete') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UNSELECT_ALL', event: { click: e=>this.multiUpdateAccessory('unselect') }}),
           ]),
         ]),
         this.accessoryContainer = _('table', { className: 'accessories' }),
@@ -671,6 +674,10 @@ export default class RootLogic {
         this.appState.characters.forEach(i => i.iconSelectionInput.checked && (i.bloom = this.characterMultiUpdateForm[key].value | 0))
         break
       }
+      case 'unselect': {
+        this.appState.characters.forEach(i => i.iconSelectionInput.checked && i.toggleSelection())
+        break
+      }
     }
     this.batchUpdating = false
     this.update({ chara: true })
@@ -691,6 +698,10 @@ export default class RootLogic {
         this.appState.posters.forEach(i => i.iconSelectionInput.checked && (i.release = this.posterMultiUpdateForm[key].value | 0))
         break
       }
+      case 'unselect': {
+        this.appState.posters.forEach(i => i.iconSelectionInput.checked && i.toggleSelection())
+        break
+      }
     }
     this.batchUpdating = false
     this.update({ poster: true })
@@ -705,6 +716,10 @@ export default class RootLogic {
       }
       case 'level': {
         this.appState.accessories.forEach(i => i.iconSelectionInput.checked && (i.level = this.accessoryMultiUpdateForm[key].value | 0))
+        break
+      }
+      case 'unselect': {
+        this.appState.accessories.forEach(i => i.iconSelectionInput.checked && i.toggleSelection())
         break
       }
     }
