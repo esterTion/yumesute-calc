@@ -51,6 +51,7 @@ export default class ConstText {
     DELETE_SELECTION_CONFIRM: 'Delete selected items?',
     SELECTION_COUNT_LABEL: 'Selected {0} items: ',
     UNSELECT_ALL: 'Unselect all',
+    SELECTION_EMPTY: 'Empty',
 
     TAB_CHARA: 'Character',
     TAB_POSTER: 'Poster',
@@ -136,6 +137,7 @@ export default class ConstText {
     DELETE_SELECTION_CONFIRM: '選択した項目を消しますか？',
     SELECTION_COUNT_LABEL: '選択した {0} 個：',
     UNSELECT_ALL: '全て選択解除',
+    SELECTION_EMPTY: 'はずす',
 
     TAB_CHARA: 'キャラ',
     TAB_POSTER: 'ポスター',
@@ -221,6 +223,7 @@ export default class ConstText {
     DELETE_SELECTION_CONFIRM: '确定删除选中的项目吗？',
     SELECTION_COUNT_LABEL: '选中的 {0} 个：',
     UNSELECT_ALL: '取消所有选中',
+    SELECTION_EMPTY: '清空',
 
     TAB_CHARA: '角色',
     TAB_POSTER: '海报',

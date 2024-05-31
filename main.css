@@ -230,3 +230,42 @@ input[type=checkbox].icon-selection:checked {
   position: sticky;
   top: 44px;
 }
+
+.party-member input[type=radio] {
+  vertical-align: top;
+}
+.party-member .spriteatlas-characters,.party-member .spriteatlas-posters,.party-member .spriteatlas-accessories,.empty-icon {
+  --target-size: 48;
+  --sprite-x: -999px;
+  --sprite-y: -999px;
+  --sprite-width: 64px;
+  --sprite-height: 64px;
+  --sprite-scale: 1;
+  margin-left:20px;
+}
+
+body.picking {
+  overflow: hidden;
+}
+.picking-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0,0,0,0.5);
+	z-index: 100;
+	overflow: auto;
+}
+.picking-container {
+	width: 670px;
+	margin: 0 auto;
+	background: white;
+	padding: 20px;
+}
+@media (max-width: 670px) {
+  .picking-container {
+    width: 100%;
+    padding: 10px 5px;
+  }
+}

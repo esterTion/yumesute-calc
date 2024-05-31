@@ -56,24 +56,12 @@ export default class PartyManager {
     this.charaSlot = []
     this.posterSlot = []
     this.accessorySlot = []
-    // create table with 5 rows of select
-    this.partyTable = container.appendChild(_('table', {}, [
-      _('thead', {}, [
-        _('tr', {}, [
-          _('th'),
-          _('th', {}, [_('text', ConstText.get('TAB_CHARA'))]),
-          _('th', {}, [_('text', ConstText.get('TAB_POSTER'))]),
-          _('th', {}, [_('text', ConstText.get('TAB_ACCESSORY'))]),
-        ]),
-      ]),
-      _('tbody', {}, Array(5).fill(0).map((__, idx) => _('tr', {}, [
-          _('td', {}, [this.leaderSelection[idx] = _('input', { type: 'radio', name: 'leader', event: { change: e=>this.changeLeader(e, idx) }})]),
-          _('td', {}, [this.charaSlot[idx] = _('select', { event: { change: e=>this.changeChara(e, idx) }})]),
-          _('td', {}, [this.posterSlot[idx] = _('select', { event: { change: e=>this.changePoster(e, idx) }})]),
-          _('td', {}, [this.accessorySlot[idx] = _('select', { event: { change: e=>this.changeAccessory(e, idx) }})]),
-        ])),
-      ),
-    ]))
+    container.appendChild(_('div', {}, Array(5).fill(0).map((__, idx) => _('div', { className: 'party-member' }, [
+      this.leaderSelection[idx] = _('input', { type: 'radio', name: 'leader', event: { change: e=>this.changeLeader(e, idx) }}),
+      this.charaSlot[idx] = _('span', { className: 'spriteatlas-characters', event: { click: e=>this.pickCharacter(e, idx) }}),
+      this.posterSlot[idx] = _('span', { className: 'spriteatlas-posters', event: { click: e=>this.pickPoster(e, idx) }}),
+      this.accessorySlot[idx] = _('span', { className: 'spriteatlas-accessories', event: { click: e=>this.pickAccessory(e, idx) }}),
+    ]))))
   }
   fillPartySelect() {
     removeAllChilds(this.partySelect)
@@ -87,60 +75,71 @@ export default class PartyManager {
     this.leaderSelection.forEach((select, idx) => {
       select.checked = null !== party.leader && party.characters[idx] === party.leader
     })
-    this.charaSlot.forEach((select, idx) => {
-      removeAllChilds(select)
-      select.appendChild(_('option', { value: -1 }, [_('text', ConstText.get('NOT_SELECTED'))]))
-      root.appState.characters.forEach((chara, charaIdx) => {
-        select.appendChild(_('option', { value: charaIdx }, [_('text', chara.fullCardName)]))
-      })
-      select.value = root.appState.characters.indexOf(party.characters[idx])
+    this.charaSlot.forEach((icon, idx) => {
+      icon.dataset.id = party.characters[idx] ? party.characters[idx].cardIconId : ''
       const senseLane = root.senseBox.children[idx]
       if (!senseLane) return
       senseLane.dataset.senseType = party.characters[idx] === null ? '' : party.characters[idx].sense.getType(party.characters)
     })
-    this.posterSlot.forEach((select, idx) => {
-      removeAllChilds(select)
-      select.appendChild(_('option', { value: -1 }, [_('text', ConstText.get('NOT_SELECTED'))]))
-      root.appState.posters.forEach((poster, posterIdx) => {
-        select.appendChild(_('option', { value: posterIdx }, [_('text', poster.fullPosterName)]))
-      })
-      select.value = root.appState.posters.indexOf(party.posters[idx])
+    this.posterSlot.forEach((icon, idx) => {
+      icon.dataset.id = party.posters[idx] ? party.posters[idx].id : ''
     })
-    this.accessorySlot.forEach((select, idx) => {
-      removeAllChilds(select)
-      select.appendChild(_('option', { value: -1 }, [_('text', ConstText.get('NOT_SELECTED'))]))
-      root.appState.accessories.forEach((accessory, accessoryIdx) => {
-        let displayName = accessory.fullAccessoryName
-        if (accessory.randomEffect) {
-          displayName = `${displayName} (${accessory.randomEffect.data.Name})`
-        }
-        select.appendChild(_('option', { value: accessoryIdx }, [_('text', displayName)]))
-      })
-      select.value = root.appState.accessories.indexOf(party.accessories[idx])
+    this.accessorySlot.forEach((icon, idx) => {
+      icon.dataset.id = party.accessories[idx] ? party.accessories[idx].id : ''
     })
     this.partyNameInput.value = this.parties[this.currentSelection].name
   }
 
-  changeChara(e, idx) {
+  changeChara(chara, idx) {
     const party = this.parties[this.currentSelection]
     const prevLeaderIdx = party.characters.indexOf(party.leader)
-    party.characters[idx] = root.appState.characters[e.target.value] || null
-    if (prevLeaderIdx === idx) {
-      party.leader = null
-      if (e.target.value !== '-1') {
-        party.leader = party.characters[idx]
+    // 寻找冲突，找到冲突角色互换两个角色的位置
+    const newCharaBaseId = chara.data.CharacterBaseMasterId
+    for (let i=0; i<5; i++) {
+      if (i === idx) continue
+      if (!party.characters[i]) continue
+      if (party.characters[i].data.CharacterBaseMasterId === newCharaBaseId) {
+        party.characters[i] = party.characters[idx]
+        break
       }
     }
+    party.characters[idx] = chara
+    party.leader = party.characters[prevLeaderIdx]
     root.update({ party: true })
   }
-  changePoster(e, idx) {
+  changePoster(poster, idx) {
     const party = this.parties[this.currentSelection]
-    party.posters[idx] = root.appState.posters[e.target.value] || null
+    if (poster) {
+      const conflictPosters = [poster.id]
+      // 剧团海报均为冲突
+      if ([230090, 230100, 230110, 230120].indexOf(poster.id) !== -1) {
+        conflictPosters.push(230090, 230100, 230110, 230120)
+      }
+      for (let i=0; i<5; i++) {
+        if (i === idx) continue
+        if (!party.posters[i]) continue
+        if (conflictPosters.indexOf(party.posters[i].id) !== -1) {
+          party.posters[i] = party.posters[idx]
+          break
+        }
+      }
+    }
+    party.posters[idx] = poster
     root.update({ party: true })
   }
-  changeAccessory(e, idx) {
+  changeAccessory(accessory, idx) {
     const party = this.parties[this.currentSelection]
-    party.accessories[idx] = root.appState.accessories[e.target.value] || null
+    if (accessory) {
+      for (let i=0; i<5; i++) {
+        if (i === idx) continue
+        if (!party.accessories[i]) continue
+        if (party.accessories[i] === accessory) {
+          party.accessories[i] = party.accessories[idx]
+          break
+        }
+      }
+    }
+    party.accessories[idx] = accessory
     root.update({ party: true })
   }
   changeLeader(e, idx) {
@@ -152,39 +151,125 @@ export default class PartyManager {
     party.leader = party.characters[idx]
     root.update({ party: true })
   }
+  createPickingOverlay() {
+    document.body.classList.add('picking')
+    const overlay = _('div', { className: 'picking-overlay'})
+    const container = _('div', { className: 'picking-container', event: { click: e=>this.confirmPicking(e) }})
+    overlay.appendChild(container)
+    document.body.appendChild(overlay)
+    this.pickingOverlay = overlay
+    this.pickingContainer = container
+    overlay.scrollTop = 0
+  }
+  confirmPicking(e) {
+    document.body.classList.remove('picking')
+    let pick
+    for (let el of this.pickingContainer.children) {
+      if (el.contains(e.target)) {
+        pick = el
+        break
+      }
+    }
+    const idx = pick.dataset.idx
+    switch (this.currentPicking.type) {
+      case 'chara': {
+        this.changeChara(root.appState.characters[idx] || null, this.currentPicking.idx)
+        break
+      }
+      case 'poster': {
+        this.changePoster(root.appState.posters[idx] || null, this.currentPicking.idx)
+        break
+      }
+      case 'accessory': {
+        this.changeAccessory(root.appState.accessories[idx] || null, this.currentPicking.idx)
+        break
+      }
+    }
+    this.pickingOverlay.remove()
+  }
+  pickCharacter(e, idx) {
+    if (root.appState.characters.length === 0) return
+    this.currentPicking = { type: 'chara', idx }
+    this.createPickingOverlay()
+    const currentSelection = {}
+    this.currentParty.characters.forEach((chara, i) => {
+      if (!chara) return
+      const icon = this.pickingContainer.appendChild(chara.iconNode.cloneNode(true))
+      icon.classList.remove('selected')
+      if (idx === i) icon.classList.add('selected')
+      currentSelection[chara.Id] = icon
+    })
+    root.appState.characters.forEach((chara, i) => {
+      if (currentSelection[chara.Id]) {
+        currentSelection[chara.Id].dataset.idx = i
+        return
+      }
+      const icon = this.pickingContainer.appendChild(chara.iconNode.cloneNode(true))
+      icon.classList.remove('selected')
+      icon.dataset.idx = i
+    })
+  }
+  pickPoster(e, idx) {
+    this.currentPicking = { type: 'poster', idx }
+    this.createPickingOverlay()
+    const currentSelection = {}
+    this.pickingContainer.appendChild(_('span', { className: 'list-icon-container small-text arial', 'data-idx': -1 }, [
+      _('span', { className: 'spriteatlas-posters empty-icon' }),
+      _('br'),
+      _('span', {}, [_('text', ConstText.get('SELECTION_EMPTY'))]),
+    ]))
+    if (this.currentParty.posters[idx] === null) {
+      this.pickingContainer.lastChild.classList.add('selected')
+    }
+    this.currentParty.posters.forEach((poster, i) => {
+      if (!poster) return
+      const icon = this.pickingContainer.appendChild(poster.iconNode.cloneNode(true))
+      icon.classList.remove('selected')
+      if (idx === i) icon.classList.add('selected')
+      currentSelection[poster.id] = icon
+    })
+    root.appState.posters.forEach((poster, i) => {
+      if (currentSelection[poster.id]) {
+        currentSelection[poster.id].dataset.idx = i
+        return
+      }
+      const icon = this.pickingContainer.appendChild(poster.iconNode.cloneNode(true))
+      icon.classList.remove('selected')
+      icon.dataset.idx = i
+    })
+  }
+  pickAccessory(e, idx) {
+    this.currentPicking = { type: 'accessory', idx }
+    this.createPickingOverlay()
+    const currentSelection = {}
+    this.pickingContainer.appendChild(_('span', { className: 'list-icon-container small-text', 'data-idx': -1 }, [
+      _('span', { className: 'spriteatlas-accessories empty-icon' }),
+      _('br'),
+      _('span', {}, [_('text', ConstText.get('SELECTION_EMPTY'))]),
+    ]))
+    if (this.currentParty.accessories[idx] === null) {
+      this.pickingContainer.lastChild.classList.add('selected')
+    }
+    this.currentParty.accessories.forEach((accessory, i) => {
+      if (!accessory) return
+      const icon = this.pickingContainer.appendChild(accessory.iconNode.cloneNode(true))
+      icon.classList.remove('selected')
+      if (idx === i) icon.classList.add('selected')
+      currentSelection[root.appState.accessories.indexOf(accessory)] = icon
+    })
+    root.appState.accessories.forEach((accessory, i) => {
+      if (currentSelection[i]) {
+        currentSelection[i].dataset.idx = i
+        return
+      }
+      const icon = this.pickingContainer.appendChild(accessory.iconNode.cloneNode(true))
+      icon.classList.remove('selected')
+      icon.dataset.idx = i
+    })
+  }
 
   update() {
     this.changeParty()
-    // disable select same item in other slots
-    const charaSelected = this.charaSlot.map(i => i.value)
-    const posterSelected = this.posterSlot.map(i => i.value)
-    const accessorySelected = this.accessorySlot.map(i => i.value)
-    this.charaSlot.forEach((select, idx) => {
-      if (charaSelected[idx] === '-1') return
-      const charaId = root.appState.characters[charaSelected[idx]].data.CharacterBaseMasterId
-      this.charaSlot.forEach((otherSelect, otherIdx) => {
-        if (idx === otherIdx) return
-        root.appState.characters.forEach((chara, charaIdx) => {
-          if (chara.data.CharacterBaseMasterId === charaId) {
-            otherSelect.children[charaIdx+1].setAttribute('disabled', '')
-          }
-        })
-      })
-    })
-    this.posterSlot.forEach((select, idx) => {
-      if (posterSelected[idx] === '-1') return
-      this.posterSlot.forEach((otherSelect, otherIdx) => {
-        if (idx === otherIdx) return
-        otherSelect.children[posterSelected[idx]*1+1].setAttribute('disabled', '')
-      })
-    })
-    this.accessorySlot.forEach((select, idx) => {
-      if (accessorySelected[idx] === '-1') return
-      this.accessorySlot.forEach((otherSelect, otherIdx) => {
-        if (idx === otherIdx) return
-        otherSelect.children[accessorySelected[idx]*1+1].setAttribute('disabled', '')
-      })
-    })
   }
 
   toJSON() {
