@@ -184,6 +184,9 @@ table.stat-details td {
 .list-icon-container.small-text {
   font-size: 13px;
 }
+.list-icon-container.arial {
+  font-family: Arial;
+}
 .list-icon-container.selected {
   background-image: repeating-linear-gradient(
     45deg,

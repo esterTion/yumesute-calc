@@ -23,7 +23,7 @@ export default class PosterData {
       _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
     ]), _('td', {}, [_('img', { src: this.imageUrl, style: { width: '200px' }, loading: 'lazy' })])]))
 
-    this.iconNode = root.posterIconList.appendChild(_('span', { className: 'list-icon-container', event: { click: e => this.toggleSelection() } }, [
+    this.iconNode = root.posterIconList.appendChild(_('span', { className: 'list-icon-container small-text arial', event: { click: e => this.toggleSelection() } }, [
       this.iconNodeIcon = _('span', { className: 'spriteatlas-posters', 'data-id': this.id }),
       _('br'),
       this.iconNodeLevelLabel = _('span'),
@@ -87,7 +87,8 @@ export default class PosterData {
       i.release = this.release
       i.update()
     })
-    this.iconNodeLevelLabel.textContent = `Rl${this.release} Lv${this.level}`
+    const releaseLabel = '◆'.repeat(this.release) + '◇'.repeat(4 - this.release)
+    this.iconNodeLevelLabel.textContent = `${releaseLabel} ${this.level}`
   }
   remove() {
     this.node.remove()
