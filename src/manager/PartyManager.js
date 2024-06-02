@@ -213,7 +213,7 @@ export default class PartyManager {
     this.createPickingOverlay()
     const currentSelection = {}
     this.pickingContainer.appendChild(_('span', { className: 'list-icon-container small-text arial', 'data-idx': -1 }, [
-      _('span', { className: 'spriteatlas-posters empty-icon' }),
+      _('span', { className: 'spriteatlas-posters empty-icon', 'data-id':'', style: {marginLeft:0} }),
       _('br'),
       _('span', {}, [_('text', ConstText.get('SELECTION_EMPTY'))]),
     ]))
@@ -242,7 +242,7 @@ export default class PartyManager {
     this.createPickingOverlay()
     const currentSelection = {}
     this.pickingContainer.appendChild(_('span', { className: 'list-icon-container small-text', 'data-idx': -1 }, [
-      _('span', { className: 'spriteatlas-accessories empty-icon' }),
+      _('span', { className: 'spriteatlas-accessories empty-icon', 'data-id':'', style: {marginLeft:0} }),
       _('br'),
       _('span', {}, [_('text', ConstText.get('SELECTION_EMPTY'))]),
     ]))
