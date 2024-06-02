@@ -100,6 +100,7 @@ export default class ConstText {
     LIVE_LOG_POSTER_SCORE: 'Poster bonus ({3}): {0} × {1} = {2}',
     LIVE_LOG_SENSE_UP: 'Sense bonus: {0}%, lasts {1} sec',
     LIVE_LOG_STARACT_UP: 'Star Act bonus: {0}%, lasts{1} sec',
+    LIVE_LOG_STARACT_SCORE_EXTRA: 'Star Act bonus ({3}): {0} × {1} = {2}',
 
     PARTY_DEFAULT_NAME: 'Party',
     PARTY_DELETE_CONFIRM: 'Delete this party?',
@@ -109,6 +110,7 @@ export default class ConstText {
     LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: 'Effect trigger not implemented: {trigger} @ {range} ({id})',
     LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: 'Branch condition not implemented: {condition} ({id})',
     LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: 'Bonus based on current score cannot be accurately calculated',
+    LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: 'Score gain type not implemented: {type} ({id})',
     UNDEFINED_STRING: 'Missing text template: {0}',
   }
   static ja = {
@@ -186,6 +188,7 @@ export default class ConstText {
     LIVE_LOG_POSTER_SCORE: 'ポスタースコア({3})：{0} × {1} = {2}',
     LIVE_LOG_SENSE_UP: 'センスブースト：{0}%，{1}秒間持続',
     LIVE_LOG_STARACT_UP: 'スターアクトブースト：{0}%，{1}秒間持続',
+    LIVE_LOG_STARACT_SCORE_EXTRA: 'スターアクトボーナススコア({3})：{0} × {1} = {2}',
 
     PARTY_DEFAULT_NAME: 'パーティー',
     PARTY_DELETE_CONFIRM: 'パーティーを消しますか？',
@@ -195,6 +198,7 @@ export default class ConstText {
     LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '効果の条件支援していない：{trigger} @ {range} ({id})',
     LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: '分岐条件支援していない：{condition} ({id})',
     LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '現在のスコアに基づくボーナスは正確に計算できません',
+    LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: 'スコアボーナスの種類支援していない：{type} ({id})',
     UNDEFINED_STRING: '不足しているテキスト：{0}',
   }
   static zh = {
@@ -272,6 +276,7 @@ export default class ConstText {
     LIVE_LOG_POSTER_SCORE: '海报加分({3})：{0} × {1} = {2}',
     LIVE_LOG_SENSE_UP: 'Sense加成：{0}%，持续{1}秒',
     LIVE_LOG_STARACT_UP: 'StarAct加成：{0}%，持续{1}秒',
+    LIVE_LOG_STARACT_SCORE_EXTRA: 'StarAct额外加分({3})：{0} × {1} = {2}',
 
     PARTY_DEFAULT_NAME: '队伍',
     PARTY_DELETE_CONFIRM: '确定删除队伍吗？',
@@ -281,6 +286,7 @@ export default class ConstText {
     LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '未支持的效果触发：{trigger} @ {range} ({id})',
     LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: '未支持的分支条件：{condition} ({id})',
     LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '按当前得分加分的效果无法精确计算分数',
+    LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: '未支持的加分类型：{type} ({id})',
     UNDEFINED_STRING: '缺失的文本：{0}',
   }
 

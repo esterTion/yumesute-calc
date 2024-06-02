@@ -52,6 +52,7 @@ export default class StarActData {
         let judgeValue
         switch (this.data.BranchCondition1) {
           case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
+          case 'StorageSenseLightCount': { judgeValue = liveSim.overflownLights[this.data.ConditionValue1 - 1]; break }
           default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition1, id: this.id})); return null }
         }
         switch (branch.JudgeType1) {

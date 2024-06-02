@@ -4,6 +4,7 @@ import ScoreCalculator from "./ScoreCalculator"
 import Effect from "../effect/Effect"
 
 import _ from "../createElement"
+import ScoreBonusType from "./ScoreBonusType"
 
 export default class LiveSimulator {
   /**
@@ -42,6 +43,7 @@ export default class LiveSimulator {
   activeBuff;
   senseExtraAmount;
   senseExtraLights;
+  overflownLights;
 
   constructor(calc) {
     this.calc = calc
@@ -66,6 +68,7 @@ export default class LiveSimulator {
     this.starActCurrent = [0,0,0,0,0]
     this.senseExtraAmount = [0,0,0,0,0]
     this.senseExtraLights = [[],[],[],[],[]]
+    this.overflownLights = [0,0,0,0,0]
   }
   runSimulation(node) {
     this.applyPendingActions()
@@ -73,7 +76,7 @@ export default class LiveSimulator {
     this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
     if (this.tryStarAct()) {
       this.phase = ConstText.get('LIVE_PHASE_START_WITH_STARACT')
-      this.starActCurrent = [0,0,0,0,0]
+      this.resetCurrentLights()
     }
     node.appendChild(_('details', { className: 'live-log-phase odd-row' }, [
       _('summary', {}, [_('text', this.phase)]),
@@ -95,7 +98,7 @@ export default class LiveSimulator {
       timelineNode.classList.remove('failed')
       if (!this.trySense(timing, timelineNode)) {
         this.phase = ConstText.get('LIVE_PHASE_SENSE_FAILED').replace('{time}', timing.TimingSecond)
-        this.starActCurrent = [0,0,0,0,0]
+        this.resetCurrentLights()
 
         timelineNode.classList.add('failed')
       } else {
@@ -104,7 +107,7 @@ export default class LiveSimulator {
 
       if (this.tryStarAct()) {
         this.phase = ConstText.get('LIVE_PHASE_SENSE_WITH_STARACT').replace('{time}', timing.TimingSecond)
-        this.starActCurrent = [0,0,0,0,0]
+        this.resetCurrentLights()
       }
       node.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : ''), open: '' }, [
         _('summary', { className: 'sense-star', 'data-sense-type': this.currentSenseType }, [_('text', this.phase)]),
@@ -164,8 +167,11 @@ export default class LiveSimulator {
       case 'special':       { this.starActCurrent[3] += amount; break }
       case 'variable':      { this.starActCurrent[4] += amount; break }
     }
-    for (let i=0; i<4; i++) {
-      this.starActCurrent[i] = Math.min(this.starActCurrent[i], this.starActRequirements[i])
+  }
+  resetCurrentLights() {
+    for (let i=0; i<5; i++) {
+      this.starActCurrent[i] = 0
+      this.overflownLights[i] = 0
     }
   }
   trySense(timing, timelineNode) {
@@ -180,7 +186,7 @@ export default class LiveSimulator {
       // 发动加分效果
       chara.sense.data.PreEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, chara.senselv)
-        effect.applyEffect(this.calc, idx, null)
+        effect.applyEffect(this.calc, idx, ScoreBonusType.Sense)
       })
       chara = this.calc.members.find(i => i && i.data.CharacterBaseMasterId === 101)
       if (!chara) {
@@ -201,14 +207,14 @@ export default class LiveSimulator {
 
     sense.data.PreEffects.forEach(effect => {
       effect = Effect.get(effect.EffectMasterId, chara.senselv)
-      effect.applyEffect(this.calc, idx, null)
+      effect.applyEffect(this.calc, idx, ScoreBonusType.Sense)
     })
     const senseEffectBranch = sense.getActiveBranch(this)
     if (senseEffectBranch) {
       senseEffectBranch.BranchEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, chara.senselv)
         effect.isLifeGuardBranch = senseEffectBranch.isLifeGuardBranch
-        effect.applyEffect(this.calc, idx, null)
+        effect.applyEffect(this.calc, idx, ScoreBonusType.Sense)
       })
     }
     this.currentSenseType = sense.Type.toLowerCase();
@@ -267,7 +273,7 @@ export default class LiveSimulator {
           effect = Effect.get(effect.EffectMasterId, ability.level + ability.release)
           if (effect.FireTimingType !== 'Sense') return
           if (!effect.canTrigger(this.calc, idx)) return
-          effect.applyEffect(this.calc, idx, null)
+          effect.applyEffect(this.calc, idx, ScoreBonusType.Poster)
         })
       }
     }
@@ -277,12 +283,12 @@ export default class LiveSimulator {
         effect = effect.effect
         if (effect.FireTimingType !== 'Sense') continue
         if (!effect.canTrigger(this.calc, idx)) continue
-        effect.applyEffect(this.calc, idx, null)
+        effect.applyEffect(this.calc, idx, ScoreBonusType.Accessory)
       }
       if (accessory.randomEffect) {
         let effect = accessory.randomEffect.effect
         if (effect.FireTimingType === 'Sense' && effect.canTrigger(this.calc, idx)) {
-          effect.applyEffect(this.calc, idx, null)
+          effect.applyEffect(this.calc, idx, ScoreBonusType.Accessory)
         }
       }
     }
@@ -300,10 +306,21 @@ export default class LiveSimulator {
     return true
   }
   tryStarAct() {
-    const requirement = this.starActRequirements.reduce((sum, i) => sum+i, 0)
-    const current = this.starActCurrent.reduce((sum, i) => sum+i, 0)
-    if (current < requirement) {
+    let missingCount = 0
+    for (let i=0; i<4; i++) {
+      if (this.starActCurrent[i] < this.starActRequirements[i]) {
+        missingCount += this.starActRequirements[i] - this.starActCurrent[i]
+      } else {
+        this.overflownLights[i] += this.starActCurrent[i] - this.starActRequirements[i]
+        this.starActCurrent[i] = this.starActRequirements[i]
+      }
+    }
+    if (missingCount - this.starActCurrent[4] > 0) {
       return false
+    }
+    // 当前即将发动，把剩余的sp光加到所有种类用于stock光计算
+    for (let i=0; i<4; i++) {
+      this.overflownLights[i] += this.starActCurrent[4] - missingCount
     }
     const stat = this.calc.stat.finalTotal
     const staractEffectBranch = this.leader.staract.getActiveBranch(this)
@@ -312,7 +329,7 @@ export default class LiveSimulator {
       staractEffectBranch.BranchEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, this.leader.bloom + 1)
         effect.isLifeGuardBranch = staractEffectBranch.isLifeGuardBranch
-        effect.applyEffect(this.calc, idx, null)
+        effect.applyEffect(this.calc, idx, ScoreBonusType.StarAct)
       })
     }
     let multiplier = this.leader.staract.scoreUp

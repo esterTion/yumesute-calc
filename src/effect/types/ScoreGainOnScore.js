@@ -1,4 +1,5 @@
 import ConstText from "../../db/ConstText"
+import ScoreBonusType from "../../logic/ScoreBonusType"
 
 export default class ScoreGainOnScore {
   static applyEffect(effect, calc, targets, type) {
@@ -10,9 +11,13 @@ export default class ScoreGainOnScore {
         + calc.result.senseScore.reduce((acc, cur) => acc + cur, 0)
         + calc.result.starActScore.reduce((acc, cur) => acc + cur, 0)
       const score = Math.floor(scoreRightNow * effect.activeEffect.Value / 10000)
-      calc.result.senseScore.push(score)
-      liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [scoreRightNow, (effect.activeEffect.Value / 100).toFixed(2) + '%', score, 'score']))
-      root.addWarningMessage(ConstText.get('LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE'))
+      if (type === ScoreBonusType.Poster) {
+        calc.result.senseScore.push(score)
+        liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [scoreRightNow, (effect.activeEffect.Value / 100).toFixed(2) + '%', score, 'score']))
+        root.addWarningMessage(ConstText.get('LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE'))
+      } else {
+        root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED', {type: type, id: effect.Id}))
+      }
     })
   }
 }

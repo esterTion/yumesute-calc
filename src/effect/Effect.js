@@ -36,6 +36,7 @@ import ScoreGainOnScore from './types/ScoreGainOnScore'
 import ScoreGainOnVocal from './types/ScoreGainOnVocal'
 import ScoreGainOnExpression from './types/ScoreGainOnExpression'
 import ScoreGainOnConcentration from './types/ScoreGainOnConcentration'
+import ScoreGainOnPerformance from './types/ScoreGainOnPerformance'
 import StarActScoreUp from './types/StarActScoreUp'
 
 export default class Effect {
@@ -149,6 +150,7 @@ export default class Effect {
       case "ScoreGainOnVocal": { return ScoreGainOnVocal.applyEffect(this, calc, [index], type) }
       case "ScoreGainOnExpression": { return ScoreGainOnExpression.applyEffect(this, calc, [index], type) }
       case "ScoreGainOnConcentration": { return ScoreGainOnConcentration.applyEffect(this, calc, [index], type) }
+      case "ScoreGainOnPerformance": { return ScoreGainOnPerformance.applyEffect(this, calc, [index], type) }
 
       case "StarActScoreUp": { return StarActScoreUp.applyEffect(this, calc, targets, type) }
 
