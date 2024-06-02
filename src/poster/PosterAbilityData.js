@@ -29,7 +29,7 @@ export default class PosterAbilityData {
   }
   get desc() {
     return BeautyText.convertGameTextToValidDom(this.data.Description)
-    .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.data.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level + this.release).activeEffectValueStr)
+      .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.data.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level + this.release).activeEffectValueStr)
   }
 
   getActiveBranch(liveSim) {

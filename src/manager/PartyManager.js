@@ -46,8 +46,7 @@ export default class PartyManager {
       this.partyNameInput = _('input', { type: 'text', event: { blur: e=>{
         this.parties[this.currentSelection].name = e.target.value
         this.fillPartySelect()
-      }
-    }}),
+      }}}),
     ]))
 
     this.fillPartySelect()

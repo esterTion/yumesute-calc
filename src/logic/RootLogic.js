@@ -294,11 +294,11 @@ export default class RootLogic {
     {
       // characters
       const addableCharactersByDate = Object.values(GameDb.Character)
-      .reduce((acc, i) => {
-        acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
-        acc[i.DisplayStartAt][1].push(i.Id)
-        return acc
-      }, {})
+        .reduce((acc, i) => {
+          acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
+          acc[i.DisplayStartAt][1].push(i.Id)
+          return acc
+        }, {})
       const addableCharacters = Object.values(addableCharactersByDate)
       addableCharacters.sort((a,b) => (a[0] > b[0] ? 1 : -1))
       addableCharacters.forEach((group) => {
@@ -311,11 +311,11 @@ export default class RootLogic {
     {
       // posters
       const addablePostersByDate = Object.values(GameDb.Poster)
-      .reduce((acc, i) => {
-        acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
-        acc[i.DisplayStartAt][1].push(i.Id)
-        return acc
-      }, {})
+        .reduce((acc, i) => {
+          acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
+          acc[i.DisplayStartAt][1].push(i.Id)
+          return acc
+        }, {})
       const addablePosters = Object.values(addablePostersByDate)
       addablePosters.sort((a,b) => (a[0] > b[0] ? 1 : -1))
       addablePosters.forEach((group) => {
@@ -551,96 +551,96 @@ export default class RootLogic {
   update(parts) {
     try {
 
-    if (this.batchUpdating) return;
+      if (this.batchUpdating) return;
 
-    this.errorOccured = false
-    /*
-    const displaySortValue = (tbl, key, a, b) => (
-      tbl[a][key] === tbl[b][key] ? 0 : tbl[a][key] > tbl[b][key] ? 1 : -1
-    )
-    */
+      this.errorOccured = false
+      /*
+      const displaySortValue = (tbl, key, a, b) => (
+        tbl[a][key] === tbl[b][key] ? 0 : tbl[a][key] > tbl[b][key] ? 1 : -1
+      )
+      */
 
-    if (parts.chara) {
-      Object.values(this.nonPersistentState.characterOptions).forEach(i => i.removeAttribute('disabled'))
-      this.appState.characters.forEach(i => {
-        i.update()
-        if (this.nonPersistentState.characterOptions[i.Id]) {
-          this.nonPersistentState.characterOptions[i.Id].setAttribute('disabled', '')
-        }
-      })
+      if (parts.chara) {
+        Object.values(this.nonPersistentState.characterOptions).forEach(i => i.removeAttribute('disabled'))
+        this.appState.characters.forEach(i => {
+          i.update()
+          if (this.nonPersistentState.characterOptions[i.Id]) {
+            this.nonPersistentState.characterOptions[i.Id].setAttribute('disabled', '')
+          }
+        })
 
-      this.keikoFillChara()
-    }
-
-    if (parts.poster) {
-      Object.values(this.nonPersistentState.posterOptions).forEach(i => i.removeAttribute('disabled'))
-      this.appState.posters.forEach(i => {
-        i.update()
-        if (this.nonPersistentState.posterOptions[i.id]) {
-          this.nonPersistentState.posterOptions[i.id].setAttribute('disabled', '')
-        }
-      })
-    }
-
-    if (parts.accessory) {
-      this.appState.accessories.forEach(i => i.update())
-    }
-    if (parts.album) {
-      this.appState.albumExtra.forEach(i => i.update())
-      const extraCount = this.appState.albumExtra.filter(i => i.enabled).length
-      this.albumExtraCountLabel.textContent = extraCount
-      this.albumExtraCountLabel.style.color = extraCount > 25 ? 'red' : ''
-    }
-    if (parts.theaterLevel) {
-      (['Sirius', 'Eden', 'Gingaza', 'Denki']).forEach(i => {
-        this.theaterLevelForm[i].value = this.appState.theaterLevel.getLevel(i)
-      })
-    }
-    if (parts.chara || parts.poster || parts.album || parts.accessory || parts.party) {
-      this.appState.partyManager.update()
-      this.appState.highScoreBuffManager.changeNotation(this.senseNoteSelect.value | 0)
-    }
-
-    if ('keiko' === this.calcTypeSelectForm.tab.value) {
-      if (parts.chara || parts.album || parts.theaterLevel) {
-        this.keikoCalcResult()
+        this.keikoFillChara()
       }
-    } else {
-      if (parts.chara || parts.poster || parts.album || parts.theaterLevel || parts.party) {
-        const party = this.appState.partyManager.currentParty
-        const extra = {
-          albumLevel: this.appState.albumLevel,
-          albumExtra: this.appState.albumExtra,
-          leader: party.leader,
-          type: ScoreCalculationType.Normal,
-        }
 
-        if ('highscore' === this.calcTypeSelectForm.tab.value) {
-          extra.type = ScoreCalculationType.Highscore
+      if (parts.poster) {
+        Object.values(this.nonPersistentState.posterOptions).forEach(i => i.removeAttribute('disabled'))
+        this.appState.posters.forEach(i => {
+          i.update()
+          if (this.nonPersistentState.posterOptions[i.id]) {
+            this.nonPersistentState.posterOptions[i.id].setAttribute('disabled', '')
+          }
+        })
+      }
+
+      if (parts.accessory) {
+        this.appState.accessories.forEach(i => i.update())
+      }
+      if (parts.album) {
+        this.appState.albumExtra.forEach(i => i.update())
+        const extraCount = this.appState.albumExtra.filter(i => i.enabled).length
+        this.albumExtraCountLabel.textContent = extraCount
+        this.albumExtraCountLabel.style.color = extraCount > 25 ? 'red' : ''
+      }
+      if (parts.theaterLevel) {
+        (['Sirius', 'Eden', 'Gingaza', 'Denki']).forEach(i => {
+          this.theaterLevelForm[i].value = this.appState.theaterLevel.getLevel(i)
+        })
+      }
+      if (parts.chara || parts.poster || parts.album || parts.accessory || parts.party) {
+        this.appState.partyManager.update()
+        this.appState.highScoreBuffManager.changeNotation(this.senseNoteSelect.value | 0)
+      }
+
+      if ('keiko' === this.calcTypeSelectForm.tab.value) {
+        if (parts.chara || parts.album || parts.theaterLevel) {
+          this.keikoCalcResult()
+        }
+      } else {
+        if (parts.chara || parts.poster || parts.album || parts.theaterLevel || parts.party) {
+          const party = this.appState.partyManager.currentParty
+          const extra = {
+            albumLevel: this.appState.albumLevel,
+            albumExtra: this.appState.albumExtra,
+            leader: party.leader,
+            type: ScoreCalculationType.Normal,
+          }
+
+          if ('highscore' === this.calcTypeSelectForm.tab.value) {
+            extra.type = ScoreCalculationType.Highscore
           // extra.highscoreBonus = ...
+          }
+
+          const calc = new ScoreCalculator(party.characters, party.posters, party.accessories, extra)
+          calc.calc(this.calcResult)
         }
-
-        const calc = new ScoreCalculator(party.characters, party.posters, party.accessories, extra)
-        calc.calc(this.calcResult)
       }
-    }
 
-    if (parts.selection) {
-      const selectedCharacterCount = this.appState.characters.filter(i => i.iconSelectionInput.checked).length
-      this.characterMultiUpdateForm.classList[selectedCharacterCount > 0 ? 'remove' : 'add']('empty')
-      this.characterMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedCharacterCount])
+      if (parts.selection) {
+        const selectedCharacterCount = this.appState.characters.filter(i => i.iconSelectionInput.checked).length
+        this.characterMultiUpdateForm.classList[selectedCharacterCount > 0 ? 'remove' : 'add']('empty')
+        this.characterMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedCharacterCount])
 
-      const selectedPosterCount = this.appState.posters.filter(i => i.iconSelectionInput.checked).length
-      this.posterMultiUpdateForm.classList[selectedPosterCount > 0 ? 'remove' : 'add']('empty')
-      this.posterMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedPosterCount])
+        const selectedPosterCount = this.appState.posters.filter(i => i.iconSelectionInput.checked).length
+        this.posterMultiUpdateForm.classList[selectedPosterCount > 0 ? 'remove' : 'add']('empty')
+        this.posterMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedPosterCount])
 
-      const selectedAccessoryCount = this.appState.accessories.filter(i => i.iconSelectionInput.checked).length
-      this.accessoryMultiUpdateForm.classList[selectedAccessoryCount > 0 ? 'remove' : 'add']('empty')
-      this.accessoryMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedAccessoryCount])
-    }
+        const selectedAccessoryCount = this.appState.accessories.filter(i => i.iconSelectionInput.checked).length
+        this.accessoryMultiUpdateForm.classList[selectedAccessoryCount > 0 ? 'remove' : 'add']('empty')
+        this.accessoryMultiUpdateForm.children[0].textContent = ConstText.get('SELECTION_COUNT_LABEL', [selectedAccessoryCount])
+      }
 
-    this.printWarningMessages()
-    ConstText.fillText()
+      this.printWarningMessages()
+      ConstText.fillText()
 
     } catch (e) {
       window.error_message.textContent = [e.toString(), e.stack].join('\n')

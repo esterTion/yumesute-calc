@@ -56,7 +56,7 @@ export default class PosterData {
       case 'SR': return 8
       case 'SSR': return 10
     }
-		return 0
+    return 0
   }
   get fullPosterName() {
     return `${this.data.Rarity} ${this.data.Name}`

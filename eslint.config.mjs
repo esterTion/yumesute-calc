@@ -17,7 +17,12 @@ export default [
         "caughtErrors": "all",
         "ignoreRestSiblings": false,
         "reportUsedIgnorePattern": false
-    }]
+      }],
+      "indent": ["error", 2, {
+        "SwitchCase": 1,
+      }],
+      "eol-last": ["error", "always"],
+      "linebreak-style": ["error", "unix"],
     }
   },
   pluginJs.configs.recommended,
