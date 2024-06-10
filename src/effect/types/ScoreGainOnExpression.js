@@ -11,6 +11,9 @@ export default class ScoreGainOnExpression {
       if (type === ScoreBonusType.Poster) {
         calc.result.senseScore.push(score)
         calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_POSTER_SCORE', [val, effect.activeEffect.Value / 100, score, 'ex']))
+      } else if (type === ScoreBonusType.Sense) {
+        calc.result.senseScore.push(score)
+        calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_SCORE_EXTRA', [val, effect.activeEffect.Value / 100, score, 'ex']))
       } else {
         root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED', {type: type, id: effect.Id}))
       }

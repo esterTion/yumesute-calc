@@ -100,6 +100,7 @@ export default class ConstText {
     LIVE_LOG_POSTER_SCORE: 'Poster bonus ({3}): {0} × {1} = {2}',
     LIVE_LOG_SENSE_UP: 'Sense bonus: {0}%, lasts {1} sec',
     LIVE_LOG_STARACT_UP: 'Star Act bonus: {0}%, lasts{1} sec',
+    LIVE_LOG_SENSE_SCORE_EXTRA: 'Sense bonus ({3}): {0} × {1} = {2}',
     LIVE_LOG_STARACT_SCORE_EXTRA: 'Star Act bonus ({3}): {0} × {1} = {2}',
 
     PARTY_DEFAULT_NAME: 'Party',
@@ -188,6 +189,7 @@ export default class ConstText {
     LIVE_LOG_POSTER_SCORE: 'ポスタースコア({3})：{0} × {1} = {2}',
     LIVE_LOG_SENSE_UP: 'センスブースト：{0}%，{1}秒間持続',
     LIVE_LOG_STARACT_UP: 'スターアクトブースト：{0}%，{1}秒間持続',
+    LIVE_LOG_SENSE_SCORE_EXTRA: 'センスボーナススコア({3})：{0} × {1} = {2}',
     LIVE_LOG_STARACT_SCORE_EXTRA: 'スターアクトボーナススコア({3})：{0} × {1} = {2}',
 
     PARTY_DEFAULT_NAME: 'パーティー',
@@ -276,6 +278,7 @@ export default class ConstText {
     LIVE_LOG_POSTER_SCORE: '海报加分({3})：{0} × {1} = {2}',
     LIVE_LOG_SENSE_UP: 'Sense加成：{0}%，持续{1}秒',
     LIVE_LOG_STARACT_UP: 'StarAct加成：{0}%，持续{1}秒',
+    LIVE_LOG_SENSE_SCORE_EXTRA: 'Sense额外加分({3})：{0} × {1} = {2}',
     LIVE_LOG_STARACT_SCORE_EXTRA: 'StarAct额外加分({3})：{0} × {1} = {2}',
 
     PARTY_DEFAULT_NAME: '队伍',

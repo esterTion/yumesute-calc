@@ -359,6 +359,7 @@ export default class LiveSimulator {
     const score = Math.floor(stat * multiplier)
     scoreLine = `${stat} × ${scoreLine} = ${score}`
     this.calc.result.starActScore.push(score)
+    this.calc.result.starActCount++
     this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_SCORE').replace('{0}', scoreLine))
     const leftPixel = this.currentTiming ? 21 : 10
     root.senseBox.children[0].children[1].appendChild(_('div', { className: 'staract-line', style: { left: `calc(${this.currentTiming/this.lastSenseTiming*100}% - ${leftPixel}px)` } }))

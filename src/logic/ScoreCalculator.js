@@ -165,6 +165,7 @@ export default class ScoreCalculator {
       baseScore,
       senseScore,
       starActScore,
+      starActCount: 0,
     }
 
     node.appendChild(_('div', {}, [
@@ -203,7 +204,7 @@ export default class ScoreCalculator {
     let finalSenseScore = this.result.senseScore.reduce((acc, cur) => acc + cur, 0)
     let finalStarActScore = this.result.starActScore.reduce((acc, cur) => acc + cur, 0)
     senseScoreNode.appendChild(_('text', finalSenseScore))
-    starActScoreNode.appendChild(_('text', ConstText.get('CALC_RESULT_STARACT').replace('{times}', this.result.starActScore.length).replace('{score}', finalStarActScore)))
+    starActScoreNode.appendChild(_('text', ConstText.get('CALC_RESULT_STARACT').replace('{times}', this.result.starActCount).replace('{score}', finalStarActScore)))
     totalScoreNode.appendChild(_('text', this.result.baseScore.map(i => i + finalSenseScore + finalStarActScore).join(' / ')))
 
     ConstText.fillText()
