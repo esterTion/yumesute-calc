@@ -114,10 +114,10 @@ img {
 }
 
 .posters > div {
-	margin-bottom: 1em;
+  margin-bottom: 1em;
 }
 .accessories > div {
-	margin-bottom: 1em;
+  margin-bottom: 1em;
 }
 
 .stat {
@@ -143,12 +143,12 @@ table.stat-details td {
   margin-bottom: .8em;
 }
 .staract-line {
-	position: absolute;
-	height: 208px;
-	width: 2px;
-	background-image: linear-gradient(180deg, transparent, transparent 50%, #fff 50%, #fff 100%), linear-gradient(180deg, #00c3ff,#df00ff,#FF0060);
-	background-size: 2px 12px, 2px 100%;
-	z-index: 5;
+  position: absolute;
+  height: 208px;
+  width: 2px;
+  background-image: linear-gradient(180deg, transparent, transparent 50%, #fff 50%, #fff 100%), linear-gradient(180deg, #00c3ff,#df00ff,#FF0060);
+  background-size: 2px 12px, 2px 100%;
+  z-index: 5;
 }
 
 .sense-add-light {
@@ -244,30 +244,30 @@ input[type=checkbox].icon-selection:checked {
   margin-left:20px;
 }
 .spriteatlas-characters[data-id=""],.spriteatlas-posters[data-id=""],.spriteatlas-accessories[data-id=""] {
-	border: dashed 2px;
-	border-radius: 15px;
-	box-sizing: border-box;
-	background-color: rgb(230,230,230);
+  border: dashed 2px;
+  border-radius: 15px;
+  box-sizing: border-box;
+  background-color: rgb(230,230,230);
 }
 
 body.picking {
   overflow: hidden;
 }
 .picking-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0,0,0,0.5);
-	z-index: 100;
-	overflow: auto;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  overflow: auto;
 }
 .picking-container {
-	width: 670px;
-	margin: 0 auto;
-	background: white;
-	padding: 20px;
+  width: 670px;
+  margin: 0 auto;
+  background: white;
+  padding: 20px;
 }
 @media (max-width: 670px) {
   .picking-container {
