@@ -11,6 +11,7 @@ export default class GameDb {
   static AlbumEffect = {};
   static PhotoEffect = {};
   static Effect = {};
+  static EffectTriggerCharacterBaseGroup = {};
 
   static Poster = {};
   static PosterAbility = {};
@@ -47,6 +48,7 @@ export default class GameDb {
       this.loadKeyedMasterTable('AlbumEffectMaster').then(r => this.AlbumEffect = r).then(updateProgress),
       this.loadKeyedMasterTable('PhotoEffectMaster').then(r => this.PhotoEffect = r).then(updateProgress),
       this.loadKeyedMasterTable('EffectMaster').then(r => this.Effect = r).then(updateProgress),
+      this.loadKeyedMasterTable('EffectTriggerCharacterBaseGroupMaster').then(r => this.EffectTriggerCharacterBaseGroup = r).then(updateProgress),
 
       this.loadKeyedMasterTable('PosterMaster').then(r => this.Poster = r).then(updateProgress),
       this.loadKeyedMasterTable('PosterAbilityMaster').then(r => this.PosterAbility = r).then(updateProgress),

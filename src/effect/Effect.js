@@ -84,6 +84,7 @@ export default class Effect {
         case "Company": { result = result && calc.members[index] && GameDb.CharacterBase[calc.members[index].data.CharacterBaseMasterId].CompanyMasterId == trigger.Value;  break }
         case "Attribute": { result = result && calc.members[index] && calc.members[index].data.Attribute == AttributeEnum[trigger.Value]; break }
         case "SenseType": { result = result && calc.members[index] && calc.members[index].sense.data.Type == SenseTypeEnum[trigger.Value]; break }
+        case "CharacterBaseGroup": { result = result && calc.members[index] && GameDb.EffectTriggerCharacterBaseGroup[trigger.Value].CharacterBaseMasterIds.indexOf(calc.members[index].data.CharacterBaseMasterId) !== -1; break }
         case "OverLife":
         case "BelowLife":
         default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED', {trigger:trigger.Trigger, range: this.Range, id: this.Id})); return false }
