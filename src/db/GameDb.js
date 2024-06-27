@@ -70,6 +70,11 @@ export default class GameDb {
     updateProgress()
 
     await Promise.all(promises)
+
+    document.getElementById('loading').textContent = 'Preparing'
+    await new Promise(res => {
+      setTimeout(res, 0)
+    })
   }
   static async loadKeyedMasterTable(tableName, idKey = 'Id') {
     const resp = await this.loadMasterTable(tableName)
