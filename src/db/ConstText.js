@@ -307,4 +307,5 @@ export default class ConstText {
     })
   }
 }
-ConstText.init()
+
+ConstText.init();

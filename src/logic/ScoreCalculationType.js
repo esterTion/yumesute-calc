@@ -3,3 +3,4 @@ export default class ScoreCalculationType {
   static HighScoreChallenge = 'HighScoreChallenge';
   static Keiko = 'Keiko';
 }
+

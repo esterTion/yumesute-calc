@@ -18,3 +18,4 @@ export default class ScoreUpByHighLife {
     calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_UP', [bonusLine, effect.DurationSecond]))
   }
 }
+

@@ -4,3 +4,4 @@ export default class ScoreBonusType {
   static Poster = 'ScoreBonusType.Poster';
   static Accessory = 'ScoreBonusType.Accessory';
 }
+

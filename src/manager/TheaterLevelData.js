@@ -34,3 +34,4 @@ export default class TheaterLevelData {
     return theater
   }
 }
+

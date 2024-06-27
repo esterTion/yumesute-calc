@@ -4,3 +4,4 @@ export default class StatBonus {
   static Concentration = 2;
   static Performance = 3;
 }
+

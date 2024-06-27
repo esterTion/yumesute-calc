@@ -1,4 +1,5 @@
 import terser from '@rollup/plugin-terser'
+import babel from '@rollup/plugin-babel';
 
 import fs from 'fs'
 function cleanMapBeforeBuild() {
@@ -26,6 +27,7 @@ export default {
     sourcemapFileNames: 'main-build.js.[hash].map'
   },
   plugins: [
+    babel({ babelHelpers: 'bundled' }),
     terser(),
     cleanMapBeforeBuild(),
   ],

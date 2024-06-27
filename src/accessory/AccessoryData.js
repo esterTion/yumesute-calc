@@ -109,3 +109,4 @@ export default class AccessoryData {
     return [this.id, this.level, this.randomEffectId]
   }
 }
+

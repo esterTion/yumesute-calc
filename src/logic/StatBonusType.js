@@ -6,3 +6,4 @@ export default class StatBonusType {
   static Theater = 4;
   static Total = 5;
 }
+

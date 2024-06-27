@@ -800,3 +800,4 @@ export default class RootLogic {
     calc.calc(this.keikoResult)
   }
 }
+

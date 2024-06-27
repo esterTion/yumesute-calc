@@ -304,3 +304,4 @@ export default class CharacterData {
     return chara
   }
 }
+

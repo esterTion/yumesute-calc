@@ -3,3 +3,4 @@ export default class EpisodeReadState {
   static One = 1;
   static Two = 2;
 }
+

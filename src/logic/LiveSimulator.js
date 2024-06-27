@@ -370,3 +370,4 @@ export default class LiveSimulator {
     this.activeBuff.starAct = this.activeBuff.starAct.filter(i => (i.skipCurrent = false, i.lastUntil >= time))
   }
 }
+
