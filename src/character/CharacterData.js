@@ -283,6 +283,14 @@ export default class CharacterData {
     this.bloom = e.target.value | 0;
     root.update({ chara: true })
   }
+  updateToMax() {
+    const maxLevel = Object.values(GameDb.CharacterLevel).reverse().find(i => (new Date(`${i.StartDate} +0900`)).getTime() < Date.now()).Level
+    this.lvl = maxLevel
+    this.awaken = true
+    this.episodeReadState = EpisodeReadState.Two
+    this.senselv = 5
+    this.bloom = 5
+  }
 
   toJSON() {
     return [

@@ -70,6 +70,10 @@ export default class PosterData {
     this.release = e.target.value | 0;
     root.update({ poster: true })
   }
+  updateToMax() {
+    this.release = 4
+    this.level = this.maxLevel
+  }
 
   update() {
     this.level = Math.min(this.level, this.currentMaxLevel)

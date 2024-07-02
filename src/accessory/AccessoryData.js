@@ -65,6 +65,9 @@ export default class AccessoryData {
     this.level = e.target.value | 0;
     root.update({ accessory: true })
   }
+  updateToMax() {
+    this.level = 10
+  }
 
   update() {
     this.levelSelect.value = this.level;

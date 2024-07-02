@@ -483,6 +483,7 @@ export default class RootLogic {
     const charaId = this.addCharacterSelect.value | 0;
     if (this.appState.characters.find(i => i.Id === charaId)) return
     this.appState.characters.push(new CharacterData(charaId, this.characterContainer))
+    this.appState.characters[this.appState.characters.length - 1].updateToMax()
     this.update({ chara: true })
   }
   removeCharacter(chara) {
@@ -525,6 +526,7 @@ export default class RootLogic {
     const posterId = this.addPosterSelect.value | 0;
     if (this.appState.posters.find(i => i.id === posterId)) return
     this.appState.posters.push(new PosterData(posterId, this.posterContainer))
+    this.appState.posters[this.appState.posters.length - 1].updateToMax()
     this.update({ poster: true })
   }
   removePoster(poster) {
@@ -535,6 +537,7 @@ export default class RootLogic {
   addAccessory() {
     const accessoryId = this.addAccessorySelect.value | 0;
     this.appState.accessories.push(new AccessoryData(accessoryId, this.accessoryContainer))
+    this.appState.accessories[this.appState.accessories.length - 1].updateToMax()
     this.update({ accessory: true })
   }
   removeAccessory(accessory) {
