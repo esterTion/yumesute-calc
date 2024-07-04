@@ -152,7 +152,7 @@ export default class PartyManager {
   }
   createPickingOverlay() {
     document.body.classList.add('picking')
-    const overlay = _('div', { className: 'picking-overlay'})
+    const overlay = _('div', { className: 'picking-overlay', event: { click: e=>this.closePicking(e) }})
     const container = _('div', { className: 'picking-container', event: { click: e=>this.confirmPicking(e) }})
     overlay.appendChild(container)
     document.body.appendChild(overlay)
@@ -160,8 +160,13 @@ export default class PartyManager {
     this.pickingContainer = container
     overlay.scrollTop = 0
   }
+  closePicking(e) {
+    if (e.target === this.pickingOverlay) {
+      document.body.classList.remove('picking')
+      this.pickingOverlay.remove()
+    }
+  }
   confirmPicking(e) {
-    document.body.classList.remove('picking')
     let pick
     for (let el of this.pickingContainer.children) {
       if (el.contains(e.target)) {
@@ -169,6 +174,8 @@ export default class PartyManager {
         break
       }
     }
+    if (!pick) return
+    document.body.classList.remove('picking')
     const idx = pick.dataset.idx
     switch (this.currentPicking.type) {
       case 'chara': {
