@@ -14,7 +14,7 @@ export default class PhotoEffectData {
     this.node = parent.appendChild(_('div', {}, [
       this.enableToggle = _('input', { type: 'checkbox', event: { change: e=>this.setEnabled(e) }}),
       this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } }),
-      this.desc = _('span'),
+      this.desc = _('span', { translate: 'yes' }),
       _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
     ]))
 

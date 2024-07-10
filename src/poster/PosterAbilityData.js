@@ -15,7 +15,7 @@ export default class PosterAbilityData {
     if (!parent) return
     this.node = parent.appendChild(_('div', {}, [
       _('div', {}, [_('text', this.data.Name + ': ' + (this.data.ReleaseLevelAt ? '(Lv'+this.data.ReleaseLevelAt+')' : ''))]),
-      this.descNode = _('div', { style: { paddingLeft: '1em', maxWidth: '450px' }}),
+      this.descNode = _('div', { translate: 'yes', style: { paddingLeft: '1em', maxWidth: '450px' }}),
     ]))
   }
 

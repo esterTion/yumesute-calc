@@ -16,7 +16,7 @@ export default class AccessoryEffectData {
     this.node = parent.appendChild(_('div', {}, [
       _('span', {}, [_('text', this.data.Name + ': ')]),
       _('br'),
-      this.descNode = _('span', { style: { paddingLeft: '1em' }}),
+      this.descNode = _('span', { translate: 'yes', style: { paddingLeft: '1em' }}),
     ]))
   }
 

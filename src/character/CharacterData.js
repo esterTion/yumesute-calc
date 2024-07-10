@@ -65,13 +65,13 @@ export default class CharacterData {
         this.totalValNode = _('td', {className: 'stat'}),
       ]),
       _('tr', {}, [
-        _('td', {}, [this.senseDescNode = _('div', { className: 'sense-star', style: {maxWidth: '390px'} })]),
+        _('td', {}, [this.senseDescNode = _('div', { className: 'sense-star', translate: 'yes', style: {maxWidth: '390px'} })]),
         _('td', {}, [_('text', 'CT: ')]),
         this.ctValNode = _('td'),
         _('td'),
       ]),
       _('tr', {}, [
-        this.staractDescNode = _('td'),
+        this.staractDescNode = _('td', { translate: 'yes' }),
         this.staractRequirementsNode = _('td', {colspan: 3}, [
           _('span', { className: 'sense-star', 'data-sense-type': 'support'}),
           _('span', { className: 'sense-star', 'data-sense-type': 'control'}),
