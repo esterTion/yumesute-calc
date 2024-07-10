@@ -3,7 +3,7 @@ export default class StatBonusType {
   static Poster = 1;
   static Accessory = 2;
   static Other = 3;
-  static Theater = 4;
-  static Total = 5;
+  static Theater = 3;
+  static Total = 4;
 }
 
