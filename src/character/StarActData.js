@@ -25,6 +25,7 @@ export default class StarActData {
   get desc() {
     return BeautyText.convertGameTextToValidDom(this.Description)
       .replace('[:score]', this.scoreUp)
+      .replace(/\[:pre(\d)\]/g, (_,i)=>Effect.get(this.PreEffects[0].EffectMasterId, this.level).activeEffectValueStr)
       .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level+1).activeEffectValueStr)
   }
   get scoreUp() {
