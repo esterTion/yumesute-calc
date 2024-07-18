@@ -148,6 +148,9 @@ export default class ScoreCalculator {
             case "Company":   { isBuffTarget = GameDb.CharacterBase[this.members[i].data.CharacterBaseMasterId].CompanyMasterId === notationBuff.TargetValue; break;}
             case "Character": { isBuffTarget = this.members[i].data.CharacterBaseMasterId === notationBuff.TargetValue; break;}
           }
+          if (notationBuff.TargetValue === undefined) {
+            isBuffTarget = true
+          }
           if (isBuffTarget) {
             this.stat.buffAfterCalc[i][StatBonus.Performance] *= 1 + notationBuff.BuffValue / 100
           }
