@@ -65,7 +65,10 @@ export default class CharacterData {
         this.totalValNode = _('td', {className: 'stat'}),
       ]),
       _('tr', {}, [
-        _('td', {}, [this.senseDescNode = _('div', { className: 'sense-star', translate: 'yes', style: {maxWidth: '390px'} })]),
+        _('td', { style: {maxWidth: '390px'} }, [
+          this.senseStarNode = _('span', { className: 'sense-star gray-background pad-size' }),
+          this.senseDescNode = _('span', { translate: 'yes', style: {marginLeft: '0.5em'} })
+        ]),
         _('td', {}, [_('text', 'CT: ')]),
         this.ctValNode = _('td'),
         _('td'),
@@ -90,8 +93,7 @@ export default class CharacterData {
       this.iconNodeIcon = _('span', { className: 'spriteatlas-characters', 'data-id': this.cardIconId }),
       _('br'),
       _('span', { className: `card-attribute-${this.attributeName}`}),
-      _('span', { className: 'sense-star', 'data-sense-type': this.sense.getType() }),
-      _('text', `${this.sense.data.LightCount} `),
+      _('span', { className: 'sense-star gray-background', 'data-sense-type': this.sense.getType() }, [_('text', `${this.sense.data.LightCount} `)]),
       this.iconNodeCtLabel = _('span'),
       _('br'),
       this.iconNodeLevelLabel = _('span'),
@@ -217,12 +219,13 @@ export default class CharacterData {
 
     this.sense.level = this.senselv
     try {
-      this.senseDescNode.textContent = `${this.sense.data.LightCount} ${this.sense.desc}`
+      this.senseDescNode.textContent = this.sense.desc
     } catch {
       // 缺条件时放弃替换
-      this.senseDescNode.textContent = `${this.sense.data.LightCount} ${this.sense.data.Description}`
+      this.senseDescNode.textContent = this.sense.data.Description
     }
-    this.senseDescNode.dataset.senseType = this.sense.getType()
+    this.senseStarNode.textContent = this.sense.data.LightCount
+    this.senseStarNode.dataset.senseType = this.sense.getType()
     this.ctValNode.textContent = this.sense.ct
 
     this.staract.level = this.bloom

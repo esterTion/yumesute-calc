@@ -91,6 +91,12 @@ img {
 .sense-star[data-sense-type="special"]::before {
   color: #0000ff;
 }
+.sense-star.gray-background {
+  background-color: #D0D0D0;
+}
+.sense-star.pad-size {
+  padding: 2px 4px;
+}
 
 .card-attribute-cute::before {
   content: "憐";
