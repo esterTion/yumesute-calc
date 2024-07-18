@@ -30,6 +30,7 @@ export default class GameDb {
   static StoryEventHighScoreBuffSetting = {};
 
   static async load() {
+    GameDb.DB_VERSION = await fetch(`./master/!version.txt?t=${Date.now()}`).then(r => r.text())
     let loaded = -1
     const updateProgress = () => {
       loaded++
@@ -85,7 +86,7 @@ export default class GameDb {
     return map
   }
   static async loadMasterTable(tableName) {
-    const resp = await fetch(`./master/${tableName}.json`).then(r => r.json())
+    const resp = await fetch(`./master/${tableName}.json?v=${GameDb.DB_VERSION}`).then(r => r.json())
     return resp
   }
 }
