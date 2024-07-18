@@ -104,7 +104,7 @@ export default class RootLogic {
         _('span', {'data-text-key':'ALBUM_LEVEL_LABEL'}),
         this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])]),
         this.albumExtraCountLabel = _('span', { style: { marginLeft: '0.5em' } }),
-        _('text', ' / 24'),
+        _('text', ' / 30'),
       ]),
       this.photoEffectContainer = _('div'),
       _('div', {}, [
@@ -592,7 +592,7 @@ export default class RootLogic {
         this.appState.albumExtra.forEach(i => i.update())
         const extraCount = this.appState.albumExtra.filter(i => i.enabled).length
         this.albumExtraCountLabel.textContent = extraCount
-        this.albumExtraCountLabel.style.color = extraCount > 24 ? 'red' : ''
+        this.albumExtraCountLabel.style.color = extraCount > 30 ? 'red' : ''
       }
       if (parts.theaterLevel) {
         (['Sirius', 'Eden', 'Gingaza', 'Denki']).forEach(i => {
