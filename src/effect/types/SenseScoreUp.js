@@ -10,7 +10,7 @@ export default class SenseScoreUp {
       effect,
       bonus,
       skipCurrent: effect.Range === 'All',
-      isLifeGuardEffect: effect.isLifeGuardBranch,
+      isStandaloneMultiplier: effect.isLifeGuardBranch,
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
     calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_UP', [bonus * 100, effect.DurationSecond]))

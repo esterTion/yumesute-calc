@@ -11,6 +11,7 @@ export default class ScoreUpByLowLife {
       targets,
       effect,
       bonus,
+      isStandaloneMultiplier: false,
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
     const bonusLine = `${effect.activeEffect.Value / 100} × ((1001 -${life}) / ${ScoreUpByLowLife.LifeCap}) ^ ${ScoreUpByLowLife.PowerValue} = ${Math.round(bonus * 100)}`

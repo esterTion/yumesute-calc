@@ -15,6 +15,7 @@ export default class ScoreUpByHighLife {
         effect,
         bonus,
         skipCurrent: false,
+        isStandaloneMultiplier: false,
         lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
       })
       calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_UP', [bonusLine, effect.DurationSecond]))
@@ -24,6 +25,7 @@ export default class ScoreUpByHighLife {
         effect,
         bonus,
         skipCurrent: false,
+        isStandaloneMultiplier: true,
         lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
       })
       calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_UP', [bonusLine, effect.DurationSecond]))

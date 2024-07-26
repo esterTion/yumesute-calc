@@ -10,7 +10,7 @@ export default class StarActScoreUp {
       effect,
       bonus,
       skipCurrent: false,
-      isLifeGuardEffect: effect.isLifeGuardBranch,
+      isStandaloneMultiplier: effect.isLifeGuardBranch,
       lastUntil: calc.liveSim.currentTiming + effect.DurationSecond,
     })
     calc.liveSim.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_UP', [bonus * 100, effect.DurationSecond]))

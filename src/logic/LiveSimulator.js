@@ -243,7 +243,7 @@ export default class LiveSimulator {
         if (targets && !targets.includes(idx)) return
         const effect = buff.effect
         if (!effect.conditionSatified(this.calc, idx)) return
-        if (buff.isLifeGuardEffect) {
+        if (buff.isStandaloneMultiplier) {
           multiplier *= 1 + buff.bonus
           scoreLine = `${scoreLine} × ${(1 + buff.bonus).toFixed(2)}`
           return
@@ -348,7 +348,7 @@ export default class LiveSimulator {
       if (targets && !targets.includes(idx)) return
       const effect = buff.effect
       if (!effect.conditionSatified(this.calc, idx)) return
-      if (buff.isLifeGuardEffect) {
+      if (buff.isStandaloneMultiplier) {
         multiplier *= 1 + buff.bonus
         scoreLine = `${scoreLine} × ${(1 + buff.bonus).toFixed(2)}`
         return
