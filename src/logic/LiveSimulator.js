@@ -322,13 +322,13 @@ export default class LiveSimulator {
     for (let i=0; i<4; i++) {
       this.overflownLights[i] += this.starActCurrent[4] - missingCount
     }
+    const idx = this.calc.members.indexOf(this.leader)
     const stat = this.calc.stat.finalTotal
     this.leader.staract.data.PreEffects.forEach(effect => {
       effect = Effect.get(effect.EffectMasterId, this.leader.bloom)
       effect.applyEffect(this.calc, idx, ScoreBonusType.StarAct)
     })
     const staractEffectBranch = this.leader.staract.getActiveBranch(this)
-    const idx = this.calc.members.indexOf(this.leader)
     if (staractEffectBranch) {
       staractEffectBranch.BranchEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, this.leader.bloom + 1)

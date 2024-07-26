@@ -13,14 +13,16 @@ export default class StatCalculator {
      *     [3]: perf
      *   [1]: addition
      *     ...
-     * [1]: poster
+     * [1]: actor
      *   ...
-     * [2]: accessory
+     * [2]: poster
      *   ...
-     * [3]: other
+     * [3]: accessory
+     *   ...
+     * [4]: other
      *   ...
      */
-    this.buff = members.map(_ => ([0,0,0,0].map(_ => ([[0,0,0,0], [0,0,0,0]]))))
+    this.buff = members.map(_ => ([0,0,0,0,0].map(_ => ([[0,0,0,0], [0,0,0,0]]))))
     this.buffLimit = members.map(_ => ([[20000,20000,20000,20000], [Infinity,Infinity,Infinity,Infinity]]))
     this.buffAfterCalc = members.map(_ => [10000,10000,10000,10000])
   }

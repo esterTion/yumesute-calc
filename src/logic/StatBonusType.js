@@ -1,9 +1,10 @@
 export default class StatBonusType {
   static Album = 0;
-  static Poster = 1;
-  static Accessory = 2;
-  static Other = 3;
-  static Theater = 3;
-  static Total = 4;
+  static Actor = 1;
+  static Poster = 2;
+  static Accessory = 3;
+  static Other = 4;
+  static Theater = 4;
+  static Total = 5;
 }
 

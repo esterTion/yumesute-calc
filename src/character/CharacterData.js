@@ -183,6 +183,9 @@ export default class CharacterData {
     const bloomStatBonus = bloomBonusEffects.reduce((acc, cur) => acc + cur.activeEffect.Value, 0);
     return bloomStatBonus;
   }
+  get categories() {
+    return this.data.Categories.filter(i => !i.IsAwaken || this.awaken).map(i => i.CategoryMasterId)
+  }
   calcStat(val) {
     const lvlBase = GameDb.CharacterLevel[this.lvl].CharacterStatusLevel;
     const episodeReadBonus = this.episodeReadState === EpisodeReadState.One ? 2 : this.episodeReadState === EpisodeReadState.Two ? 5 : 0;

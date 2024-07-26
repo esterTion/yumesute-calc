@@ -93,6 +93,29 @@ export default class ScoreCalculator {
     })
     this.liveSim.starActRequirements = leader.staract.actualRequirements
 
+    // leader sense
+    this.memberMatchingCategories = this.members.map(_ => ({}))
+    if (this.extra.type !== ScoreCalculationType.Keiko) leader.leaderSense.Details.forEach(detail => {
+      const effect = Effect.get(detail.EffectMasterId, 1)
+      this.members.forEach((chara, idx) => {
+        const charaCategories = chara.categories
+        const matchedCategories = []
+        for (let i = 0; i < detail.Conditions.length; i++) {
+          for (let j = 1; j < 6; j++) {
+            const testCategory = detail.Conditions[i][`CategoryMasterId${j}`]
+            if (testCategory === undefined) break
+            if (charaCategories.indexOf(testCategory) === -1) {
+              return
+            }
+            matchedCategories.push(testCategory)
+          }
+        }
+
+        matchedCategories.forEach(category => this.memberMatchingCategories[idx][category] = true)
+        effect.applyEffect(this, idx, StatBonusType.Actor)
+      })
+    })
+
     // poster
     this.posters.forEach((poster, idx) => {
       if (!poster) return
@@ -199,6 +222,7 @@ export default class ScoreCalculator {
       _('div', { className: 'spriteatlas-characters', 'data-id': leader.cardIconId, style: {float: 'left', margin: '0 5px 5px 0'}}),
       _('div', { 'data-text-key': 'CALC_STAR_ACT_REQUIREMENTS'}),
       ScoreCalculator.createStarActDisplay(this.liveSim.starActRequirements),
+      _('div', { translate: 'yes' }, [_('text', leader.leaderSense.desc)]),
       _('div', { style: {clear: 'both'}}),
     ]))
 
@@ -217,7 +241,8 @@ export default class ScoreCalculator {
     return _('div', {}, this.members.map((chara, idx) => (rowNumber = 0, chara === null ? _('text', '') : _('details', {}, [
       _('summary', {}, [
         _('span', {className: `card-attribute-${chara.attributeName}`}),
-        _('text', `${chara.fullCardName} CT: ${chara.sense.ct}`)
+        _('text', `${chara.fullCardName} CT: ${chara.sense.ct}`),
+        _('span', {}, Object.keys(this.memberMatchingCategories[idx]).map(category => _('span', {className: 'character-category'}, [_('text', GameDb.Category[category].Name)]))),
       ]),
       _('table', { className: 'stat-details'}, [
         _('thead', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
@@ -234,7 +259,7 @@ export default class ScoreCalculator {
           _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].co)]),
           _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].total)]),
         ])]),
-        _('tbody', {}, ['CALC_TABLE_ALBUM', 'CALC_TABLE_POSTER', 'CALC_TABLE_ACCESSORY', 'CALC_TABLE_OTHER'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+        _('tbody', {}, ['CALC_TABLE_ALBUM', 'CALC_TABLE_ACTOR', 'CALC_TABLE_POSTER', 'CALC_TABLE_ACCESSORY', 'CALC_TABLE_OTHER'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', { 'data-text-key': name }, [_('text', name)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Vocal        ] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Vocal        ]}\n${this.stat.bonus[idx][j].vo}`)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Expression   ] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Expression   ]}\n${this.stat.bonus[idx][j].ex}`)]),
