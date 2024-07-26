@@ -7,6 +7,8 @@ export default class GameDb {
   static Sense = {};
   static StarAct = {};
   static StarActCondition = {};
+  static LeaderSense = {};
+  static Category = {};
 
   static AlbumEffect = {};
   static PhotoEffect = {};
@@ -45,6 +47,8 @@ export default class GameDb {
       this.loadKeyedMasterTable('SenseMaster').then(r => this.Sense = r).then(updateProgress),
       this.loadKeyedMasterTable('StarActMaster').then(r => this.StarAct = r).then(updateProgress),
       this.loadKeyedMasterTable('StarActConditionMaster').then(r => this.StarActCondition = r).then(updateProgress),
+      this.loadKeyedMasterTable('LeaderSenseMaster').then(r => this.LeaderSense = r).then(updateProgress),
+      this.loadKeyedMasterTable('CategoryMaster').then(r => this.Category = r).then(updateProgress),
 
       this.loadKeyedMasterTable('AlbumEffectMaster').then(r => this.AlbumEffect = r).then(updateProgress),
       this.loadKeyedMasterTable('PhotoEffectMaster').then(r => this.PhotoEffect = r).then(updateProgress),

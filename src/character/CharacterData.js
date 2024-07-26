@@ -3,9 +3,11 @@ import GameDb from "../db/GameDb"
 import SenseData from "./SenseData"
 import StarActData from "./StarActData"
 import CharacterStat from "./CharacterStat"
+import LeaderSenseData from "./LeaderSenseData"
 import Effect from "../effect/Effect"
 
 import _ from "../createElement";
+import removeAllChilds from "../removeAllChilds"
 
 export default class CharacterData {
   Id;
@@ -31,6 +33,7 @@ export default class CharacterData {
 
     this.sense = new SenseData(this.data.SenseMasterId, this.senselv)
     this.staract = new StarActData(this.data.StarActMasterId, this.bloom)
+    this.leaderSense = new LeaderSenseData(this.data.LeaderSenseMasterId)
 
     if (!parent) return
     this.node = parent.appendChild(_('tbody', {}, [
@@ -83,6 +86,10 @@ export default class CharacterData {
         ]),
       ]),
       _('tr', {}, [
+        this.leaderSenseDescNode = _('td', { translate: 'yes' }),
+        this.categoryNode = _('td', { colspan: 3, style: {maxWidth: '290px'} }),
+      ]),
+      _('tr', {}, [
         _('td'),
         _('td', { colspan: 2 }, [_('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }})]),
         _('td'),
@@ -111,7 +118,7 @@ export default class CharacterData {
     for (let i = 1; i < 6; i++) {
       this.senseInput.appendChild(_('option', { value: i }, [_('text', i)]))
     }
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i <= this.data.MaxTalentStage; i++) {
       this.bloomInput.appendChild(_('option', { value: i }, [_('text', i)]))
     }
   }
@@ -227,6 +234,13 @@ export default class CharacterData {
     this.senseStarNode.textContent = this.sense.data.LightCount
     this.senseStarNode.dataset.senseType = this.sense.getType()
     this.ctValNode.textContent = this.sense.ct
+    this.leaderSenseDescNode.textContent = this.leaderSense.desc
+
+    removeAllChilds(this.categoryNode)
+    this.data.Categories.forEach(i => {
+      if (i.IsAwaken && !this.awaken) return
+      this.categoryNode.appendChild(_('span', { className: 'character-category' }, [_('text', GameDb.Category[i.CategoryMasterId].Name)]))
+    })
 
     this.staract.level = this.bloom
     this.staractDescNode.innerHTML = this.staract.desc
