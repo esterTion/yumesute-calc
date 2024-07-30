@@ -259,7 +259,7 @@ export default class ScoreCalculator {
           _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].co)]),
           _('td', { className: 'stat-value' }, [_('text', this.stat.initial[idx].total)]),
         ])]),
-        _('tbody', {}, ['CALC_TABLE_ALBUM', 'CALC_TABLE_ACTOR', 'CALC_TABLE_POSTER', 'CALC_TABLE_ACCESSORY', 'CALC_TABLE_OTHER'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+        _('tbody', {}, ['CALC_TABLE_ALBUM', 'CALC_TABLE_POSTER', 'CALC_TABLE_ACCESSORY', 'CALC_TABLE_ACTOR', 'CALC_TABLE_OTHER'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', { 'data-text-key': name }, [_('text', name)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Vocal        ] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Vocal        ]}\n${this.stat.bonus[idx][j].vo}`)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Expression   ] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Expression   ]}\n${this.stat.bonus[idx][j].ex}`)]),
