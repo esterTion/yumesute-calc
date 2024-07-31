@@ -87,12 +87,13 @@ export default class RootLogic {
       this.keikoCalcTabContent = _('div', {}, [
         _('div', {}, [
           this.keikoSelect = _('select', { event: { change: _=>this.keikoFillChara() }}),
-          this.keikoBox = _('div', { style: { display: 'none' }}, [
-            _('select', { event: { change: _=>this.keikoCalcResult() }}),
-            _('select', { event: { change: _=>this.keikoCalcResult() }}),
-            _('select', { event: { change: _=>this.keikoCalcResult() }}),
-            _('select', { event: { change: _=>this.keikoCalcResult() }}),
-            _('select', { event: { change: _=>this.keikoCalcResult() }}),
+          this.keikoBox = _('form', { style: { display: 'none' }, event: { change: _=>this.keikoCalcResult() }}, [
+            _('span', {'data-text-key':'KEIKO_MEMBER_COUNT_LABEL', style: { marginRight: '1em' }}),
+            _('label', {}, [_('input', { type: 'radio', name: 'keiko_member_count', value: 5}), _('text', 5)]),
+            _('label', {}, [_('input', { type: 'radio', name: 'keiko_member_count', value: 4}), _('text', 4)]),
+            _('label', {}, [_('input', { type: 'radio', name: 'keiko_member_count', value: 3}), _('text', 3)]),
+            _('label', {}, [_('input', { type: 'radio', name: 'keiko_member_count', value: 2}), _('text', 2)]),
+            _('label', {}, [_('input', { type: 'radio', name: 'keiko_member_count', value: 1}), _('text', 1)]),
           ]),
           this.keikoResult = _('div'),
         ]),
@@ -571,8 +572,6 @@ export default class RootLogic {
             this.nonPersistentState.characterOptions[i.Id].setAttribute('disabled', '')
           }
         })
-
-        this.keikoFillChara()
       }
 
       if (parts.poster) {
@@ -606,7 +605,7 @@ export default class RootLogic {
 
       if ('keiko' === this.calcTypeSelectForm.tab.value) {
         if (parts.chara || parts.album || parts.theaterLevel) {
-          this.keikoCalcResult()
+          this.keikoFillChara()
         }
       } else {
         if (parts.chara || parts.poster || parts.album || parts.theaterLevel || parts.party) {
@@ -759,42 +758,63 @@ export default class RootLogic {
       return
     }
     this.keikoBox.style.display = ''
-    for (let select of this.keikoBox.children) {
-      removeAllChilds(select)
-      select.appendChild(_('option', { value: '', 'data-text-key': 'NOT_SELECTED' }))
-      for (let i=0; i<this.appState.characters.length; i++) {
-        if (this.appState.characters[i].data.CharacterBaseMasterId !== keikoCharaId) continue;
-        const chara = this.appState.characters[i]
-        select.appendChild(_('option', { value: i }, [_('text', `${chara.fullCardName}@${chara.lvl} ${chara.bloom}`)]))
-      }
-    }
 
-    for (let i=0; i<5; i++) {
-      let idx = this.appState.characters.indexOf(this.keikoSelection[i])
-      this.keikoBox.children[i].value = idx > -1 && this.keikoSelection[i].data.CharacterBaseMasterId == keikoCharaId ? idx : ''
-    }
-    ConstText.fillText()
+    let choice = this.keikoBox['keiko_member_count'].value | 0
+    if (choice < 1) choice = 5
+    const inventoryCharaCount = this.appState.characters.filter(i => i.data.CharacterBaseMasterId === keikoCharaId).length
+    this.keikoBox['keiko_member_count'][0][inventoryCharaCount >= 5 ? 'removeAttribute' : 'setAttribute']('disabled', '')
+    this.keikoBox['keiko_member_count'][1][inventoryCharaCount >= 4 ? 'removeAttribute' : 'setAttribute']('disabled', '')
+    this.keikoBox['keiko_member_count'][2][inventoryCharaCount >= 3 ? 'removeAttribute' : 'setAttribute']('disabled', '')
+    this.keikoBox['keiko_member_count'][3][inventoryCharaCount >= 2 ? 'removeAttribute' : 'setAttribute']('disabled', '')
+    this.keikoBox['keiko_member_count'][4][inventoryCharaCount >= 1 ? 'removeAttribute' : 'setAttribute']('disabled', '')
+    choice = Math.min(choice, inventoryCharaCount)
+    this.keikoBox['keiko_member_count'].value = choice
+
+    this.keikoCalcResult()
   }
   keikoSelection = []
   keikoCalcResult() {
-    this.keikoResult.textContent = ''
+    removeAllChilds(this.keikoResult)
     const keikoCharaId = this.keikoSelect.value | 0;
     if (!keikoCharaId) return
-    ([...this.keikoBox.querySelectorAll('option[disabled]')]).forEach(i => i.removeAttribute('disabled'))
-    this.keikoSelection.splice(0, this.keikoSelection.length)
-    for (let select of this.keikoBox.children) {
-      if (select.selectedIndex <= 0) {
-        this.keikoSelection.push(null)
-        continue;
+    const inventoryChara = this.appState.characters.filter(i => i.data.CharacterBaseMasterId === keikoCharaId)
+    if (inventoryChara.length === 0) return
+
+    const choice = this.keikoBox['keiko_member_count'].value | 0
+    let bestParty
+    if (choice < inventoryChara.length) {
+      // pick
+      const dummyNode = _('div')
+
+      // create list of all combinations picking `choice` characters from `inventoryChara`
+      const comb = []
+      const pick = (idx, picked) => {
+        if (picked.length === choice) {
+          comb.push(picked.slice())
+          return
+        }
+        if (idx === inventoryChara.length) return
+        pick(idx + 1, picked)
+        pick(idx + 1, picked.concat(inventoryChara[idx]))
       }
-      for (let otherSelect of this.keikoBox.children) {
-        if (otherSelect === select) continue;
-        otherSelect.options[select.selectedIndex].setAttribute('disabled', '')
-      }
-      this.keikoSelection.push(this.appState.characters[select.value])
+      pick(0, [])
+      const testResult = comb.map(i => {
+        const testCalc = new ScoreCalculator(i, [], [], {
+          albumLevel: this.appState.albumLevel,
+          albumExtra: this.appState.albumExtra,
+          starRankScoreBonus: this.appState.characterStarRank.get(keikoCharaId),
+          type: ScoreCalculationType.Keiko,
+        })
+        testCalc.calc(dummyNode)
+        return [i, testCalc.result.baseScore[3]]
+      })
+      testResult.sort((a,b) => b[1] - a[1])
+      bestParty = testResult[0][0]
+    } else {
+      bestParty = inventoryChara
     }
 
-    const calc = new ScoreCalculator(this.keikoSelection, [], [], {
+    const calc = new ScoreCalculator(bestParty, [], [], {
       albumLevel: this.appState.albumLevel,
       albumExtra: this.appState.albumExtra,
       starRankScoreBonus: this.appState.characterStarRank.get(keikoCharaId),
