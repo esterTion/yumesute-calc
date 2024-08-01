@@ -746,6 +746,10 @@ export default class RootLogic {
         .reduce((acc, cur) => ([Math.min(acc[0], cur.TimingSecond - acc[1]), cur.TimingSecond]), [Infinity, -Infinity])[0])
       .forEach((i, idx) => this.senseBox.children[idx].children[0].textContent = i === Infinity ? 'N/A' : i)
 
+    for (let i = 0; i < 5; i++) {
+      this.senseBox.children[i].children[0].appendChild(_('div', { className: 'start-live-extra-lights' }))
+    }
+
     if (!skipUpdate) {
       this.update({ party: true })
     }

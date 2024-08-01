@@ -5,6 +5,8 @@ import Effect from "../effect/Effect"
 
 import _ from "../createElement"
 import ScoreBonusType from "./ScoreBonusType"
+import { SenseTypeInternalEnum } from "../db/Enum"
+import removeAllChilds from "../removeAllChilds"
 
 export default class LiveSimulator {
   /**
@@ -44,6 +46,8 @@ export default class LiveSimulator {
   senseExtraAmount;
   senseExtraLights;
   overflownLights;
+  newLightCurrentStep;
+  wrongLightToSpAmount;
 
   constructor(calc) {
     this.calc = calc
@@ -69,11 +73,29 @@ export default class LiveSimulator {
     this.senseExtraAmount = [0,0,0,0,0]
     this.senseExtraLights = [[],[],[],[],[]]
     this.overflownLights = [0,0,0,0,0]
+    this.newLightCurrentStep = new Array(5).fill(0).map(_ => new Array(5).fill(0))
+    this.wrongLightToSpAmount = [0,0,0,0,0]
   }
   runSimulation(node) {
     this.applyPendingActions()
     Array.from(root.senseBox.querySelectorAll('.sense-add-light,.staract-line')).forEach(i => i.remove())
     this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
+    for (let i=0; i<5; i++) {
+      const startExtraLight = []
+      this.newLightCurrentStep[i].forEach((amount, lightType) => {
+        for (let j=0; j<amount; j++) {
+          startExtraLight.push(SenseTypeInternalEnum[lightType])
+        }
+      })
+      const container = root.senseBox.children[i].children[0].children[0]
+      removeAllChilds(container)
+      if (startExtraLight.length) {
+        container.style.marginTop = `calc(50% - 3px - ${startExtraLight.length * 5}px)`
+        startExtraLight.forEach(lightType => {
+          container.appendChild(_('div', { className: 'sense-add-light', 'data-sense-type': lightType.toLowerCase(), style: { position: 'initial' } }))
+        })
+      }
+    }
     if (this.tryStarAct()) {
       this.phase = ConstText.get('LIVE_PHASE_START_WITH_STARACT')
       this.resetCurrentLights()
@@ -96,6 +118,7 @@ export default class LiveSimulator {
         this.senseTiming.filter(i => i.Position === timing.Position).indexOf(timing)
       ]
       timelineNode.classList.remove('failed')
+      timelineNode.dataset.senseType = ''
       if (!this.trySense(timing, timelineNode)) {
         this.phase = ConstText.get('LIVE_PHASE_SENSE_FAILED').replace('{time}', timing.TimingSecond)
         this.resetCurrentLights()
@@ -159,19 +182,44 @@ export default class LiveSimulator {
     this.pGaugeLimit += amount
     this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE_LIMIT', [before, amount, this.pGauge, this.pGaugeLimit]))
   }
-  addSenseLight(type, amount = 1) {
+  addSenseLight(type, idx, amount = 1) {
+    let lightType
     switch (type.toLowerCase()) {
-      case 'support':       { this.starActCurrent[0] += amount; break }
-      case 'control':       { this.starActCurrent[1] += amount; break }
-      case 'amplification': { this.starActCurrent[2] += amount; break }
-      case 'special':       { this.starActCurrent[3] += amount; break }
-      case 'variable':      { this.starActCurrent[4] += amount; break }
+      case 'support':       { lightType = 0; break }
+      case 'control':       { lightType = 1; break }
+      case 'amplification': { lightType = 2; break }
+      case 'special':       { lightType = 3; break }
+      case 'variable':      { lightType = 4; break }
+      default: throw new Error('Unknown sense type: ' + type)
+    }
+    this.starActCurrent[lightType] += amount
+    this.newLightCurrentStep[idx][lightType] += amount
+  }
+  processWrongLightToSp(idx, addedLights) {
+    let wrongLightToSp = this.wrongLightToSpAmount[idx]
+    for (let i = addedLights.length - 1; i >= 0; i--) {
+      if (wrongLightToSp === 0) break
+      let lightType
+      switch (addedLights[i].toLowerCase()) {
+        case 'support':       { lightType = 0; break }
+        case 'control':       { lightType = 1; break }
+        case 'amplification': { lightType = 2; break }
+        case 'special':       { lightType = 3; break }
+      }
+      if (lightType === undefined) continue
+      if (this.starActCurrent[lightType] > this.starActRequirements[lightType]) {
+        this.starActCurrent[lightType]--
+        this.starActCurrent[4]++
+        wrongLightToSp--
+        addedLights[i] = 'Variable'
+      }
     }
   }
   resetCurrentLights() {
     for (let i=0; i<5; i++) {
       this.starActCurrent[i] = 0
       this.overflownLights[i] = 0
+      this.newLightCurrentStep[i].fill(0)
     }
   }
   trySense(timing, timelineNode) {
@@ -218,18 +266,20 @@ export default class LiveSimulator {
       })
     }
     this.currentSenseType = sense.Type.toLowerCase();
-    const addedLights = new Array(sense.data.LightCount + this.senseExtraAmount[idx] - 1).fill(sense.Type)
-    this.addSenseLight(sense.Type, addedLights.length + 1)
+    const addedLights = new Array(sense.data.LightCount + this.senseExtraAmount[idx]).fill(sense.Type)
+    this.addSenseLight(sense.Type, idx, addedLights.length)
     for (let light of this.senseExtraLights[idx]) {
       let [addLightType, addLightAmount] = light
-      this.addSenseLight(addLightType, addLightAmount)
+      this.addSenseLight(addLightType, idx, addLightAmount)
       while (addLightAmount--) {
         addedLights.push(addLightType)
       }
     }
-    for (let i=0; i<addedLights.length; i++) {
-      timelineNode.appendChild(_('div', { className: 'sense-add-light', 'data-sense-type': addedLights[i].toLowerCase(), style: { top: `calc(100% + ${i*8}px)` } }))
+    this.processWrongLightToSp(idx, addedLights)
+    for (let i=0; i<addedLights.length - 1; i++) {
+      timelineNode.appendChild(_('div', { className: 'sense-add-light', 'data-sense-type': addedLights[i + 1].toLowerCase(), style: { top: `calc(100% + ${i*8}px)` } }))
     }
+    timelineNode.dataset.senseType = addedLights[0].toLowerCase()
     if (sense.scoreUp) {
       let multiplier = sense.scoreUp
       let scoreLine = multiplier
@@ -365,7 +415,7 @@ export default class LiveSimulator {
     this.calc.result.starActScore.push(score)
     this.calc.result.starActCount++
     this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_SCORE').replace('{0}', scoreLine))
-    const leftPixel = this.currentTiming ? 21 : 10
+    const leftPixel = this.currentTiming ? 21 : 8
     root.senseBox.children[0].children[1].appendChild(_('div', { className: 'staract-line', style: { left: `calc(${this.currentTiming/this.lastSenseTiming*100}% - ${leftPixel}px)` } }))
     return true
   }

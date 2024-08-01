@@ -13,6 +13,13 @@ export const SenseTypeEnum = {
   "9": "None",
   "10": "Alternative"
 }
+export const SenseTypeInternalEnum = [
+  "Support",
+  "Control",
+  "Amplification",
+  "Special",
+  "Variable"
+]
 export const SenseTypeTextEnum = {
   支援: "support",
   支配: "control",

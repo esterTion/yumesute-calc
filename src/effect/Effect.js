@@ -38,6 +38,7 @@ import ScoreGainOnExpression from './types/ScoreGainOnExpression'
 import ScoreGainOnConcentration from './types/ScoreGainOnConcentration'
 import ScoreGainOnPerformance from './types/ScoreGainOnPerformance'
 import StarActScoreUp from './types/StarActScoreUp'
+import ChangeWrongLightToSpLight from './types/ChangeWrongLightToSpLight'
 
 export default class Effect {
   // life guard分支下的效果需要单独处理。。
@@ -146,6 +147,7 @@ export default class Effect {
       case "AddSenseLightControl": { return AddSenseLightControl.applyEffect(this, calc, [index], type) }
       case "AddSenseLightAmplification": { return AddSenseLightAmplification.applyEffect(this, calc, [index], type) }
       case "AddSenseLightSpecial": { return AddSenseLightSpecial.applyEffect(this, calc, [index], type) }
+      case "ChangeWrongLightToSpLight": { return ChangeWrongLightToSpLight.applyEffect(this, calc, [index], type) }
 
       case "ScoreGainOnScore": { return ScoreGainOnScore.applyEffect(this, calc, [index], type) }
       case "ScoreGainOnVocal": { return ScoreGainOnVocal.applyEffect(this, calc, [index], type) }
@@ -158,8 +160,6 @@ export default class Effect {
       // case "BaseVocalUp":
       // case "BaseExpressionUp":
       // case "BaseConcentrationUp":
-
-      // case "ChangeWrongLightToSpLight":
 
       // case "ScoreUpByBuff":
       // case "BuffTimeExtend":

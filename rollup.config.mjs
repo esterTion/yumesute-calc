@@ -7,10 +7,10 @@ function cleanMapBeforeBuild() {
     name: 'cleanMapBeforeBuild',
     buildStart() {
       let count = 0
-      fs.readdirSync('./').forEach(file => {
+      fs.readdirSync('./dist').forEach(file => {
         if (file.endsWith('.map')) {
           count++
-          fs.unlinkSync(file)
+          fs.unlinkSync(`./dist/${file}`)
         }
       })
       console.log(`cleaned ${count} sourcemap files`)
@@ -18,10 +18,31 @@ function cleanMapBeforeBuild() {
   }
 }
 
-export default {
+function copyStaticFiles() {
+  const files = ['index.html', 'main.css']
+  return {
+    name: 'copyStaticFiles',
+    buildEnd() {
+      files.forEach(file => {
+        fs.copyFileSync(`./${file}`, `./dist/${file}`)
+        console.log(`copied ${file}`)
+      })
+    }
+  }
+}
+
+export default [{
   input: 'src/main.js',
   output: {
     file: 'main-build.js',
+    format: 'cjs',
+    sourcemap: true,
+    sourcemapFileNames: 'main-build.js.map'
+  },
+},{
+  input: 'src/main.js',
+  output: {
+    file: 'dist/main-build.js',
     format: 'cjs',
     sourcemap: true,
     sourcemapFileNames: 'main-build.js.[hash].map'
@@ -30,5 +51,6 @@ export default {
     babel({ babelHelpers: 'bundled' }),
     terser(),
     cleanMapBeforeBuild(),
+    copyStaticFiles(),
   ],
-}
+}]

@@ -4,7 +4,7 @@ export default class AddSenseLightVariable {
       if (!effect.conditionSatified(calc, idx)) return
       const type = 'Variable'
       switch (effect.FireTimingType) {
-        case 'StartLive': { calc.liveSim.addSenseLight(type, effect.activeEffect.Value); break }
+        case 'StartLive': { calc.liveSim.addSenseLight(type, idx, effect.activeEffect.Value); break }
         case 'Passive': { calc.liveSim.senseExtraLights[idx].push([type, effect.activeEffect.Value]); break }
       }
     })
