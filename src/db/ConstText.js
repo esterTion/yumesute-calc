@@ -37,6 +37,7 @@ export default class ConstText {
     EXPORTER_LABEL: 'Export tool using password',
     HIGHSCORE_BUFF_LABEL: 'Stage Boost: ',
     KEIKO_MEMBER_COUNT_LABEL: 'Party size: ',
+    KEIKO_CALCULATING: 'Calculating the highest score of {0} party combinations',
 
     THEATER_LEVEL_LABEL: 'Theatre level: ',
     SIRIUS: 'Sirius',
@@ -127,6 +128,7 @@ export default class ConstText {
     EXPORTER_LABEL: '連携パスワードで導入するツール',
     HIGHSCORE_BUFF_LABEL: '舞台装置：',
     KEIKO_MEMBER_COUNT_LABEL: '編成人数：',
+    KEIKO_CALCULATING: '{0}個の編成の最高スコアを計算中',
 
     THEATER_LEVEL_LABEL: '劇場レベル：',
     SIRIUS: 'シリウス',
@@ -217,6 +219,7 @@ export default class ConstText {
     EXPORTER_LABEL: '引继码导出工具',
     HIGHSCORE_BUFF_LABEL: '舞台装置：',
     KEIKO_MEMBER_COUNT_LABEL: '编队人数：',
+    KEIKO_CALCULATING: '正在计算{0}个组合的最高分',
 
     THEATER_LEVEL_LABEL: '剧场等级：',
     SIRIUS: 'Sirius',

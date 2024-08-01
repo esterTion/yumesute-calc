@@ -773,7 +773,7 @@ export default class RootLogic {
     this.keikoCalcResult()
   }
   keikoSelection = []
-  keikoCalcResult() {
+  async keikoCalcResult() {
     removeAllChilds(this.keikoResult)
     const keikoCharaId = this.keikoSelect.value | 0;
     if (!keikoCharaId) return
@@ -791,6 +791,10 @@ export default class RootLogic {
       const pick = (idx, picked) => {
         if (picked.length === choice) {
           comb.push(picked.slice())
+          for (let i = 1; i < choice; i++) {
+            [picked[0], picked[i]] = [picked[i], picked[0]]
+            comb.push(picked.slice())
+          }
           return
         }
         if (idx === inventoryChara.length) return
@@ -798,6 +802,8 @@ export default class RootLogic {
         pick(idx + 1, picked.concat(inventoryChara[idx]))
       }
       pick(0, [])
+      this.keikoResult.textContent = ConstText.get('KEIKO_CALCULATING', [comb.length])
+      await new Promise(r => setTimeout(r, 50))
       const testResult = comb.map(i => {
         const testCalc = new ScoreCalculator(i, [], [], {
           albumLevel: this.appState.albumLevel,
