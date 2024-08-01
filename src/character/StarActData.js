@@ -37,11 +37,6 @@ export default class StarActData {
   get actualRequirements() {
     return this.requirements.map((req, i) => (req > 0 ? Math.max(1, req - this.requireDecrease[i]) : 0))
   }
-  clone() {
-    const staract = new StarActData(this.id, this.level)
-    staract.requireDecrease = this.requireDecrease.slice()
-    return staract
-  }
 
   getActiveBranch(liveSim) {
     const branches = this.data.Branches

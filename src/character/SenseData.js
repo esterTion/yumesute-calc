@@ -80,10 +80,4 @@ export default class SenseData {
     }
     return result
   }
-
-  clone() {
-    const sense = new SenseData(this.id, this.level)
-    sense.recastDown = this.recastDown.slice()
-    return sense
-  }
 }

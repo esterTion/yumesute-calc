@@ -10,10 +10,4 @@ export default class LeaderSenseData {
   get desc() {
     return this.Description
   }
-
-  clone() {
-    const sense = new SenseData(this.id, this.level)
-    sense.recastDown = this.recastDown.slice()
-    return sense
-  }
 }

@@ -23,10 +23,9 @@ function copyStaticFiles() {
   return {
     name: 'copyStaticFiles',
     buildEnd() {
-      files.forEach(file => {
-        fs.copyFileSync(`./${file}`, `./dist/${file}`)
-        console.log(`copied ${file}`)
-      })
+      return Promise.all(files.map(file => (
+        fs.promises.copyFile(`./${file}`, `./dist/${file}`)
+      )))
     }
   }
 }
