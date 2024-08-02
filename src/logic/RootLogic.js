@@ -787,10 +787,6 @@ export default class RootLogic {
     const choice = this.keikoBox['keiko_member_count'].value | 0
     let bestParty
     if (choice < inventoryChara.length) {
-      // pick
-      const dummyNode = _('div')
-
-      // create list of all combinations picking `choice` characters from `inventoryChara`
       const comb = []
       const pick = (idx, picked) => {
         if (picked.length === choice) {
@@ -815,7 +811,7 @@ export default class RootLogic {
           starRankScoreBonus: this.appState.characterStarRank.get(keikoCharaId),
           type: ScoreCalculationType.Keiko,
         })
-        testCalc.calc(dummyNode)
+        testCalc.calc(null)
         return [i, testCalc.result.baseScore[3]]
       })
       testResult.sort((a,b) => b[1] - a[1])

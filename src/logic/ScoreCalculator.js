@@ -39,7 +39,7 @@ export default class ScoreCalculator {
     this.liveSim = new LiveSimulator(this)
   }
   calc(node) {
-    removeAllChilds(node)
+    node && removeAllChilds(node)
 
     if (this.extra.type === ScoreCalculationType.Keiko) {
       this.extra.leader = this.members.find(i => i)
@@ -193,6 +193,8 @@ export default class ScoreCalculator {
       starActScore,
       starActCount: 0,
     }
+
+    if (!node) return
 
     node.appendChild(_('div', {}, [
       this.createStatDetailsTable(),
