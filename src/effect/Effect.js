@@ -127,7 +127,7 @@ export default class Effect {
       case 'LifeHealing': { return LifeHealing.applyEffect(this, calc, targets, type) }
       case "PrincipalGaugeUp": { return PrincipalGaugeUp.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeGain': { return PrincipalGaugeGain.applyEffect(this, calc, [index], type) }
-      case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, targets, type) }
+      case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, [index], type) }
       case 'FinalPerformanceUpCancelSense': { return FinalPerformanceUpCancelSense.applyEffect(this, calc, targets, type) }
       case "VocalLimitUp": { return VocalLimitUp.applyEffect(this, calc, targets, type) }
       case "ExpressionLimitUp": { return ExpressionLimitUp.applyEffect(this, calc, targets, type) }
