@@ -739,7 +739,7 @@ export default class RootLogic {
     const totalDuration = data.Details.reduce((acc, cur) => Math.max(acc, cur.TimingSecond), 0)
     data.Details.forEach(i => {
       const lane = this.senseBox.children[i.Position - 1].children[1]
-      lane.appendChild(_('div', { className: 'sense-node', style: {left: `calc(${i.TimingSecond / totalDuration * 100}% - 40px)`, fontSize: i.TimingSecond > 99 ? '14px' : '' } }, [_('text', i.TimingSecond)]))
+      lane.appendChild(_('div', { className: 'sense-node', style: {left: `calc(calc(100% - 40px) * ${i.TimingSecond / totalDuration})`, fontSize: i.TimingSecond > 99 ? '14px' : '' } }, [_('text', i.TimingSecond)]))
     })
     data.Details.reduce((acc, cur) => (acc[cur.Position-1].push(cur),acc), [[],[],[],[],[]])
       .map(lane => lane.sort((a,b) => a.TimingSecond - b.TimingSecond)
