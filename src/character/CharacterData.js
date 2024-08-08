@@ -304,7 +304,7 @@ export default class CharacterData {
     root.update({ chara: true })
   }
   updateToMax() {
-    const maxLevel = Object.values(GameDb.CharacterLevel).reverse().find(i => (new Date(`${i.StartDate} +0900`)).getTime() < Date.now()).Level
+    const maxLevel = Object.values(GameDb.CharacterLevel).reverse().find(i => (new Date(`${i.StartDate.replace(/-/g, '/')} +0900`)).getTime() < Date.now()).Level
     this.lvl = maxLevel
     this.awaken = true
     this.episodeReadState = EpisodeReadState.Two
