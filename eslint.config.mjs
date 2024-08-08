@@ -4,12 +4,20 @@ import pluginJs from "@eslint/js";
 
 export default [
   {
+    ignores: [
+      'main-build.*',
+      'dist',
+    ]
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.browser,
         root: 'readonly',
       }
-    },
+    }
+  },
+  {
     rules: {
       "no-unused-vars": ["error", {
         "vars": "all",
