@@ -94,6 +94,7 @@ export default class Effect {
     return result
   }
   conditionSatified(calc, index) {
+    if (this.data.Conditions.length === 0) return true
     const member = calc.members[index]
     if (!member) return false
     for (let condition of this.data.Conditions) {
