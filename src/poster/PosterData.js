@@ -94,6 +94,10 @@ export default class PosterData {
     const releaseLabel = '◆'.repeat(this.release) + '◇'.repeat(4 - this.release)
     this.iconNodeLevelLabel.textContent = `${releaseLabel} ${this.level}`
   }
+  appendNode(parent) {
+    root.posterIconList.appendChild(this.iconNode)
+    parent.appendChild(this.node)
+  }
   remove() {
     this.node.remove()
     this.iconNode.remove()

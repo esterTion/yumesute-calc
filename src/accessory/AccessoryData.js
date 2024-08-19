@@ -82,6 +82,10 @@ export default class AccessoryData {
       this.iconNodeLevelLabel.textContent = [this.level, this.randomEffect.data.Name].join(' | ')
     }
   }
+  appendNode(parent) {
+    root.accessoryIconList.appendChild(this.iconNode)
+    parent.appendChild(this.node)
+  }
   remove() {
     this.node.remove()
     this.iconNode.remove()

@@ -1,3 +1,6 @@
+html {
+  scrollbar-gutter: stable;
+}
 body {
   max-width: 800px;
   margin:  5px auto 30px;

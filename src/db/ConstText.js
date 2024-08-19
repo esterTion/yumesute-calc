@@ -1,6 +1,6 @@
-import ConstTextEn from "./ConstText.en"
-import ConstTextJa from "./ConstText.ja"
-import ConstTextZh from "./ConstText.zh"
+import ConstTextEn from "./ConstText_en"
+import ConstTextJa from "./ConstText_ja"
+import ConstTextZh from "./ConstText_zh"
 
 export default class ConstText {
   static language = null

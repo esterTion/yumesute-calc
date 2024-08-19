@@ -15,6 +15,7 @@ import PhotoEffectData from '../manager/PhotoEffectData'
 
 import ScoreCalculationType from './ScoreCalculationType'
 import ScoreCalculator from './ScoreCalculator'
+import FilterManager from '../manager/FilterManager'
 
 export default class RootLogic {
   appState = {
@@ -146,19 +147,8 @@ export default class RootLogic {
       ]),
 
       this.characterTabContent = _('div', {}, [
-        _('div', {}, [
-          this.charaSortSelect = _('select', { event: { change: _=>this.setCharaSort() }}, [
-            _('option', { value: '' }, [_('text', 'Keep')]),
-            _('option', { value: 'Id' }, [_('text', 'ID')]),
-            _('option', { value: 'CharacterBaseMasterId' }, [_('text', 'Chara')]),
-          ]),
-          _('text', ''),
-          _('label', {}, [
-            this.charaSortDescInput = _('input', { type: 'checkbox', event: { change: _=>this.setCharaSort() }}),
-            _('text', '降順')
-          ])
-        ]),
         this.characterIconList = _('div', {}, [
+          this.characterFilterContainer = _('div'),
           this.characterMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
             _('span'),
             _('br'),
@@ -208,6 +198,7 @@ export default class RootLogic {
 
       this.posterTabContent = _('div', {}, [
         this.posterIconList = _('div', {}, [
+          this.posterFilterContainer = _('div'),
           this.posterMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
             _('span'),
             _('br'),
@@ -243,6 +234,7 @@ export default class RootLogic {
 
       this.accessoryTabContent = _('div', {}, [
         this.accessoryIconList = _('div', {}, [
+          this.accessoryFilterContainer = _('div'),
           this.accessoryMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
             _('span'),
             _('br'),
@@ -308,6 +300,9 @@ export default class RootLogic {
           this.nonPersistentState.characterOptions[i] = groupEle.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
         })
       })
+      this.characterFilterManager = new FilterManager(this.characterFilterContainer, FilterManager.getCharacterFilters(), FilterManager.getCharacterSorter())
+      this.characterFilterManager.render()
+      this.characterFilterContainer.appendChild(_('input', { type: 'button', 'data-text-value': 'FILTER_APPLY', event: { click: _=>this.characterFilterManager.filterAndSort(this.appState.characters) }}))
     }
     {
       // posters
@@ -325,10 +320,16 @@ export default class RootLogic {
           this.nonPersistentState.posterOptions[i] = groupEle.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
         })
       })
+      this.posterFilterManager = new FilterManager(this.posterFilterContainer, FilterManager.getPosterFilters(), FilterManager.getPosterSorter())
+      this.posterFilterManager.render()
+      this.posterFilterContainer.appendChild(_('input', { type: 'button', 'data-text-value': 'FILTER_APPLY', event: { click: _=>this.posterFilterManager.filterAndSort(this.appState.posters) }}))
     }
     Object.values(GameDb.Accessory).forEach(i => {
       this.addAccessorySelect.appendChild(_('option', { value: i.Id }, [_('text', (new AccessoryData(i.Id, null)).fullAccessoryName)]))
     })
+    this.accessoryFilterManager = new FilterManager(this.accessoryFilterContainer, FilterManager.getAccessoryFilters(), FilterManager.getAccessorySorter())
+    this.accessoryFilterManager.render()
+    this.accessoryFilterContainer.appendChild(_('input', { type: 'button', 'data-text-value': 'FILTER_APPLY', event: { click: _=>this.accessoryFilterManager.filterAndSort(this.appState.accessories) }}))
     for (let lvl in GameDb.CharacterLevel) {
       this.characterMultiUpdateForm['level'].appendChild(_('option', { value: lvl }, [_('text', lvl)]))
     }
@@ -490,23 +491,6 @@ export default class RootLogic {
   removeCharacter(chara) {
     this.appState.characters.splice(this.appState.characters.indexOf(chara), 1)
     this.update({ chara: true })
-  }
-  setCharaSort() {
-    const sortKey = this.charaSortSelect.value;
-    const desc = this.charaSortDescInput.checked;
-    if (!sortKey) {
-      return
-    }
-    this.appState.characters.sort((a,b) => {
-      if (a.data[sortKey] === b.data[sortKey]) {
-        return 0
-      }
-      if (desc) {
-        return b.data[sortKey] - a.data[sortKey]
-      }
-      return a.data[sortKey] - b.data[sortKey]
-    })
-    this.appState.characters.forEach(i => i.appendNode(this.characterContainer))
   }
 
   setAlbumLevel() {
