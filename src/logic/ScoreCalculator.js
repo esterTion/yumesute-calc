@@ -240,6 +240,13 @@ export default class ScoreCalculator {
   }
   createStatDetailsTable() {
     let rowNumber;
+    const buffPercentageDisplay = (stat, idx, j, type) => {
+      let str = `${stat.buffFinal[idx][j][0][type] / 100}%`
+      if (stat.buffFinal[idx][j][0][type] < stat.buff[idx][j][0][type]) {
+        str += ` (${stat.buff[idx][j][0][type] / 100}%)`
+      }
+      return str
+    }
     return _('div', {}, this.members.map((chara, idx) => (rowNumber = 0, chara === null ? _('text', '') : _('details', {}, [
       _('summary', {}, [
         _('span', {className: `card-attribute-${chara.attributeName}`}),
@@ -263,10 +270,10 @@ export default class ScoreCalculator {
         ])]),
         _('tbody', {}, ['CALC_TABLE_ALBUM', 'CALC_TABLE_POSTER', 'CALC_TABLE_ACCESSORY', 'CALC_TABLE_ACTOR', 'CALC_TABLE_OTHER'].map((name, j) => _('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', { 'data-text-key': name }, [_('text', name)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Vocal        ] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Vocal        ]}\n${this.stat.bonus[idx][j].vo}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Expression   ] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Expression   ]}\n${this.stat.bonus[idx][j].ex}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Concentration] / 100}%\n+${this.stat.buffFinal[idx][j][1][StatBonus.Concentration]}\n${this.stat.bonus[idx][j].co}`)]),
-          _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][j][0][StatBonus.Performance  ] / 100}%\n${this.stat.bonus[idx][j].total}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${buffPercentageDisplay(this.stat, idx, j, StatBonus.Vocal        )}\n+${this.stat.buffFinal[idx][j][1][StatBonus.Vocal        ]}\n${this.stat.bonus[idx][j].vo}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${buffPercentageDisplay(this.stat, idx, j, StatBonus.Expression   )}\n+${this.stat.buffFinal[idx][j][1][StatBonus.Expression   ]}\n${this.stat.bonus[idx][j].ex}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${buffPercentageDisplay(this.stat, idx, j, StatBonus.Concentration)}\n+${this.stat.buffFinal[idx][j][1][StatBonus.Concentration]}\n${this.stat.bonus[idx][j].co}`)]),
+          _('td', { className: 'stat-value' }, [_('text', `${buffPercentageDisplay(this.stat, idx, j, StatBonus.Performance  )}\n${this.stat.bonus[idx][j].total}`)]),
         ]))),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', { 'data-text-key': 'CALC_TABLE_TOTAL_BONUS'}, [_('text', '上昇合計')]),
