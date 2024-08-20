@@ -95,7 +95,7 @@ export default class ScoreCalculator {
 
     // leader sense
     this.memberMatchingCategories = this.members.map(_ => ({}))
-    leader.leaderSense.Details.forEach(detail => {
+    if (this.extra.type !== ScoreCalculationType.Keiko) leader.leaderSense.Details.forEach(detail => {
       const effect = Effect.get(detail.EffectMasterId, 1)
       this.members.forEach((chara, idx) => {
         const charaCategories = chara.categories

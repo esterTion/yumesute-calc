@@ -775,10 +775,12 @@ export default class RootLogic {
       const pick = (idx, picked) => {
         if (picked.length === choice) {
           comb.push(picked.slice())
+          /* 
           for (let i = 1; i < choice; i++) {
             [picked[0], picked[i]] = [picked[i], picked[0]]
             comb.push(picked.slice())
           }
+          */
           return
         }
         if (idx === inventoryChara.length) return
