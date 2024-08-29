@@ -4,7 +4,7 @@ import ConstText from '../db/ConstText'
 import _ from '../createElement'
 import removeAllChilds from '../removeAllChilds'
 
-import {Swappable} from '@shopify/draggable';
+// import {Swappable} from '@shopify/draggable';
 
 export default class PartyManager {
   constructor() {
@@ -64,7 +64,7 @@ export default class PartyManager {
       this.accessorySlot[idx] = _('span', { 'data-slot-key': 'accessorySlot', 'data-data-key': 'accessories', className: 'spriteatlas-accessories', event: { click: e=>this.pickAccessory(e) }}),
     ]))))
 
-    const swappable = new Swappable(container, {
+    const swappable = new Draggable.Swappable(container, {
       draggable: 'span',
       distance: 10,
     });
