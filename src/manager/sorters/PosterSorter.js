@@ -5,12 +5,15 @@ class PosterSortType {
 	static RARITY     = 'SORT_KEY_RARITY'
 	static LEVEL      = 'SORT_KEY_LEVEL'
 	static RELEASE    = 'SORT_KEY_RELEASE'
+	static RELDATE		= 'SORT_KEY_RELEASE_DATE'
 
 	static getKeys() {
 		return [
+			this.NONE,
 			this.LEVEL,
 			this.RARITY,
 			this.RELEASE,
+			this.RELDATE,
 		]
 	}
 }
@@ -56,6 +59,7 @@ export default class {
 			case PosterSortType.RARITY:  { result = a.data.Rarity.length - b.data.Rarity.length; break }
 			case PosterSortType.LEVEL:   { result = a.level - b.level; break }
 			case PosterSortType.RELEASE: { result = a.release - b.release; break }
+			case PosterSortType.RELDATE: { result = a.data.DisplayStartAt.localeCompare(b.data.DisplayStartAt); break }
 		}
 		if (result === 0) {
 			result = a.id - b.id

@@ -7,6 +7,7 @@ class AccessorySortType {
 
 	static getKeys() {
 		return [
+			this.NONE,
 			this.LEVEL,
 			this.RARITY,
 		]

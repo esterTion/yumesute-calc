@@ -8,15 +8,18 @@ class CharacterSortType {
 	static SENSELEVEL = 'SORT_KEY_SENSELEVEL'
 	static BLOOM      = 'SORT_KEY_BLOOM'
 	static CT         = 'SORT_KEY_CT'
+	static RELDATE    = 'SORT_KEY_RELEASE_DATE'
 
 	static getKeys() {
 		return [
+			this.NONE,
 			this.CHARACTER,
 			this.LEVEL,
 			this.RARITY,
 			this.SENSELEVEL,
 			this.BLOOM,
 			this.CT,
+			this.RELDATE,
 		]
 	}
 }
@@ -65,6 +68,7 @@ export default class {
 			case CharacterSortType.SENSELEVEL: { result = a.senselv - b.senselv; break }
 			case CharacterSortType.BLOOM:      { result = a.bloom - b.bloom; break }
 			case CharacterSortType.CT:         { result = a.sense.ct - b.sense.ct; break }
+			case CharacterSortType.RELDATE:    { result = a.data.DisplayStartAt.localeCompare(b.data.DisplayStartAt); break }
 		}
 		if (result === 0) {
 			result = a.Id - b.Id
