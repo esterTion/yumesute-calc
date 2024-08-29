@@ -7,6 +7,7 @@ export default [
     ignores: [
       'main-build.*',
       'dist',
+      'draggable.min.js',
     ]
   },
   {
@@ -14,6 +15,7 @@ export default [
       globals: {
         ...globals.browser,
         root: 'readonly',
+        Draggable: 'readonly',
       }
     }
   },

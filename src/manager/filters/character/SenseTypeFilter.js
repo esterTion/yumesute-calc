@@ -40,8 +40,8 @@ export default class extends Filter {
     return this.container
   }
   check(item) {
-		let index = ['support','control','amplification','special'].indexOf(item.sense.Type.toLowerCase())
-		if (index === -1) index = 4
+    let index = ['support','control','amplification','special'].indexOf(item.sense.Type.toLowerCase())
+    if (index === -1) index = 4
     return this.state[ index ]
   }
 }

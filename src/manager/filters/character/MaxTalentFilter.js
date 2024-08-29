@@ -40,9 +40,9 @@ export default class extends Filter {
     return this.container
   }
   check(item) {
-		const maxTalent = item.data.MaxTalentStage
-		let maxTalentType = 0
-		if (maxTalent === 6) maxTalentType = 1
+    const maxTalent = item.data.MaxTalentStage
+    let maxTalentType = 0
+    if (maxTalent === 6) maxTalentType = 1
     return this.state[ maxTalentType ]
   }
 }

@@ -40,11 +40,11 @@ export default class extends Filter {
     return this.container
   }
   check(item) {
-		let obtainMethod = 1
-		const unlockText = item.data.UnlockText
-		if (/フェス/.test(unlockText)) obtainMethod = 3
-		else if (/限定/.test(unlockText)) obtainMethod = 2
-		else if (/初期/.test(unlockText)) obtainMethod = 0
+    let obtainMethod = 1
+    const unlockText = item.data.UnlockText
+    if (/フェス/.test(unlockText)) obtainMethod = 3
+    else if (/限定/.test(unlockText)) obtainMethod = 2
+    else if (/初期/.test(unlockText)) obtainMethod = 0
     return this.state[ obtainMethod ]
   }
 }

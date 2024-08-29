@@ -167,8 +167,6 @@ export default class Effect {
 
       // case "LifeFixedValue":
       // case "LightGuard":
-
-      // case "ScoreGainOnPerformance":
       default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_NOT_IMPLEMENTED', {type: this.Type, id: this.Id})) }
     }
   }
