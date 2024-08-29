@@ -1,6 +1,6 @@
 import terser from '@rollup/plugin-terser'
 import babel from '@rollup/plugin-babel';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
+// import { nodeResolve } from '@rollup/plugin-node-resolve';
 
 import fs from 'fs'
 function cleanMapBeforeBuild() {
@@ -40,7 +40,7 @@ export default [{
     sourcemapFileNames: 'main-build.js.map'
   },
   plugins: [
-    nodeResolve(),
+    // nodeResolve(),
   ],
 },{
   input: 'src/main.js',
@@ -55,6 +55,6 @@ export default [{
     terser(),
     cleanMapBeforeBuild(),
     copyStaticFiles(),
-    nodeResolve(),
+    // nodeResolve(),
   ],
 }]
