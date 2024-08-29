@@ -4,6 +4,8 @@ import ConstText from '../db/ConstText'
 import _ from '../createElement'
 import removeAllChilds from '../removeAllChilds'
 
+import {Swappable} from '@shopify/draggable';
+
 export default class PartyManager {
   constructor() {
     this.parties = [new Party()]
@@ -57,10 +59,41 @@ export default class PartyManager {
     this.accessorySlot = []
     container.appendChild(_('div', {}, Array(5).fill(0).map((__, idx) => _('div', { className: 'party-member' }, [
       this.leaderSelection[idx] = _('input', { type: 'radio', name: 'leader', event: { change: e=>this.changeLeader(e, idx) }}),
-      this.charaSlot[idx] = _('span', { className: 'spriteatlas-characters', event: { click: e=>this.pickCharacter(e, idx) }}),
-      this.posterSlot[idx] = _('span', { className: 'spriteatlas-posters', event: { click: e=>this.pickPoster(e, idx) }}),
-      this.accessorySlot[idx] = _('span', { className: 'spriteatlas-accessories', event: { click: e=>this.pickAccessory(e, idx) }}),
+      this.charaSlot[idx] = _('span', { 'data-slot-key': 'charaSlot', 'data-data-key': 'characters', className: 'spriteatlas-characters', event: { click: e=>this.pickCharacter(e) }}),
+      this.posterSlot[idx] = _('span', { 'data-slot-key': 'posterSlot', 'data-data-key': 'posters', className: 'spriteatlas-posters', event: { click: e=>this.pickPoster(e) }}),
+      this.accessorySlot[idx] = _('span', { 'data-slot-key': 'accessorySlot', 'data-data-key': 'accessories', className: 'spriteatlas-accessories', event: { click: e=>this.pickAccessory(e) }}),
     ]))))
+
+    const swappable = new Swappable(container, {
+      draggable: 'span',
+      distance: 10,
+    });
+    swappable.on('swappable:start', e => {
+      if (!e.data.dragEvent.data.originalSource.dataset.id) return e.cancel()
+    })
+    swappable.on('swappable:swap', e => {
+      const event = e.data.dragEvent.data
+      const source = event.originalSource
+      const target = event.over
+      if (source.dataset.slotKey !== target.dataset.slotKey) return e.cancel()
+      const slots = this[source.dataset.slotKey]
+      const swapSource = slots.indexOf(source)
+      const swapTarget = slots.indexOf(target)
+      {
+        const temp = slots[swapSource]
+        slots[swapSource] = slots[swapTarget]
+        slots[swapTarget] = temp
+      }
+      {
+        const party = this.currentParty
+        const temp = party[source.dataset.dataKey][swapSource]
+        party[source.dataset.dataKey][swapSource] = party[source.dataset.dataKey][swapTarget]
+        party[source.dataset.dataKey][swapTarget] = temp
+      }
+    })
+    swappable.on('swappable:stop', e => {
+      root.update({ party: true })
+    })
   }
   fillPartySelect() {
     removeAllChilds(this.partySelect)
@@ -193,8 +226,9 @@ export default class PartyManager {
     }
     this.pickingOverlay.remove()
   }
-  pickCharacter(e, idx) {
+  pickCharacter(e) {
     if (root.appState.characters.length === 0) return
+    const idx = this.charaSlot.indexOf(e.target)
     this.currentPicking = { type: 'chara', idx }
     this.createPickingOverlay()
     const currentSelection = {}
@@ -215,7 +249,8 @@ export default class PartyManager {
       icon.dataset.idx = i
     })
   }
-  pickPoster(e, idx) {
+  pickPoster(e) {
+    const idx = this.posterSlot.indexOf(e.target)
     this.currentPicking = { type: 'poster', idx }
     this.createPickingOverlay()
     const currentSelection = {}
@@ -244,7 +279,8 @@ export default class PartyManager {
       icon.dataset.idx = i
     })
   }
-  pickAccessory(e, idx) {
+  pickAccessory(e) {
+    const idx = this.accessorySlot.indexOf(e.target)
     this.currentPicking = { type: 'accessory', idx }
     this.createPickingOverlay()
     const currentSelection = {}
