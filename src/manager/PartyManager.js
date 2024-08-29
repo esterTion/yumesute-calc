@@ -64,10 +64,14 @@ export default class PartyManager {
       this.accessorySlot[idx] = _('span', { 'data-slot-key': 'accessorySlot', 'data-data-key': 'accessories', className: 'spriteatlas-accessories', event: { click: e=>this.pickAccessory(e) }}),
     ]))))
 
+    if (root.nonPersistentState.swappable) {
+      root.nonPersistentState.swappable.destroy()
+    }
     const swappable = new Draggable.Swappable(container, {
       draggable: 'span',
       distance: 10,
     });
+    root.nonPersistentState.swappable = swappable
     swappable.on('swappable:start', e => {
       if (!e.data.dragEvent.data.originalSource.dataset.id) return e.cancel()
     })

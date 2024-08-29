@@ -33,6 +33,7 @@ export default class RootLogic {
   nonPersistentState = {
     characterOptions: {},
     posterOptions: {},
+    swappable: null,
   }
 
   async init() {
