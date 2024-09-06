@@ -57,7 +57,7 @@ export default class PartyManager {
     this.charaSlot = []
     this.posterSlot = []
     this.accessorySlot = []
-    container.appendChild(_('div', {}, Array(5).fill(0).map((__, idx) => _('div', { className: 'party-member' }, [
+    container.appendChild(_('div', {}, Array(5).fill(0).map((__, idx) => _('div', { className: 'party-member', 'data-idx': idx }, [
       this.leaderSelection[idx] = _('input', { type: 'radio', name: 'leader', event: { change: e=>this.changeLeader(e, idx) }}),
       this.charaSlot[idx] = _('span', { 'data-slot-key': 'charaSlot', 'data-data-key': 'characters', className: 'spriteatlas-characters', event: { click: e=>this.pickCharacter(e) }}),
       this.posterSlot[idx] = _('span', { 'data-slot-key': 'posterSlot', 'data-data-key': 'posters', className: 'spriteatlas-posters', event: { click: e=>this.pickPoster(e) }}),
@@ -70,8 +70,10 @@ export default class PartyManager {
     const swappable = new Draggable.Swappable(container, {
       draggable: 'span',
       distance: 10,
+      delay: 0,
     });
     root.nonPersistentState.swappable = swappable
+    let swapSource, swapTarget, slots
     swappable.on('swappable:start', e => {
       if (!e.data.dragEvent.data.originalSource.dataset.id) return e.cancel()
     })
@@ -80,9 +82,13 @@ export default class PartyManager {
       const source = event.originalSource
       const target = event.over
       if (source.dataset.slotKey !== target.dataset.slotKey) return e.cancel()
-      const slots = this[source.dataset.slotKey]
-      const swapSource = slots.indexOf(source)
-      const swapTarget = slots.indexOf(target)
+      slots = this[source.dataset.slotKey]
+      swapSource = slots.indexOf(source)
+      swapTarget = target.parentNode.dataset.idx
+    })
+    swappable.on('swappable:stop', e => {
+      const source = slots[swapSource]
+      if (swapSource === swapTarget) return
       {
         const temp = slots[swapSource]
         slots[swapSource] = slots[swapTarget]
@@ -94,8 +100,6 @@ export default class PartyManager {
         party[source.dataset.dataKey][swapSource] = party[source.dataset.dataKey][swapTarget]
         party[source.dataset.dataKey][swapTarget] = temp
       }
-    })
-    swappable.on('swappable:stop', e => {
       root.update({ party: true })
     })
   }
