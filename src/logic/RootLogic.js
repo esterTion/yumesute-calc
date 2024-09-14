@@ -150,7 +150,10 @@ export default class RootLogic {
 
       this.characterTabContent = _('div', {}, [
         this.characterIconList = _('div', {}, [
-          this.characterFilterContainer = _('div'),
+          _('details', {}, [
+            _('summary', {'data-text-key':'LABEL_SORT_AND_FILTER' }),
+            this.characterFilterContainer = _('div'),
+          ]),
           this.characterMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
             _('span'),
             _('br'),
@@ -200,7 +203,10 @@ export default class RootLogic {
 
       this.posterTabContent = _('div', {}, [
         this.posterIconList = _('div', {}, [
-          this.posterFilterContainer = _('div'),
+          _('details', {}, [
+            _('summary', {'data-text-key':'LABEL_SORT_AND_FILTER' }),
+            this.posterFilterContainer = _('div'),
+          ]),
           this.posterMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
             _('span'),
             _('br'),
@@ -236,7 +242,10 @@ export default class RootLogic {
 
       this.accessoryTabContent = _('div', {}, [
         this.accessoryIconList = _('div', {}, [
-          this.accessoryFilterContainer = _('div'),
+          _('details', {}, [
+            _('summary', {'data-text-key':'LABEL_SORT_AND_FILTER' }),
+            this.accessoryFilterContainer = _('div'),
+          ]),
           this.accessoryMultiUpdateForm = _('form', { className: 'list-multi-update-container' }, [
             _('span'),
             _('br'),

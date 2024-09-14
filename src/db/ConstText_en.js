@@ -95,6 +95,7 @@ export default {
   FILTER_CHARACTER_OBTAIN_FES: 'Fes Limited',
   FILTER_CHARACTER_MAX_TALENT: 'Max Bloom Stage',
 
+  LABEL_SORT_AND_FILTER: 'Sort & Filter',
   LABEL_SORT_BY: 'Sort by: ',
   LABEL_SORT_DIRECTION: 'Order: ',
   LABEL_SORT_ASC: 'Ascending',

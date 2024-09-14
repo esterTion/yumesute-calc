@@ -95,6 +95,7 @@ export default {
   FILTER_CHARACTER_OBTAIN_FES: 'Fes限定',
   FILTER_CHARACTER_MAX_TALENT: '最高开花',
 
+  LABEL_SORT_AND_FILTER: '筛选排序',
   LABEL_SORT_BY: '排序：',
   LABEL_SORT_DIRECTION: '顺序：',
   LABEL_SORT_ASC: '升序',
