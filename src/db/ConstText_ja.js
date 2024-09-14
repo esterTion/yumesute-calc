@@ -109,6 +109,10 @@ export default {
   SORT_KEY_RELEASE_DATE: 'リリース日',
   SORT_KEY_RELEASE: '上限解放',
 
+  MENU_ANCHOR_TIMELINE: '編成',
+  MENU_ANCHOR_ALBUM: 'アルバム',
+  MENU_ANCHOR_INVENTORY: 'メンバー',
+
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '効果支援していない：{type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '効果の条件支援していない：{trigger} @ {range} ({id})',
   LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: '分岐条件支援していない：{condition} ({id})',

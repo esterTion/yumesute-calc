@@ -307,3 +307,25 @@ select {
   border-radius: 5px;
   display: inline-block;
 }
+
+@media (max-width: 1200px) {
+  .side-menu-container {
+    display: none;
+  }
+}
+.side-menu-container {
+  position: fixed;
+  top: 40px;
+  left: calc(50vw + 405px);
+  width: 200px;
+}
+.side-menu-item {
+  content: '';
+  border-left: gray 2px solid;
+  cursor: pointer;
+  padding-left: 5px;
+  transition: border-left-color 0.2s;
+}
+.side-menu-item:hover, .side-menu-item.active {
+  border-left-color: cyan;
+}

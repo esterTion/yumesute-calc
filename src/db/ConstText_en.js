@@ -109,6 +109,10 @@ export default {
   SORT_KEY_RELEASE_DATE: 'Release Date',
   SORT_KEY_RELEASE: 'Release',
 
+  MENU_ANCHOR_TIMELINE: 'Timeline',
+  MENU_ANCHOR_ALBUM: 'Album',
+  MENU_ANCHOR_INVENTORY: 'Inventory',
+
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: 'Effect type not implemented: {type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: 'Effect trigger not implemented: {trigger} @ {range} ({id})',
   LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: 'Branch condition not implemented: {condition} ({id})',

@@ -16,6 +16,7 @@ import PhotoEffectData from '../manager/PhotoEffectData'
 import ScoreCalculationType from './ScoreCalculationType'
 import ScoreCalculator from './ScoreCalculator'
 import FilterManager from '../manager/FilterManager'
+import SideMenuManager from '../manager/SideMenuManager'
 
 export default class RootLogic {
   appState = {
@@ -67,8 +68,8 @@ export default class RootLogic {
         _('a', { href: './YumesuteExporter.exe', download: 'YumesuteExporter.exe', 'data-text-key': 'EXPORTER_LABEL' }),
       ]),
       this.warningMessageBox = _('div', { id: 'warning_message_box'}),
-      _('div', {className: 'margin-box'}),
-      this.calcTypeSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()}}, [
+      _('div', {className: 'margin-box', 'data-menu-anchor': 'MENU_ANCHOR_TIMELINE' }),
+      this.calcTypeSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()} }, [
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'normal' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_NORMAL'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'highscore' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_HIGHSCORE'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'keiko' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_KEIKO'})]),
@@ -101,7 +102,7 @@ export default class RootLogic {
         ]),
       ]),
 
-      _('div', {className: 'margin-box'}),
+      _('div', {className: 'margin-box', 'data-menu-anchor': 'MENU_ANCHOR_ALBUM' }),
 
       _('div', {}, [
         _('span', {'data-text-key':'ALBUM_LEVEL_LABEL'}),
@@ -139,9 +140,9 @@ export default class RootLogic {
         ])
       ]),
 
-      _('div', {className: 'margin-box'}),
+      _('div', {className: 'margin-box', 'data-menu-anchor': 'MENU_ANCHOR_INVENTORY'}),
 
-      this.tabSelectForm = _('form', { style: { display: 'flex', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.8)', padding: '10px 0', zIndex: 5 }, event: {change: _=>this.changeTab()}}, [
+      this.tabSelectForm = _('form', { style: { display: 'flex', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.8)', padding: '10px 0', zIndex: 5 }, event: {change: _=>this.changeTab()} }, [
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'character' }), _('span', {'data-text-key': 'TAB_CHARA'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'poster' }), _('span', {'data-text-key': 'TAB_POSTER'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'accessory' }), _('span', {'data-text-key': 'TAB_ACCESSORY'})]),
@@ -364,6 +365,8 @@ export default class RootLogic {
 
     window.addEventListener('blur', _=>this.saveState())
     window.addEventListener('unload', _=>this.saveState())
+
+    SideMenuManager.init()
 
     ConstText.fillText()
   }

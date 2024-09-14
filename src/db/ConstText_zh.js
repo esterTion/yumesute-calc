@@ -109,6 +109,10 @@ export default {
   SORT_KEY_RELEASE_DATE: '更新日期',
   SORT_KEY_RELEASE: '上限解放',
 
+  MENU_ANCHOR_TIMELINE: '时间轴',
+  MENU_ANCHOR_ALBUM: '相册',
+  MENU_ANCHOR_INVENTORY: '仓库',
+
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '未支持的效果：{type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '未支持的效果触发：{trigger} @ {range} ({id})',
   LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: '未支持的分支条件：{condition} ({id})',
