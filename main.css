@@ -329,3 +329,13 @@ select {
 .side-menu-item:hover, .side-menu-item.active {
   border-left-color: cyan;
 }
+.obtain-type {
+	background-color: #E0E0E0;
+	padding: 1px 3px;
+	margin: 2px .3em;
+	border-radius: 5px;
+	display: inline-block;
+}
+.obtain-type:empty {
+	display: none;
+}

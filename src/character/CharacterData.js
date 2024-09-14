@@ -38,7 +38,7 @@ export default class CharacterData {
     if (!parent) return
     this.node = parent.appendChild(_('tbody', {}, [
       _('tr', {}, [
-        _('td', {}, [_('span', {className: `card-attribute-${this.attributeName}`}), _('text', this.fullCardName)]),
+        _('td', {}, [_('span', {className: `card-attribute-${this.attributeName}`}), _('text', this.fullCardName), _('span', { className: 'obtain-type' }, [_('text', /フェス/.test(this.data.UnlockText) ? 'フェス' : /限定/.test(this.data.UnlockText) ? '限定' : /イベント/.test(this.data.UnlockText) ? 'イベント' : '')])]),
         _('td', {}, [_('text', 'Vo:')]),
         this.voValNode = _('td', {className: 'stat'}),
         _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: `https://redive.estertion.win/wds/card/${this.Id}_0.webp@w400`, loading: 'lazy' })])

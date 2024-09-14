@@ -13,7 +13,7 @@ export default class PosterData {
 
     if (!parent) return
     this.node = parent.appendChild(_('tr', {}, [_('td', {}, [
-      _('div', {}, [_('text', this.fullPosterName)]),
+      _('div', {}, [_('text', this.fullPosterName), _('span', { className: 'obtain-type' }, [_('text', /特別/.test(this.data.UnlockText) ? '特別' : /限定/.test(this.data.UnlockText) ? '限定' : /イベント/.test(this.data.UnlockText) ? 'イベント' : '')])]),
       _('div', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
       _('div', {}, [_('text', '解放: '), this.releaseSelect = _('select', { event: { change: e=>this.setRelease(e) } })]),
       _('div', {}, [_('text', 'Leader: ')]),
