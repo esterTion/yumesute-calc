@@ -339,3 +339,6 @@ select {
 .obtain-type:empty {
 	display: none;
 }
+label {
+  display: inline-block;
+}

@@ -33,6 +33,14 @@ export default class ConstText {
   static ja = ConstTextJa
   static zh = ConstTextZh
 
+  static htmlKey = {
+    FILTER_EFFECT_SENSE_LIGHT_SUPPORT: true,
+    FILTER_EFFECT_SENSE_LIGHT_CONTROL: true,
+    FILTER_EFFECT_SENSE_LIGHT_AMPLIFICATION: true,
+    FILTER_EFFECT_SENSE_LIGHT_SPECIAL: true,
+    FILTER_EFFECT_SENSE_LIGHT_VARIABLE: true,
+  }
+
   static get(key, replaces = {}) {
     return (ConstText[ConstText.language][key] || ConstText.get('UNDEFINED_STRING', [key]))
       .replace(/{([^{}}]+)}/g, (ori, name) => (replaces[name]!==undefined ? replaces[name] : ori))
@@ -40,7 +48,11 @@ export default class ConstText {
 
   static fillText() {
     document.querySelectorAll('[data-text-key]').forEach(i => {
-      i.textContent = ConstText.get(i.dataset.textKey)
+      if (ConstText.htmlKey[i.dataset.textKey]) {
+        i.innerHTML = ConstText.get(i.dataset.textKey)
+      } else {
+        i.textContent = ConstText.get(i.dataset.textKey)
+      }
     })
     document.querySelectorAll('[data-text-value]').forEach(i => {
       i.value = ConstText.get(i.dataset.textValue)

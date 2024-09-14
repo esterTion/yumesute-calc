@@ -6,11 +6,14 @@ import CharacterSenseTypeFilter from "./filters/character/SenseTypeFilter"
 import CharacterAttributeFilter from "./filters/character/AttributeFilter"
 import CharacterFilter from "./filters/character/CharacterFilter"
 import CharacterObtainMethodFilter from "./filters/character/ObtainMethod"
-import CHaracterMaxTalentFilter from "./filters/character/MaxTalentFilter"
+import CharacterMaxTalentFilter from "./filters/character/MaxTalentFilter"
+import CharacterSenseEffectFilter from "./filters/character/SenseEffectFilter"
 
 import PosterRarityFilter from "./filters/poster/RarityFilter"
+import PosterEffectFilter from "./filters/poster/EffectFilter"
 
 import AccessoryRarityFilter from "./filters/accessory/RarityFilter"
+import AccessoryEffectFilter from "./filters/accessory/EffectFilter"
 
 import CharacterSorter from "./sorters/CharacterSorter"
 import PosterSorter from "./sorters/PosterSorter"
@@ -54,17 +57,20 @@ export default class FilterManager {
       new CharacterAttributeFilter,
       new CharacterFilter,
       new CharacterObtainMethodFilter,
-      new CHaracterMaxTalentFilter,
+      new CharacterMaxTalentFilter,
+      new CharacterSenseEffectFilter,
     ]
   }
   static getPosterFilters() {
     return [
       new PosterRarityFilter,
+      new PosterEffectFilter,
     ]
   }
   static getAccessoryFilters() {
     return [
       new AccessoryRarityFilter,
+      new AccessoryEffectFilter,
     ]
   }
   static getCharacterSorter() {
