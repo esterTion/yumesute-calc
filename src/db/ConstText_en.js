@@ -96,6 +96,7 @@ export default {
   FILTER_CHARACTER_MAX_TALENT: 'Max Bloom Stage',
   FILTER_CHARACTER_SENSE_EFFECT: 'Sense Effect',
   FILTER_POSTER_EFFECT: 'Poster Effect',
+  FILTER_ACCESSORY_EFFECT: 'Accessory Effect',
 
   FILTER_EFFECT_SENSE_SCORE_UP: 'Sense score bonus',
   FILTER_EFFECT_STARACT_SCORE_UP: 'Star Act score bonus',

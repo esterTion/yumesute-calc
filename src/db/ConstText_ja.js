@@ -96,6 +96,7 @@ export default {
   FILTER_CHARACTER_MAX_TALENT: '最大開花',
   FILTER_CHARACTER_SENSE_EFFECT: 'センス効果',
   FILTER_POSTER_EFFECT: 'ポスター効果',
+  FILTER_ACCESSORY_EFFECT: 'アクセサリー効果',
 
   FILTER_EFFECT_SENSE_SCORE_UP: 'センススコアアップ',
   FILTER_EFFECT_STARACT_SCORE_UP: 'スターアクトスコアアップ',
