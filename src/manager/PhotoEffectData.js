@@ -50,6 +50,9 @@ export default class PhotoEffectData {
     this.desc.textContent = `${this.data.Name}：${this.description}`;
     this.enableToggle.checked = this.enabled
   }
+  appendNode(parent) {
+    parent.appendChild(this.node)
+  }
   remove() {
     this.node.remove()
     root.removePhotoEffect(this)

@@ -110,6 +110,10 @@ export default class RootLogic {
         this.albumExtraCountLabel = _('span', { style: { marginLeft: '0.5em' } }),
         _('text', ' / 30'),
       ]),
+      _('details', {}, [
+        _('summary', {'data-text-key':'LABEL_SORT_AND_FILTER' }),
+        this.photoEffectFilterContainer = _('div'),
+      ]),
       this.photoEffectContainer = _('div'),
       _('div', {}, [
         this.addPhotoEffectSelect = _('select'),
@@ -357,6 +361,9 @@ export default class RootLogic {
       const pe = new PhotoEffectData(i.Id, 1, null)
       this.addPhotoEffectSelect.appendChild(_('option', { value: i.Id }, [_('text', pe.selectName)]))
     })
+    this.photoEffectFilterManager = new FilterManager(this.photoEffectFilterContainer, FilterManager.getPhotoEffectFilters(), FilterManager.getPhotoEffectSorter())
+    this.photoEffectFilterManager.render()
+    this.photoEffectFilterContainer.appendChild(_('input', { type: 'button', 'data-text-value': 'FILTER_APPLY', event: { click: _=>this.photoEffectFilterManager.filterAndSort(this.appState.albumExtra) }}))
 
     this.renderSenseNote(true)
     this.update({

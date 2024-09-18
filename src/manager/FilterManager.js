@@ -18,6 +18,7 @@ import AccessoryEffectFilter from "./filters/accessory/EffectFilter"
 import CharacterSorter from "./sorters/CharacterSorter"
 import PosterSorter from "./sorters/PosterSorter"
 import AccessorySorter from "./sorters/AccessorySorter"
+import PhotoEffectSorter from "./sorters/PhotoEffectSorter"
 
 export default class FilterManager {
   constructor(parent, conditions, sorter) {
@@ -41,6 +42,7 @@ export default class FilterManager {
     data.sort((a,b) => this.sorter.compare(a,b))
     data.forEach(item => {
       item.appendNode(item.node.parentNode)
+      if (!item.iconNode) return
       if (this.conditions.every(condition => condition.check(item))) {
         item.iconNode.style.display = ''
       } else {
@@ -73,6 +75,10 @@ export default class FilterManager {
       new AccessoryEffectFilter,
     ]
   }
+  static getPhotoEffectFilters() {
+    return [
+    ]
+  }
   static getCharacterSorter() {
     return new CharacterSorter
   }
@@ -81,5 +87,8 @@ export default class FilterManager {
   }
   static getAccessorySorter() {
     return new AccessorySorter
+  }
+  static getPhotoEffectSorter() {
+    return new PhotoEffectSorter
   }
 }
