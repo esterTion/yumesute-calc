@@ -41,7 +41,7 @@ export default class CharacterData {
         _('td', {}, [_('span', {className: `card-attribute-${this.attributeName}`}), _('text', this.fullCardName), _('span', { className: 'obtain-type' }, [_('text', /フェス/.test(this.data.UnlockText) ? 'フェス' : /限定/.test(this.data.UnlockText) ? '限定' : /イベント/.test(this.data.UnlockText) ? 'イベント' : '')])]),
         _('td', {}, [_('text', 'Vo:')]),
         this.voValNode = _('td', {className: 'stat'}),
-        _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: `https://redive.estertion.win/wds/card/${this.Id}_0.webp@w400`, loading: 'lazy' })])
+        _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: 'about:blank', loading: 'lazy' })])
       ]),
       _('tr', {}, [
         _('td', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
@@ -206,7 +206,9 @@ export default class CharacterData {
     this.senseInput.value = this.senselv;
     this.bloomInput.value = this.bloom;
 
-    this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w400`
+    if (this.iconSelectionInput.checked) {
+      this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w400`
+    }
     this.iconNodeIcon.dataset.id = this.cardIconId
 
     const stat = this.statFinal
@@ -272,6 +274,7 @@ export default class CharacterData {
     this.iconNode.classList[this.iconSelectionInput.checked ? 'add' : 'remove']('selected')
     if (this.iconSelectionInput.checked) {
       this.node.style.display = ''
+      this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w400`
     } else {
       this.node.style.display = 'none'
     }

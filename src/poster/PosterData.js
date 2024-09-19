@@ -21,7 +21,7 @@ export default class PosterData {
       _('div', {}, [_('text', 'Normal: ')]),
       this.normalAbilityBox = _('div'),
       _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
-    ]), _('td', {}, [_('img', { src: this.imageUrl, style: { width: '200px' }, loading: 'lazy' })])]))
+    ]), _('td', {}, [this.posterImg = _('img', { src: 'about:blank', style: { width: '200px' }, loading: 'lazy' })])]))
 
     this.iconNode = root.posterIconList.appendChild(_('span', { className: 'list-icon-container small-text arial', event: { click: e => this.toggleSelection() } }, [
       this.iconNodeIcon = _('span', { className: 'spriteatlas-posters', 'data-id': this.id }),
@@ -108,6 +108,7 @@ export default class PosterData {
     this.iconNode.classList[this.iconSelectionInput.checked ? 'add' : 'remove']('selected')
     if (this.iconSelectionInput.checked) {
       this.node.style.display = ''
+      this.posterImg.src = this.imageUrl
     } else {
       this.node.style.display = 'none'
     }
