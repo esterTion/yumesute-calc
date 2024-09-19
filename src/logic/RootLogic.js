@@ -43,6 +43,18 @@ export default class RootLogic {
     await GameDb.load()
     this.loaded = true;
 
+    {
+      // test scroll bar width
+      const outer = _('div', { style: { overflow: 'scroll', width: '100px', height: '100px', position: 'absolute', top: '-9999px' }}, [
+        _('div', { style: { width: '100%', height: '100%' }})
+      ])
+      document.body.appendChild(outer)
+      const inner = outer.firstChild
+      const scrollbarWidth = outer.offsetWidth - inner.offsetWidth
+      outer.remove()
+      document.body.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`)
+    }
+
     // 追加常驻时间轴
     GameDb.SenseNotation[0] = {
       Id: 0,

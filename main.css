@@ -1,11 +1,9 @@
-html {
-  scrollbar-gutter: stable;
-}
 body {
   max-width: 800px;
   margin:  5px auto 30px;
   cursor: default;
   font-family: Arial, Meiryo;
+  --scrollbar-width: 0px;
 }
 #error_message, #loading {
   white-space: pre-wrap;
@@ -272,6 +270,7 @@ input[type=checkbox].icon-selection:checked {
 
 body.picking {
   overflow: hidden;
+  padding-right: var(--scrollbar-width);
 }
 .picking-overlay {
   position: fixed;
