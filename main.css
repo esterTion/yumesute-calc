@@ -243,6 +243,7 @@ input[type=checkbox].icon-selection:checked {
 }
 .list-multi-update-container.empty {
   pointer-events: none;
+  opacity: 0.7;
 }
 .list-multi-update-container:not(.empty) {
   position: sticky;
@@ -340,4 +341,18 @@ select {
 }
 label {
   display: inline-block;
+}
+.list-icon-container.hoz-item-with-name {
+  vertical-align: top;
+  width: 190px;
+  max-width: initial;
+  padding: 5px;
+  margin: 0 5px 5px 0;
+}
+.list-icon-container.hoz-item-with-name span[data-id] {
+  float: left;
+}
+.list-icon-container.hoz-item-with-name .item-name {
+  font-size: 0.7em;
+  word-break: break-all;
 }

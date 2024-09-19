@@ -27,6 +27,9 @@ export default {
   SELECTION_COUNT_LABEL: '选中的 {0} 个：',
   UNSELECT_ALL: '取消所有选中',
   SELECTION_EMPTY: '清空',
+  ADD_ALL: '添加全部',
+  SELECT_ALL: '全选',
+  BACK: '返回',
 
   TAB_CHARA: '角色',
   TAB_POSTER: '海报',

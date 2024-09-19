@@ -27,6 +27,9 @@ export default {
   SELECTION_COUNT_LABEL: '選択した {0} 個：',
   UNSELECT_ALL: '全て選択解除',
   SELECTION_EMPTY: 'はずす',
+  ADD_ALL: '全て追加',
+  SELECT_ALL: '全選択',
+  BACK: '戻る',
 
   TAB_CHARA: 'キャラ',
   TAB_POSTER: 'ポスター',

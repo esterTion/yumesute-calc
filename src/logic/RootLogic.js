@@ -206,14 +206,14 @@ export default class RootLogic {
             _('br'),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdateChara('delete') }}),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UNSELECT_ALL', event: { click: e=>this.multiUpdateChara('unselect') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'SELECT_ALL', event: { click: e=>this.multiUpdateChara('select') }}),
           ]),
         ]),
         this.characterForm = _('form', {}, [
           this.characterContainer = _('table', { className: 'characters' }),
         ]),
         _('div', {}, [
-          this.addCharacterSelect = _('select'),
-          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.addCharacter() }}),
+          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.pickCharacterToAdd() }}),
         ]),
       ]),
 
@@ -247,12 +247,12 @@ export default class RootLogic {
             _('br'),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdatePoster('delete') }}),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UNSELECT_ALL', event: { click: e=>this.multiUpdatePoster('unselect') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'SELECT_ALL', event: { click: e=>this.multiUpdatePoster('select') }}),
           ]),
         ]),
         this.posterContainer = _('table', { className: 'posters' }),
         _('div', {}, [
-          this.addPosterSelect = _('select'),
-          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.addPoster() }}),
+          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: _=>this.pickPosterToAdd() }}),
         ]),
       ]),
 
@@ -281,12 +281,12 @@ export default class RootLogic {
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UPDATE_SELECTION', event: { click: e=>this.multiUpdateAccessory('level') }}),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'DELETE_SELECTION', event: { click: e=>this.multiUpdateAccessory('delete') }}),
             _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'UNSELECT_ALL', event: { click: e=>this.multiUpdateAccessory('unselect') }}),
+            _('input', { style: {marginRight: '1em'}, type: 'button', 'data-text-value': 'SELECT_ALL', event: { click: e=>this.multiUpdateAccessory('select') }}),
           ]),
         ]),
         this.accessoryContainer = _('table', { className: 'accessories' }),
         _('div', {}, [
-          this.addAccessorySelect = _('select'),
-          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.addAccessory() }}),
+          _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: _=>this.pickAccessoryToAdd() }}),
         ]),
       ]),
     ]))
@@ -313,47 +313,16 @@ export default class RootLogic {
     })
     {
       // characters
-      const addableCharactersByDate = Object.values(GameDb.Character)
-        .reduce((acc, i) => {
-          acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
-          acc[i.DisplayStartAt][1].push(i.Id)
-          return acc
-        }, {})
-      const addableCharacters = Object.values(addableCharactersByDate)
-      addableCharacters.sort((a,b) => (a[0] > b[0] ? 1 : -1))
-      addableCharacters.forEach((group) => {
-        const groupEle = this.addCharacterSelect.appendChild(_('optgroup', { label: group[0] }))
-        group[1].forEach(i => {
-          this.nonPersistentState.characterOptions[i] = groupEle.appendChild(_('option', { value: i }, [_('text', (new CharacterData(i, null)).fullCardName)]))
-        })
-      })
       this.characterFilterManager = new FilterManager(this.characterFilterContainer, FilterManager.getCharacterFilters(), FilterManager.getCharacterSorter())
       this.characterFilterManager.render()
       this.characterFilterContainer.appendChild(_('input', { type: 'button', 'data-text-value': 'FILTER_APPLY', event: { click: _=>this.characterFilterManager.filterAndSort(this.appState.characters) }}))
     }
     {
       // posters
-      const addablePostersByDate = Object.values(GameDb.Poster)
-        .reduce((acc, i) => {
-          acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
-          acc[i.DisplayStartAt][1].push(i.Id)
-          return acc
-        }, {})
-      const addablePosters = Object.values(addablePostersByDate)
-      addablePosters.sort((a,b) => (a[0] > b[0] ? 1 : -1))
-      addablePosters.forEach((group) => {
-        const groupEle = this.addPosterSelect.appendChild(_('optgroup', { label: group[0] }))
-        group[1].forEach(i => {
-          this.nonPersistentState.posterOptions[i] = groupEle.appendChild(_('option', { value: i }, [_('text', (new PosterData(i, null)).fullPosterName)]))
-        })
-      })
       this.posterFilterManager = new FilterManager(this.posterFilterContainer, FilterManager.getPosterFilters(), FilterManager.getPosterSorter())
       this.posterFilterManager.render()
       this.posterFilterContainer.appendChild(_('input', { type: 'button', 'data-text-value': 'FILTER_APPLY', event: { click: _=>this.posterFilterManager.filterAndSort(this.appState.posters) }}))
     }
-    Object.values(GameDb.Accessory).forEach(i => {
-      this.addAccessorySelect.appendChild(_('option', { value: i.Id }, [_('text', (new AccessoryData(i.Id, null)).fullAccessoryName)]))
-    })
     this.accessoryFilterManager = new FilterManager(this.accessoryFilterContainer, FilterManager.getAccessoryFilters(), FilterManager.getAccessorySorter())
     this.accessoryFilterManager.render()
     this.accessoryFilterContainer.appendChild(_('input', { type: 'button', 'data-text-value': 'FILTER_APPLY', event: { click: _=>this.accessoryFilterManager.filterAndSort(this.appState.accessories) }}))
@@ -509,12 +478,165 @@ export default class RootLogic {
     this.characterTabContent.style.display = tab === 'character' ? '' : 'none'
     this.posterTabContent.style.display = tab === 'poster' ? '' : 'none'
     this.accessoryTabContent.style.display = tab === 'accessory' ? '' : 'none'
-
-
   }
 
-  addCharacter() {
-    const charaId = this.addCharacterSelect.value | 0;
+  createPickingOverlay(confirmCallback) {
+    document.body.classList.add('picking')
+    const overlay = _('div', { className: 'picking-overlay', event: { click: e=>e.target === this.pickingOverlay && this.closePicking() }})
+    const container = _('div', { className: 'picking-container', event: { click: confirmCallback }})
+    overlay.appendChild(container)
+    document.body.appendChild(overlay)
+    this.pickingOverlay = overlay
+    this.pickingContainer = container
+    overlay.scrollTop = 0
+  }
+  closePicking() {
+    document.body.classList.remove('picking')
+    this.pickingOverlay.remove()
+    delete this.pickingOverlay
+    delete this.pickingContainer
+  }
+  pickCharacterToAdd() {
+    const pickTarget = []
+    this.createPickingOverlay(e => {
+      let pick
+      for (let el of pickTarget) {
+        if (el.contains(e.target)) {
+          pick = el
+          break
+        }
+      }
+      if (!pick) return
+      const charaId = pick.dataset.pickId | 0
+      this.addCharacter(charaId)
+      this.closePicking()
+    })
+    this.pickingContainer.appendChild(_('p', {}, [
+      _('input', { 'type': 'button', value: ConstText.get('ADD_ALL'), event: { click: _=>{
+        this.batchUpdating = true
+        pickTarget.forEach(i => this.addCharacter(i.dataset.pickId | 0))
+        this.batchUpdating = false
+        this.update({ chara: true })
+        this.closePicking()
+      } }}),
+      _('input', { 'type': 'button', style: { marginLeft: '1em' }, value: ConstText.get('BACK'), event: { click: _=> this.closePicking() }}),
+    ]))
+    const currentInventory = this.appState.characters.map(i => i.Id)
+    const addableCharactersByDate = Object.values(GameDb.Character)
+      .reduce((acc, i) => {
+        acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
+        acc[i.DisplayStartAt][1].push(i.Id)
+        return acc
+      }, {})
+    const addableCharacters = Object.values(addableCharactersByDate)
+    addableCharacters.sort((a,b) => (a[0] < b[0] ? 1 : -1))
+    addableCharacters.forEach((group) => {
+      const groupEle = this.pickingContainer.appendChild(_('p', {}, [_('text', group[0]), _('br')]))
+      group[1].forEach(i => {
+        const chara = new CharacterData(i, null)
+        const charaEle = groupEle.appendChild(_('span', { className: 'list-icon-container hoz-item-with-name', 'data-pick-id': i }, [
+          _('span', { className: 'spriteatlas-characters', 'data-id': chara.cardIconId }),
+          _('span', { className: `card-attribute-${chara.attributeName}`}),
+          _('span', { className: 'sense-star gray-background', 'data-sense-type': chara.sense.getType() }, [_('text', `${chara.sense.data.LightCount} `)]),
+          _('text', chara.sense.ct),
+          _('text', chara.rarityStr),
+          _('br'),
+          _('span', { className: 'item-name' }, [_('text', `【${chara.cardName}】${chara.charaName}`)]),
+        ]))
+        if (currentInventory.includes(i)) {
+          charaEle.classList.add('selected')
+        } else {
+          pickTarget.push(charaEle)
+        }
+      })
+    })
+  }
+  pickPosterToAdd() {
+    const pickTarget = []
+    this.createPickingOverlay(e => {
+      let pick
+      for (let el of pickTarget) {
+        if (el.contains(e.target)) {
+          pick = el
+          break
+        }
+      }
+      if (!pick) return
+      const posterId = pick.dataset.pickId | 0
+      this.addPoster(posterId)
+      this.closePicking()
+    })
+    this.pickingContainer.appendChild(_('p', {}, [
+      _('input', { 'type': 'button', value: ConstText.get('ADD_ALL'), event: { click: _=>{
+        this.batchUpdating = true
+        pickTarget.forEach(i => this.addPoster(i.dataset.pickId | 0))
+        this.batchUpdating = false
+        this.update({ poster: true })
+        this.closePicking()
+      } }}),
+      _('input', { 'type': 'button', style: { marginLeft: '1em' }, value: ConstText.get('BACK'), event: { click: _=> this.closePicking() }}),
+    ]))
+    const currentInventory = this.appState.posters.map(i => i.id)
+    const addablePostersByDate = Object.values(GameDb.Poster)
+      .reduce((acc, i) => {
+        acc[i.DisplayStartAt] = acc[i.DisplayStartAt] || [i.DisplayStartAt, []]
+        acc[i.DisplayStartAt][1].push(i.Id)
+        return acc
+      }, {})
+    const addablePosters = Object.values(addablePostersByDate)
+    addablePosters.sort((a,b) => (a[0] < b[0] ? 1 : -1))
+    addablePosters.forEach((group) => {
+      const groupEle = this.pickingContainer.appendChild(_('p', {}, [_('text', group[0]), _('br')]))
+      group[1].forEach(i => {
+        const poster = new PosterData(i, null)
+        const posterEle = groupEle.appendChild(_('span', { className: 'list-icon-container hoz-item-with-name', 'data-pick-id': i }, [
+          _('span', { className: 'spriteatlas-posters', 'data-id': poster.id }),
+          _('span', { className: 'item-name' }, [_('text', poster.fullPosterName)]),
+        ]))
+        if (currentInventory.includes(i)) {
+          posterEle.classList.add('selected')
+        } else {
+          pickTarget.push(posterEle)
+        }
+      })
+    })
+  }
+  pickAccessoryToAdd() {
+    const pickTarget = []
+    this.createPickingOverlay(e => {
+      let pick
+      for (let el of pickTarget) {
+        if (el.contains(e.target)) {
+          pick = el
+          break
+        }
+      }
+      if (!pick) return
+      const accessoryId = pick.dataset.pickId | 0
+      this.addAccessory(accessoryId)
+      this.closePicking()
+    })
+    this.pickingContainer.appendChild(_('p', {}, [
+      _('input', { 'type': 'button', value: ConstText.get('ADD_ALL'), event: { click: _=>{
+        this.batchUpdating = true
+        pickTarget.forEach(i => this.addAccessory(i.dataset.pickId | 0))
+        this.batchUpdating = false
+        this.update({ accessory: true })
+        this.closePicking()
+      } }}),
+      _('input', { 'type': 'button', style: { marginLeft: '1em' }, value: ConstText.get('BACK'), event: { click: _=> this.closePicking() }}),
+    ]))
+    Object.values(GameDb.Accessory).forEach(i => {
+      const accessory = new AccessoryData(i.Id, null)
+      const accessoryEle = this.pickingContainer.appendChild(_('span', { className: 'list-icon-container hoz-item-with-name', 'data-pick-id': i.Id }, [
+        _('span', { className: 'spriteatlas-accessories', 'data-id': accessory.id }),
+        _('span', { className: 'item-name' }, [_('text', accessory.fullAccessoryName)]),
+      ]))
+      pickTarget.push(accessoryEle)
+    })
+  }
+
+  addCharacter(charaId) {
     if (this.appState.characters.find(i => i.Id === charaId)) return
     this.appState.characters.push(new CharacterData(charaId, this.characterContainer))
     this.appState.characters[this.appState.characters.length - 1].updateToMax()
@@ -539,8 +661,7 @@ export default class RootLogic {
     this.update({ album: true })
   }
 
-  addPoster() {
-    const posterId = this.addPosterSelect.value | 0;
+  addPoster(posterId) {
     if (this.appState.posters.find(i => i.id === posterId)) return
     this.appState.posters.push(new PosterData(posterId, this.posterContainer))
     this.appState.posters[this.appState.posters.length - 1].updateToMax()
@@ -551,8 +672,7 @@ export default class RootLogic {
     this.update({ poster: true })
   }
 
-  addAccessory() {
-    const accessoryId = this.addAccessorySelect.value | 0;
+  addAccessory(accessoryId) {
     this.appState.accessories.push(new AccessoryData(accessoryId, this.accessoryContainer))
     this.appState.accessories[this.appState.accessories.length - 1].updateToMax()
     this.update({ accessory: true })
@@ -696,9 +816,13 @@ export default class RootLogic {
         this.appState.characters.forEach(i => i.iconSelectionInput.checked && i.toggleSelection())
         break
       }
+      case 'select': {
+        this.appState.characters.forEach(i => !i.iconSelectionInput.checked && i.toggleSelection())
+        break
+      }
     }
     this.batchUpdating = false
-    this.update({ chara: true })
+    this.update({ chara: true, selection: true })
   }
   multiUpdatePoster(key) {
     this.batchUpdating = true
@@ -720,9 +844,13 @@ export default class RootLogic {
         this.appState.posters.forEach(i => i.iconSelectionInput.checked && i.toggleSelection())
         break
       }
+      case 'select': {
+        this.appState.posters.forEach(i => !i.iconSelectionInput.checked && i.toggleSelection())
+        break
+      }
     }
     this.batchUpdating = false
-    this.update({ poster: true })
+    this.update({ poster: true, selection: true })
   }
   multiUpdateAccessory(key) {
     this.batchUpdating = true
@@ -740,9 +868,13 @@ export default class RootLogic {
         this.appState.accessories.forEach(i => i.iconSelectionInput.checked && i.toggleSelection())
         break
       }
+      case 'select': {
+        this.appState.accessories.forEach(i => !i.iconSelectionInput.checked && i.toggleSelection())
+        break
+      }
     }
     this.batchUpdating = false
-    this.update({ accessory: true })
+    this.update({ accessory: true, selection: true })
   }
 
   renderSenseNote(skipUpdate = false) {

@@ -27,6 +27,9 @@ export default {
   SELECTION_COUNT_LABEL: 'Selected {0} items: ',
   UNSELECT_ALL: 'Unselect all',
   SELECTION_EMPTY: 'Empty',
+  ADD_ALL: 'Add all',
+  SELECT_ALL: 'Select all',
+  BACK: 'Back',
 
   TAB_CHARA: 'Character',
   TAB_POSTER: 'Poster',
