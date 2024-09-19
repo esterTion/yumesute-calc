@@ -817,7 +817,7 @@ export default class RootLogic {
         break
       }
       case 'select': {
-        this.appState.characters.forEach(i => !i.iconSelectionInput.checked && i.toggleSelection())
+        this.appState.characters.forEach(i => !i.iconSelectionInput.checked && i.iconNode.style.display !== 'none' && i.toggleSelection())
         break
       }
     }
@@ -845,7 +845,7 @@ export default class RootLogic {
         break
       }
       case 'select': {
-        this.appState.posters.forEach(i => !i.iconSelectionInput.checked && i.toggleSelection())
+        this.appState.posters.forEach(i => !i.iconSelectionInput.checked && i.iconNode.style.display !== 'none' && i.toggleSelection())
         break
       }
     }
@@ -869,7 +869,7 @@ export default class RootLogic {
         break
       }
       case 'select': {
-        this.appState.accessories.forEach(i => !i.iconSelectionInput.checked && i.toggleSelection())
+        this.appState.accessories.forEach(i => !i.iconSelectionInput.checked && i.iconNode.style.display !== 'none' && i.toggleSelection())
         break
       }
     }
