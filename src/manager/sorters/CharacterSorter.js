@@ -9,6 +9,7 @@ class CharacterSortType {
   static BLOOM      = 'SORT_KEY_BLOOM'
   static CT         = 'SORT_KEY_CT'
   static RELDATE    = 'SORT_KEY_RELEASE_DATE'
+  static BLOOMDATE  = 'SORT_KEY_BLOOM_RELEASE_DATE'
 
   static getKeys() {
     return [
@@ -20,6 +21,7 @@ class CharacterSortType {
       this.BLOOM,
       this.CT,
       this.RELDATE,
+      this.BLOOMDATE,
     ]
   }
 }
@@ -69,6 +71,7 @@ export default class {
       case CharacterSortType.BLOOM:      { result = a.bloom - b.bloom; break }
       case CharacterSortType.CT:         { result = a.sense.ct - b.sense.ct; break }
       case CharacterSortType.RELDATE:    { result = a.data.DisplayStartAt.localeCompare(b.data.DisplayStartAt); break }
+      case CharacterSortType.BLOOMDATE:  { result = (a.data.MaxTalentStageReleaseDate||'').localeCompare((b.data.MaxTalentStageReleaseDate||'')); break }
     }
     if (result === 0) {
       result = a.Id - b.Id

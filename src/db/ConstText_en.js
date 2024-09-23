@@ -12,7 +12,7 @@ export default {
   KEIKO_MEMBER_COUNT_LABEL: 'Party size: ',
   KEIKO_CALCULATING: 'Calculating the highest score of {0} party combinations',
 
-  THEATER_LEVEL_LABEL: 'Theatre level: ',
+  THEATER_LEVEL_LABEL: 'Theater level: ',
   SIRIUS: 'Sirius',
   EDEN: 'Eden',
   GINGAZA: 'Gingaza',
@@ -100,6 +100,7 @@ export default {
   FILTER_CHARACTER_SENSE_EFFECT: 'Sense Effect',
   FILTER_POSTER_EFFECT: 'Poster Effect',
   FILTER_ACCESSORY_EFFECT: 'Accessory Effect',
+  FILTER_EFFECT_CONDITION: 'Effect Condition',
 
   FILTER_EFFECT_SENSE_SCORE_UP: 'Sense score bonus',
   FILTER_EFFECT_STARACT_SCORE_UP: 'Star Act score bonus',
@@ -124,6 +125,11 @@ export default {
   FILTER_EFFECT_RECAST_DOWN: 'CT decrease',
   FILTER_EFFECT_BASE_SCORE_UP: 'Base score bonus',
   FILTER_EFFECT_OTHER: 'Other',
+
+  FILTER_EFFECT_CONDITION_CHARACTER: 'Character',
+  FILTER_EFFECT_CONDITION_COMPANY: 'Theater',
+  FILTER_EFFECT_CONDITION_ATTRIBUTE: 'Attribute',
+  FILTER_EFFECT_CONDITION_NONE: 'No condition',
 
   LABEL_SORT_AND_FILTER: 'Sort & Filter',
   LABEL_SORT_BY: 'Sort by: ',

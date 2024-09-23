@@ -11,9 +11,11 @@ import CharacterSenseEffectFilter from "./filters/character/SenseEffectFilter"
 
 import PosterRarityFilter from "./filters/poster/RarityFilter"
 import PosterEffectFilter from "./filters/poster/EffectFilter"
+import PosterEffectConditionFilter from "./filters/poster/EffectConditionFilter"
 
 import AccessoryRarityFilter from "./filters/accessory/RarityFilter"
 import AccessoryEffectFilter from "./filters/accessory/EffectFilter"
+import AccessoryEffectConditionFilter from "./filters/accessory/EffectConditionFilter"
 
 import CharacterSorter from "./sorters/CharacterSorter"
 import PosterSorter from "./sorters/PosterSorter"
@@ -67,12 +69,14 @@ export default class FilterManager {
     return [
       new PosterRarityFilter,
       new PosterEffectFilter,
+      new PosterEffectConditionFilter,
     ]
   }
   static getAccessoryFilters() {
     return [
       new AccessoryRarityFilter,
       new AccessoryEffectFilter,
+      new AccessoryEffectConditionFilter,
     ]
   }
   static getPhotoEffectFilters() {
