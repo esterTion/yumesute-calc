@@ -8,6 +8,7 @@ import Effect from "../effect/Effect"
 
 import _ from "../createElement";
 import removeAllChilds from "../removeAllChilds"
+import imgErrorHandler from "../logic/imgErrorHandler"
 
 export default class CharacterData {
   Id;
@@ -41,7 +42,7 @@ export default class CharacterData {
         _('td', {}, [_('span', {className: `card-attribute-${this.attributeName}`}), _('text', this.fullCardName), _('span', { className: 'obtain-type' }, [_('text', /フェス/.test(this.data.UnlockText) ? 'フェス' : /限定/.test(this.data.UnlockText) ? '限定' : /イベント/.test(this.data.UnlockText) ? 'イベント' : '')])]),
         _('td', {}, [_('text', 'Vo:')]),
         this.voValNode = _('td', {className: 'stat'}),
-        _('td', { rowspan: 4 }, [this.cardImg = _('img', { src: 'about:blank', loading: 'lazy' })])
+        _('td', { rowspan: 4 }, [this.cardImg = imgErrorHandler(_('img', { src: 'about:blank', loading: 'lazy' }))])
       ]),
       _('tr', {}, [
         _('td', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
