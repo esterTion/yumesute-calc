@@ -1,4 +1,6 @@
 export default {
+  PAGE_TITLE: 'ユメステ　計算',
+
   SENSE_NOTATION_TAB_NORMAL: 'オーディション/リーグ',
   SENSE_NOTATION_TAB_HIGHSCORE: 'ハイスコア挑戦',
   SENSE_NOTATION_TAB_KEIKO: '稽古',

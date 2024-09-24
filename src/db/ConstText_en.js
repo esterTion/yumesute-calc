@@ -1,4 +1,6 @@
 export default {
+  PAGE_TITLE: 'YumeSute Calculator',
+
   SENSE_NOTATION_TAB_NORMAL: 'Normal (Audition/League）',
   SENSE_NOTATION_TAB_HIGHSCORE: 'Highscore Challenge',
   SENSE_NOTATION_TAB_KEIKO: 'Lesson (Keiko)',

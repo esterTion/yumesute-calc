@@ -1,4 +1,6 @@
 export default {
+  PAGE_TITLE: '大明星算分',
+
   SENSE_NOTATION_TAB_NORMAL: '通常（试音/排位）',
   SENSE_NOTATION_TAB_HIGHSCORE: '高分',
   SENSE_NOTATION_TAB_KEIKO: '稽古',

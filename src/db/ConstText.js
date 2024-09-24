@@ -47,6 +47,7 @@ export default class ConstText {
   }
 
   static fillText() {
+    document.title = ConstText.get('PAGE_TITLE')
     document.querySelectorAll('[data-text-key]').forEach(i => {
       if (ConstText.htmlKey[i.dataset.textKey]) {
         i.innerHTML = ConstText.get(i.dataset.textKey)
