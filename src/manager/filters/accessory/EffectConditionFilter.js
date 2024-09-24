@@ -1,5 +1,4 @@
 import _ from "../../../createElement"
-import Effect from "../../../effect/Effect"
 import Filter from "../Filter"
 
 const FILTER_KEYS = [
@@ -59,29 +58,29 @@ export default class extends Filter {
       effects.push(item.randomEffect.effect)
     }
     for (const effect of effects) {
-			for (const condition of effect.Conditions) {
-				switch (condition.Condition) {
-					case 'CharacterBase':
-					case 'Character': { matchedCategories++; matchResult = matchResult || this.state[ 0 ]; break }
-					case 'Company': { matchedCategories++; matchResult = matchResult || this.state[ 1 ]; break }
-					case 'Attribute': { matchedCategories++; matchResult = matchResult || this.state[ 2 ]; break }
+      for (const condition of effect.Conditions) {
+        switch (condition.Condition) {
+          case 'CharacterBase':
+          case 'Character': { matchedCategories++; matchResult = matchResult || this.state[ 0 ]; break }
+          case 'Company': { matchedCategories++; matchResult = matchResult || this.state[ 1 ]; break }
+          case 'Attribute': { matchedCategories++; matchResult = matchResult || this.state[ 2 ]; break }
 					// case 'SenseType':
 					// case 'EquippedPoster':
-				}
-			}
-			for (const trigger of effect.Triggers) {
-				switch (trigger.Trigger) {
-					case 'CharacterBase':
-					case 'CharacterBaseGroup': { matchedCategories++; matchResult = matchResult || this.state[ 0 ]; break }
-					case 'Company':
-					case 'CompanyCount': { matchedCategories++; matchResult = matchResult || this.state[ 1 ]; break }
-					case 'Attribute':
-					case 'AttributeCount': { matchedCategories++; matchResult = matchResult || this.state[ 2 ]; break }
+        }
+      }
+      for (const trigger of effect.Triggers) {
+        switch (trigger.Trigger) {
+          case 'CharacterBase':
+          case 'CharacterBaseGroup': { matchedCategories++; matchResult = matchResult || this.state[ 0 ]; break }
+          case 'Company':
+          case 'CompanyCount': { matchedCategories++; matchResult = matchResult || this.state[ 1 ]; break }
+          case 'Attribute':
+          case 'AttributeCount': { matchedCategories++; matchResult = matchResult || this.state[ 2 ]; break }
 					// case 'OverLife':
 					// case 'BelowLife':
 					// case 'SenseType':
-				}
-			}
+        }
+      }
     }
     if (matchedCategories === 0) {
       return this.state[ this.state.length - 1 ]
