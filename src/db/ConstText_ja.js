@@ -147,6 +147,7 @@ export default {
   SORT_KEY_CT: 'CT',
   SORT_KEY_RELEASE_DATE: 'リリース日',
   SORT_KEY_RELEASE: '上限解放',
+  SORT_KEY_BLOOM_RELEASE_DATE: '開花上限解放日',
 
   MENU_ANCHOR_TIMELINE: '編成',
   MENU_ANCHOR_ALBUM: 'アルバム',

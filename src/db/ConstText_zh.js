@@ -147,6 +147,7 @@ export default {
   SORT_KEY_CT: '发动时间',
   SORT_KEY_RELEASE_DATE: '更新日期',
   SORT_KEY_RELEASE: '上限解放',
+  SORT_KEY_BLOOM_RELEASE_DATE: '开花上限提升日期',
 
   MENU_ANCHOR_TIMELINE: '时间轴',
   MENU_ANCHOR_ALBUM: '相册',

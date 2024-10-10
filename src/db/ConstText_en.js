@@ -147,6 +147,7 @@ export default {
   SORT_KEY_CT: 'Cooldown Time',
   SORT_KEY_RELEASE_DATE: 'Release Date',
   SORT_KEY_RELEASE: 'Release',
+  SORT_KEY_BLOOM_RELEASE_DATE: 'Bloom Cap Release Date',
 
   MENU_ANCHOR_TIMELINE: 'Timeline',
   MENU_ANCHOR_ALBUM: 'Album',

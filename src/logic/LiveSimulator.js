@@ -368,10 +368,13 @@ export default class LiveSimulator {
     if (missingCount - this.starActCurrent[4] > 0) {
       return false
     }
+    // stock 5号位统计总溢出光，在加sp前统计
+    const totalOverflownLights = this.overflownLights.reduce((a,b) => a+b, 0)
     // 当前即将发动，把剩余的sp光加到所有种类用于stock光计算
     for (let i=0; i<4; i++) {
       this.overflownLights[i] += this.starActCurrent[4] - missingCount
     }
+    this.overflownLights[4] = totalOverflownLights + this.starActCurrent[4] - missingCount
     const idx = this.calc.members.indexOf(this.leader)
     const stat = this.calc.stat.finalTotal
     this.leader.staract.data.PreEffects.forEach(effect => {
