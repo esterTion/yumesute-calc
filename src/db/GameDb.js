@@ -17,6 +17,7 @@ export default class GameDb {
 
   static Poster = {};
   static PosterAbility = {};
+  static PosterStory = {};
 
   static Accessory = {};
   static AccessoryEffect = {};
@@ -57,6 +58,7 @@ export default class GameDb {
 
       this.loadKeyedMasterTable('PosterMaster').then(r => this.Poster = r).then(updateProgress),
       this.loadKeyedMasterTable('PosterAbilityMaster').then(r => this.PosterAbility = r).then(updateProgress),
+      this.loadKeyedMasterTable('PosterStoryMaster').then(r => this.PosterStory = r).then(updateProgress),
 
       this.loadKeyedMasterTable('AccessoryMaster').then(r => this.Accessory = r).then(updateProgress),
       this.loadKeyedMasterTable('AccessoryEffectMaster').then(r => this.AccessoryEffect = r).then(updateProgress),

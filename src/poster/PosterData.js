@@ -3,6 +3,7 @@ import PosterAbilityData from "./PosterAbilityData"
 
 import _ from "../createElement"
 import imgErrorHandler from "../logic/imgErrorHandler"
+import PosterDetailBoard from "./PosterDetailBoard"
 
 export default class PosterData {
   constructor(id, parent) {
@@ -22,7 +23,7 @@ export default class PosterData {
       _('div', {}, [_('text', 'Normal: ')]),
       this.normalAbilityBox = _('div'),
       _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
-    ]), _('td', {}, [this.posterImg = imgErrorHandler(_('img', { src: 'about:blank', style: { width: '200px' }, loading: 'lazy' }))])]))
+    ]), _('td', {}, [_('div', { className: 'expandable' }, [this.posterImg = imgErrorHandler(_('img', { src: 'about:blank', style: { width: '200px' }, event: { click: _=>PosterDetailBoard.show(this.id) } }))])])]))
 
     this.iconNode = root.posterIconList.appendChild(_('span', { className: 'list-icon-container small-text arial', event: { click: e => this.toggleSelection() } }, [
       this.iconNodeIcon = _('span', { className: 'spriteatlas-posters', 'data-id': this.id }),
