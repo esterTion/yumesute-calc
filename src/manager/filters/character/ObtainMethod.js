@@ -4,7 +4,7 @@ import Filter from "../Filter"
 export default class extends Filter {
   constructor() {
     super()
-    this.state = [true, true, true, true]
+    this.state = [true, true, true, true, true]
     this.toggles = []
     this.container = _('div', {}, [
       _('hr'),
@@ -14,7 +14,7 @@ export default class extends Filter {
           this.toggleAll = _('input', { type: 'checkbox', checked: true, event: { change: _ => this.changeAll() }}),
           _('span', { 'data-text-key': 'FILTER_SELECTION_ALL' })
         ]),
-        ...['FILTER_CHARACTER_OBTAIN_DEFAULT','FILTER_CHARACTER_OBTAIN_GACHA','FILTER_CHARACTER_OBTAIN_LIMITED','FILTER_CHARACTER_OBTAIN_FES'].map((type, i) => _('label', {}, [
+        ...['FILTER_CHARACTER_OBTAIN_DEFAULT','FILTER_CHARACTER_OBTAIN_GACHA','FILTER_CHARACTER_OBTAIN_EVENT','FILTER_CHARACTER_OBTAIN_LIMITED','FILTER_CHARACTER_OBTAIN_FES'].map((type, i) => _('label', {}, [
           this.toggles[i] = _('input', { type: 'checkbox', checked: true, event: { change: _ => this.change(i) }}),
           _('span', { 'data-text-key': type })
         ]))
@@ -42,8 +42,9 @@ export default class extends Filter {
   check(item) {
     let obtainMethod = 1
     const unlockText = item.data.UnlockText
-    if (/フェス/.test(unlockText)) obtainMethod = 3
-    else if (/限定/.test(unlockText)) obtainMethod = 2
+    if (/フェス/.test(unlockText)) obtainMethod = 4
+    else if (/限定/.test(unlockText)) obtainMethod = 3
+    else if (/イベント/.test(unlockText)) obtainMethod = 2
     else if (/初期/.test(unlockText)) obtainMethod = 0
     return this.state[ obtainMethod ]
   }

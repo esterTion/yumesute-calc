@@ -1,4 +1,5 @@
 import _ from "../createElement"
+import ConstText from "../db/ConstText"
 import GameDb from "../db/GameDb"
 
 export default class PosterDetailBoard {
@@ -13,7 +14,7 @@ export default class PosterDetailBoard {
 
     this.container = document.body.appendChild(_('div', { className: 'picking-overlay', event: { click: e => e.target === this.container && this.close() } }, [
       _('div', { className: 'picking-container' }, [
-        _('input', { type: 'button', value: 'Close', event: { click: () => this.close() } }),
+        _('input', { type: 'button', value: ConstText.get('BACK'), event: { click: () => this.close() } }),
         this.layerToggles = _('div', { className: 'poster-layer-toggles' }),
         this.loadingText = _('div'),
         _('div', { style: {position: 'relative'}}, [
@@ -25,10 +26,11 @@ export default class PosterDetailBoard {
           }),
           this.canvas = _('canvas', { style: { width: '100%', position: 'absolute', left: 0, top: 0 }, event: { click: _ => {
             const newWin = window.open('about:blank', '_blank')
+            this.drawImg()
             this.canvas.toBlob(blob => {
               const url = URL.createObjectURL(blob)
-              newWin.location.href = url
-              URL.revokeObjectURL(url)
+              newWin.location.replace(url)
+              setTimeout(() => URL.revokeObjectURL(url), 1000)
             })
           } } }),
         ]),
