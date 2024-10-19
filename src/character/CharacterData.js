@@ -249,7 +249,12 @@ export default class CharacterData {
     })
 
     this.staract.level = this.bloom
-    this.staractDescNode.innerHTML = this.staract.desc
+    try {
+      this.staractDescNode.innerHTML = this.staract.desc
+    } catch {
+      // 缺条件时放弃替换
+      this.staractDescNode.textContent = this.staract.data.Description
+    }
     this.staract.actualRequirements.forEach((req, i) => {
       this.staractRequirementsNode.children[i].textContent = req
       this.staractRequirementsNode.children[i].style.display = req > 0 ? '' : 'none'
