@@ -420,6 +420,8 @@ export default class LiveSimulator {
     this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_SCORE').replace('{0}', scoreLine))
     const leftStyle = this.currentTiming ? `calc(calc(calc(100% - 40px) * ${this.currentTiming/this.lastSenseTiming}) + 19px)` : '-8px'
     root.senseBox.children[0].children[1].appendChild(_('div', { className: 'staract-line', style: { left: leftStyle } }))
+
+    this.applyPendingActions()
     return true
   }
   purgeExpiredBuff(time) {

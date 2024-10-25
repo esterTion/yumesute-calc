@@ -49,6 +49,7 @@ export default class StarActData {
         switch (this.data.BranchCondition1) {
           case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
           case 'StorageSenseLightCount': { judgeValue = liveSim.overflownLights[this.data.ConditionValue1 - 1]; break }
+          case 'CompanyMemberCount': { judgeValue = liveSim.calc.members.reduce((s,i) => GameDb.CharacterBase[i.data.CharacterBaseMasterId].CompanyMasterId === this.data.ConditionValue1 ? s+1 : s, 0); break }
           default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition1, id: this.id})); return null }
         }
         switch (branch.JudgeType1) {

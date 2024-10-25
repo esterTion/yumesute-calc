@@ -39,6 +39,7 @@ import ScoreGainOnConcentration from './types/ScoreGainOnConcentration'
 import ScoreGainOnPerformance from './types/ScoreGainOnPerformance'
 import StarActScoreUp from './types/StarActScoreUp'
 import ChangeWrongLightToSpLight from './types/ChangeWrongLightToSpLight'
+import PrincipalGaugeBonus from './types/PrincipalGaugeBonus'
 
 export default class Effect {
   // life guard分支下的效果需要单独处理。。
@@ -126,6 +127,7 @@ export default class Effect {
       case 'DecreaseRequireAmplificationLight': { return DecreaseRequireAmplificationLight.applyEffect(this, calc, targets, type) }
       case 'DecreaseRequireSpecialLight': { return DecreaseRequireSpecialLight.applyEffect(this, calc, targets, type) }
       case 'LifeHealing': { return LifeHealing.applyEffect(this, calc, targets, type) }
+      case 'PrincipalGaugeBonus': { return PrincipalGaugeBonus.applyEffect(this, calc, targets, type) }
       case "PrincipalGaugeUp": { return PrincipalGaugeUp.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeGain': { return PrincipalGaugeGain.applyEffect(this, calc, [index], type) }
       case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, [index], type) }
