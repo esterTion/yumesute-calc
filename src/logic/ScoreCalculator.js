@@ -139,7 +139,7 @@ export default class ScoreCalculator {
       for (let effect of accessory.mainEffects) {
         effect = effect.effect
         if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') continue
-        if (!effect.canTrigger(this, idx)) return
+        if (!effect.canTrigger(this, idx)) continue
         effect.applyEffect(this, idx, StatBonusType.Accessory)
       }
       if (accessory.randomEffect) {
