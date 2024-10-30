@@ -150,15 +150,11 @@ export default class PartyManager {
   changePoster(poster, idx) {
     const party = this.parties[this.currentSelection]
     if (poster) {
-      const conflictPosters = [poster.id]
-      // 剧团海报均为冲突
-      if ([230090, 230100, 230110, 230120].indexOf(poster.id) !== -1) {
-        conflictPosters.push(230090, 230100, 230110, 230120)
-      }
+      const restrictId = poster.data.OrganizeRestrictGroupId
       for (let i=0; i<5; i++) {
         if (i === idx) continue
         if (!party.posters[i]) continue
-        if (conflictPosters.indexOf(party.posters[i].id) !== -1) {
+        if (restrictId && restrictId === party.posters[i].data.OrganizeRestrictGroupId) {
           party.posters[i] = party.posters[idx]
           break
         }
