@@ -138,19 +138,19 @@ export default class RootLogic {
         _('div', {'data-text-key':'THEATER_LEVEL_LABEL'}),
         this.theaterLevelForm = _('form', { event: { change: e=>this.setTheaterLevel(e) }}, [
           _('div', {}, [
-            _('select', { name: 'Sirius' }, ([0,1,2,3,4,5]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Sirius' }, (new Array(11)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'SIRIUS' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Eden' }, ([0,1,2,3,4,5]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Eden' }, (new Array(11)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'EDEN' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Gingaza' }, ([0,1,2,3,4,5]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Gingaza' }, (new Array(11)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'GINGAZA' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Denki' }, ([0,1,2,3,4,5]).map(i => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Denki' }, (new Array(11)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'DENKI' }),
           ]),
         ])
