@@ -26,6 +26,8 @@ export default class CharacterData {
     this.episodeReadState = EpisodeReadState.None;
     this.senselv = 1;
     this.bloom = 0;
+    this.baseAddition = [0,0,0];
+    this.baseCorrection = 0;
 
     this.data = GameDb.Character[Id];
     if (this.data === undefined) {
@@ -147,13 +149,13 @@ export default class CharacterData {
     return `${this.rarityStr}【${this.cardName}】${this.charaName}`
   }
   get coMin() {
-    return this.data.MinLevelStatus.Concentration;
+    return this.data.MinLevelStatus.Concentration + this.baseAddition[2];
   }
   get exMin() {
-    return this.data.MinLevelStatus.Expression;
+    return this.data.MinLevelStatus.Expression + this.baseAddition[1];
   }
   get voMin() {
-    return this.data.MinLevelStatus.Vocal;
+    return this.data.MinLevelStatus.Vocal + this.baseAddition[0];
   }
   get coFinal() {
     return this.calcStat(this.coMin);
@@ -179,21 +181,28 @@ export default class CharacterData {
     const bloomBonusEffects = bloomBonus.map(i => Effect.get(i.EffectMasterId, 1));
     return bloomBonusEffects;
   }
-  get bloomStatBonus() {
-    const bloomBonusEffects = this.bloomBonusEffects.filter(i => i.Type === 'BaseCorrection');
-    const bloomStatBonus = bloomBonusEffects.reduce((acc, cur) => acc + cur.activeEffect.Value, 0);
-    return bloomStatBonus;
-  }
   get categories() {
     return this.data.Categories.filter(i => !i.IsAwaken || this.awaken).map(i => i.CategoryMasterId)
   }
   calcStat(val) {
     const lvlBase = GameDb.CharacterLevel[this.lvl].CharacterStatusLevel;
     const episodeReadBonus = this.episodeReadState === EpisodeReadState.One ? 2 : this.episodeReadState === EpisodeReadState.Two ? 5 : 0;
-    const bloomBonus = this.bloomStatBonus;
+    const bloomBonus = this.baseCorrection;
     const awakenNum = this.awaken ? 1 : 0;
     const starRankBonus = this.starRank / 2;
     return (val + episodeReadBonus) * lvlBase / 100 * (100 + bloomBonus / 100 + awakenNum * 10 + starRankBonus) / 100;
+  }
+  updateBloomBonus() {
+    this.baseAddition = [0,0,0]
+    this.baseCorrection = 0
+    this.bloomBonusEffects.forEach(e => {
+      switch (e.Type) {
+        case 'BaseCorrection': { this.baseCorrection += e.activeEffect.Value; return }
+        case 'BaseVocalUp': { this.baseAddition[0] += e.activeEffect.Value; return }
+        case 'BaseExpressionUp': { this.baseAddition[1] += e.activeEffect.Value; return }
+        case 'BaseConcentrationUp': { this.baseAddition[2] += e.activeEffect.Value; return }
+      }
+    })
   }
   update() {
     if (this.data.Rarity === 'Rare1' || this.data.Rarity === 'Rare2') {
@@ -211,6 +220,8 @@ export default class CharacterData {
       this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w400`
     }
     this.iconNodeIcon.dataset.id = this.cardIconId
+
+    this.updateBloomBonus()
 
     const stat = this.statFinal
     this.voValNode.textContent = stat.vo

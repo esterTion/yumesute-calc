@@ -115,7 +115,10 @@ export default class Effect {
   applyEffect(calc, index, type) {
     const targets = this.Range === 'All' ? [0,1,2,3,4] : this.Range === 'Self' ? [index] : []
     switch (this.Type) {
-      case 'BaseCorrection': { return }
+      case 'BaseCorrection':
+      case "BaseVocalUp":
+      case "BaseExpressionUp":
+      case "BaseConcentrationUp": { return }
       case 'VocalUp': { return VocalUpEffect.applyEffect(this, calc, targets, type) }
       case 'ExpressionUp': { return ExpressionUpEffect.applyEffect(this, calc, targets, type) }
       case 'ConcentrationUp': { return ConcentrationUpEffect.applyEffect(this, calc, targets, type) }
@@ -159,10 +162,6 @@ export default class Effect {
       case "ScoreGainOnPerformance": { return ScoreGainOnPerformance.applyEffect(this, calc, [index], type) }
 
       case "StarActScoreUp": { return StarActScoreUp.applyEffect(this, calc, targets, type) }
-
-      // case "BaseVocalUp":
-      // case "BaseExpressionUp":
-      // case "BaseConcentrationUp":
 
       // case "ScoreUpByBuff":
       // case "BuffTimeExtend":
