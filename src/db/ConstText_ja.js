@@ -19,6 +19,7 @@ export default {
   EDEN: 'Eden',
   GINGAZA: '銀河座',
   DENKI: '劇団電姫',
+  AQUARS: 'Aquars',
 
   ADD: '追加',
   DELETE: '消す',

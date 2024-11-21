@@ -19,6 +19,7 @@ export default {
   EDEN: 'Eden',
   GINGAZA: 'Gingaza',
   DENKI: 'Gekidan Denki',
+  AQUARS: 'Aquars',
 
   ADD: 'Add',
   DELETE: 'Delete',

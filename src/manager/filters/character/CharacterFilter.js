@@ -10,12 +10,13 @@ export default class extends Filter {
       companyMap[c.CompanyMasterId] = companyMap[c.CompanyMasterId] || []
       companyMap[c.CompanyMasterId].push(c.Id)
     })
-    this.state = [[],
-      new Array(companyMap[1].length).fill(true),
-      new Array(companyMap[2].length).fill(true),
-      new Array(companyMap[3].length).fill(true),
-      new Array(companyMap[4].length).fill(true),
-    ]
+    this.state = []
+    for (let c in companyMap) {
+      this.state[c] = []
+      for (let charaId of companyMap[c]) {
+        this.state[c][(charaId % 100) - 1] = true
+      }
+    }
     const childs = [_('tr', {}, [_('td', {}, [_('label', {}, [
       this.toggleAll = _('input', { type: 'checkbox', checked: true, event: { change: _ => this.changeAll() }}),
       _('span', { 'data-text-key': 'FILTER_SELECTION_ALL' })
@@ -24,12 +25,13 @@ export default class extends Filter {
     Object.keys(companyMap).forEach(c => {
       childs.push(_('tr', { style: { borderTop: '1px dashed black' } }, [_('td', {}, [_('label', {}, [
         this.toggles[c] = _('input', { type: 'checkbox', checked: true, event: { change: _ => this.changeCompany(c | 0) }}),
-        _('span', { 'data-text-key': ['', 'SIRIUS', 'EDEN', 'GINGAZA', 'DENKI'][c] })
+        _('span', { 'data-text-key': {1:'SIRIUS', 2:'EDEN', 3:'GINGAZA', 4:'DENKI', 900:'AQUARS'}[c] })
       ])])]))
       companyMap[c].map(c => {
         const charaId = GameDb.CharacterBase[c].Id
+        const companyId = GameDb.CharacterBase[c].CompanyMasterId
         return _('td', {}, [_('label', {}, [
-          this.toggles[charaId] = _('input', { type: 'checkbox', checked: true, event: { change: _ => this.change(charaId) }}),
+          this.toggles[charaId] = _('input', { type: 'checkbox', checked: true, 'data-company': companyId, event: { change: _ => this.change(charaId) }}),
           _('text', GameDb.CharacterBase[c].Name)
         ])])
       }).reduce((a, b) => {
@@ -50,14 +52,14 @@ export default class extends Filter {
     const target = this.toggleAll.checked
     this.toggleAll.indeterminate = false
     this.toggleAll.checked = target
-    for (let i = 1; i < 5; i++) {
-      this.changeCompany(i, target)
+    for (let i in this.state) {
+      this.changeCompany(i | 0, target)
     }
   }
   changeCompany(company, target) {
     if (target === undefined) target = this.toggles[company].checked
     for (let toggleId in this.toggles) {
-      let c = Math.floor(toggleId / 100)
+      let c = this.toggles[toggleId].dataset.company | 0
       if (c !== company) continue
       const chara = (toggleId % 100) - 1
       this.toggles[toggleId].checked = target
@@ -65,20 +67,20 @@ export default class extends Filter {
     }
     this.updateCompanyState()
   }
-  change(i) {
-    const company = Math.floor(i / 100)
-    const chara = (i % 100) - 1
-    this.state[company][chara] = this.toggles[i].checked
+  change(charaId) {
+    const company = this.toggles[charaId].dataset.company | 0
+    const chara = (charaId % 100) - 1
+    this.state[company][chara] = this.toggles[charaId].checked
     this.updateCompanyState()
   }
   updateCompanyState() {
     const count = this.state.map(i => i.filter(v => v).length)
     let totalChecked = 0, totalCount = 0
-    for (let i = 1; i < 5; i++) {
-      this.toggles[i].checked = count[i] === this.state[i].length
-      this.toggles[i].indeterminate = count[i] > 0 && count[i] < this.state[i].length
-      totalChecked += count[i]
-      totalCount += this.state[i].length
+    for (let c in this.state) {
+      this.toggles[c].checked = count[c] === Object.values(this.state[c]).length
+      this.toggles[c].indeterminate = count[c] > 0 && count[c] < Object.values(this.state[c]).length
+      totalChecked += count[c]
+      totalCount += Object.values(this.state[c]).length
     }
     this.toggleAll.checked = totalChecked === totalCount
     this.toggleAll.indeterminate = totalChecked > 0 && totalChecked < totalCount
@@ -88,8 +90,7 @@ export default class extends Filter {
   }
   check(item) {
     const charaId = item.data.CharacterBaseMasterId
-    const company = Math.floor(charaId / 100)
-    const chara = (charaId % 100) - 1
-    return this.state[company][chara]
+    const toggle = this.toggles[charaId]
+    return toggle && toggle.checked
   }
 }
