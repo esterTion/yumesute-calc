@@ -32,8 +32,6 @@ export default class RootLogic {
     version: 5,
   }
   nonPersistentState = {
-    characterOptions: {},
-    posterOptions: {},
     swappable: null,
   }
 
@@ -701,23 +699,11 @@ export default class RootLogic {
       */
 
       if (parts.chara) {
-        Object.values(this.nonPersistentState.characterOptions).forEach(i => i.removeAttribute('disabled'))
-        this.appState.characters.forEach(i => {
-          i.update()
-          if (this.nonPersistentState.characterOptions[i.Id]) {
-            this.nonPersistentState.characterOptions[i.Id].setAttribute('disabled', '')
-          }
-        })
+        this.appState.characters.forEach(i => i.update())
       }
 
       if (parts.poster) {
-        Object.values(this.nonPersistentState.posterOptions).forEach(i => i.removeAttribute('disabled'))
-        this.appState.posters.forEach(i => {
-          i.update()
-          if (this.nonPersistentState.posterOptions[i.id]) {
-            this.nonPersistentState.posterOptions[i.id].setAttribute('disabled', '')
-          }
-        })
+        this.appState.posters.forEach(i => i.update())
       }
 
       if (parts.accessory) {
