@@ -29,6 +29,7 @@ export default class RootLogic {
     theaterLevel: new TheaterLevelData(),
     partyManager: new PartyManager(),
     highScoreBuffManager: new HighScoreBuffManager(),
+    selectedNotation: 0,
     version: 5,
   }
   nonPersistentState = {
@@ -344,6 +345,8 @@ export default class RootLogic {
     this.photoEffectFilterManager.render()
     this.photoEffectFilterContainer.appendChild(_('input', { type: 'button', 'data-text-value': 'FILTER_APPLY', event: { click: _=>this.photoEffectFilterManager.filterAndSort(this.appState.albumExtra) }}))
 
+    this.senseNoteSelect.value = this.appState.selectedNotation
+
     this.renderSenseNote(true)
     this.update({
       chara: true,
@@ -391,6 +394,7 @@ export default class RootLogic {
     this.appState.partyManager.init()
     this.appState.highScoreBuffManager = HighScoreBuffManager.fromJSON(data.highScoreBuffManager)
     this.appState.highScoreBuffManager.init()
+    this.appState.selectedNotation = data.selectedNotation | 0
     this.batchUpdating = false
   }
   addMissingFields(data) {
@@ -866,6 +870,7 @@ export default class RootLogic {
   renderSenseNote(skipUpdate = false) {
     const id = this.senseNoteSelect.value | 0;
     const data = GameDb.SenseNotation[id];
+    this.appState.selectedNotation = id
     removeAllChilds(this.senseBox)
     for (let i = 0; i < 5; i++) {
       this.senseBox.appendChild(_('div', { className: 'sense-lane' }, [_('div', { className: 'sense-lane-ct' }), _('div', { className: 'sense-lane-box' })]))
