@@ -154,6 +154,10 @@ export default class PartyManager {
       for (let i=0; i<5; i++) {
         if (i === idx) continue
         if (!party.posters[i]) continue
+        if (party.posters[i] === poster) {
+          party.posters[i] = party.posters[idx]
+          break
+        }
         if (restrictId && restrictId === party.posters[i].data.OrganizeRestrictGroupId) {
           party.posters[i] = party.posters[idx]
           break
