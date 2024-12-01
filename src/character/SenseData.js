@@ -59,6 +59,7 @@ export default class SenseData {
         let judgeValue
         switch (this.data.BranchCondition1) {
           case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
+          case 'AttributeCount': { judgeValue = liveSim.calc.properties.attributeCount; isLifeGuardBranch = true; break }
           default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition1, id: this.id})); return null }
         }
         switch (branch.JudgeType1) {
