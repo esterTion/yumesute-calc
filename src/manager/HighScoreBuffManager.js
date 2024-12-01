@@ -29,7 +29,7 @@ export default class HighScoreBuffManager {
     }
     if (this.buffMap[id] === undefined) {
       this.buffMap[id] = {}
-      buffItems.forEach(i => this.buffMap[id][i.StoryEventHighScoreBuffMasterId] = 0)
+      buffItems.forEach(i => this.buffMap[id][i.StoryEventHighScoreBuffMasterId] = 10)
     }
     this.currentBuffGroup = this.buffMap[id]
 
