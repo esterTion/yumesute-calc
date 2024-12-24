@@ -96,6 +96,10 @@ img {
 .sense-star[data-sense-type="special"]::before {
   color: #0000ff;
 }
+.sense-star[data-sense-type="empty"]::before {
+  color: transparent;
+  -webkit-text-stroke: 1px black;
+}
 .sense-star.gray-background {
   background-color: #D0D0D0;
 }
@@ -371,4 +375,18 @@ label {
 }
 .spriteatlas-characterlog.after-talk-icon {
   --target-size: 32;
+}
+.light-display {
+	background: #FFF;
+	padding: 2px 7px;
+	border-radius: 5px;
+	margin: 0 5px;
+	border: 1px solid black;
+}
+.stock-lights {
+	background: #E0E0E0;
+	padding: 2px 7px;
+	border-radius: 5px;
+	margin-left: 5px;
+	margin-right: -7px;
 }

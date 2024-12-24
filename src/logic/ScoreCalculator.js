@@ -92,6 +92,10 @@ export default class ScoreCalculator {
       chara.bloomBonusEffects.forEach(effect => effect.applyEffect(this, idx, StatBonusType.Album))
     })
     this.liveSim.starActRequirements = leader.staract.actualRequirements
+    if (leader.staract.data.BranchCondition1 === 'StorageSenseLightCount') {
+      this.liveSim.maxStockCount = leader.staract.data.Branches.find(i => i.JudgeType1 === 'MoreThan')?.Parameter1 ?? 0
+      this.liveSim.stockType = leader.staract.data.ConditionValue1
+    }
 
     // leader sense
     this.memberMatchingCategories = this.members.map(_ => ({}))

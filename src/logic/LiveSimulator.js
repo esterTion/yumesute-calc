@@ -1,6 +1,5 @@
 import GameDb from "../db/GameDb"
 import ConstText from "../db/ConstText"
-import ScoreCalculator from "./ScoreCalculator"
 import Effect from "../effect/Effect"
 
 import _ from "../createElement"
@@ -48,6 +47,10 @@ export default class LiveSimulator {
   overflownLights;
   newLightCurrentStep;
   wrongLightToSpAmount;
+  holdingLights;
+  holdingStockLights;
+  maxStockCount;
+  stockType;
 
   constructor(calc) {
     this.calc = calc
@@ -75,8 +78,14 @@ export default class LiveSimulator {
     this.overflownLights = [0,0,0,0,0]
     this.newLightCurrentStep = new Array(5).fill(0).map(_ => new Array(5).fill(0))
     this.wrongLightToSpAmount = [0,0,0,0,0]
+    this.holdingLights = []
+    this.holdingStockLights = []
+    this.maxStockCount = 0
+    this.stockType = -1
+    this.starActRequiredCount = 0
   }
   runSimulation(node) {
+    this.starActRequiredCount = this.starActRequirements.reduce((a,b) => a+b, 0)
     this.applyPendingActions()
     Array.from(root.senseBox.querySelectorAll('.sense-add-light,.staract-line')).forEach(i => i.remove())
     this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
@@ -96,15 +105,19 @@ export default class LiveSimulator {
         })
       }
     }
+    let lights = this.getHoldingLightsElement()
     if (this.tryStarAct()) {
       this.phase = ConstText.get('LIVE_PHASE_START_WITH_STARACT')
       this.resetCurrentLights()
     }
     node.appendChild(_('details', { className: 'live-log-phase odd-row' }, [
-      _('summary', {}, [_('text', this.phase)]),
+      _('summary', {}, [
+        _('text', this.phase),
+        _('br'),
+        lights,
+        this.getPGaugeProgressElement(),
+      ]),
       _('text', this.phaseLog.join('\n')),
-      _('br'),
-      ScoreCalculator.createStarActDisplay(this.starActCurrent, true),
     ]))
 
     let oddRow = false
@@ -128,24 +141,47 @@ export default class LiveSimulator {
         this.lastSenseTime[timing.Position - 1] = timing.TimingSecond
       }
 
+      lights = this.getHoldingLightsElement()
       if (this.tryStarAct()) {
         this.phase = ConstText.get('LIVE_PHASE_SENSE_WITH_STARACT').replace('{time}', timing.TimingSecond)
         this.resetCurrentLights()
       }
-      node.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : ''), open: '' }, [
-        _('summary', { className: 'sense-star', 'data-sense-type': this.currentSenseType }, [_('text', this.phase)]),
+      node.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : '') }, [
+        _('summary', { className: 'sense-star', 'data-sense-type': this.currentSenseType }, [
+          _('text', this.phase),
+          _('br'),
+          lights,
+          this.getPGaugeProgressElement(),
+        ]),
         _('table', {}, [_('tr', { style: {verticalAlign: 'top'} }, [
           _('td', {}, [_('div', { className: 'spriteatlas-characters', 'data-id': this.calc.members[timing.Position - 1].cardIconId})]),
           _('td', {}, [
             _('text', this.phaseLog.join('\n')),
-            _('br'),
-            ScoreCalculator.createStarActDisplay(this.starActCurrent, true),
           ]),
         ])]),
       ]))
 
       oddRow = !oddRow
     })
+  }
+  getPGaugeProgressElement() {
+    return _('span', {}, [
+      _('progress', { value: this.pGauge, max: this.pGaugeLimit, style: { width: `${this.pGaugeLimit / 1000 * 50}px`} }),
+      _('text', ` ${this.pGauge}/${this.pGaugeLimit}`),
+    ])
+  }
+  getHoldingLightsElement() {
+    const container = _('span', { className: 'light-display' }, [
+      _('span', {}, (new Array(this.starActRequiredCount)).fill(0).map((__, i) =>
+        _('span', { className: 'sense-star', 'data-sense-type': (this.holdingLights[i]?.toLowerCase() ?? 'empty') })
+      ))
+    ])
+    if (this.maxStockCount > 0) {
+      container.appendChild(_('span', { className: 'stock-lights' }, (new Array(this.maxStockCount)).fill(0).map((__, i) =>
+        _('span', { className: 'sense-star', 'data-sense-type': (this.holdingStockLights[i]?.toLowerCase() ?? 'empty') })
+      )))
+    }
+    return container
   }
 
   applyPendingActions() {
@@ -192,6 +228,23 @@ export default class LiveSimulator {
       case 'variable':      { lightType = 4; break }
       default: throw new Error('Unknown sense type: ' + type)
     }
+    // 持有统计
+    for (let i = 0; i < amount; i++) {
+      // sp光
+      if (lightType === 4) {
+        if (this.holdingStockLights.length < this.starActRequiredCount) {
+          this.holdingLights.push(type)
+        } else {
+          this.holdingStockLights.push(type)
+        }
+      } else {
+        if (this.starActCurrent[lightType]+i < this.starActRequirements[lightType]) {
+          this.holdingLights.push(type)
+        } else if (this.stockType === 5 || this.stockType - 1 === lightType) {
+          this.holdingStockLights.push(type)
+        }
+      }
+    }
     this.starActCurrent[lightType] += amount
     this.newLightCurrentStep[idx][lightType] += amount
   }
@@ -209,7 +262,7 @@ export default class LiveSimulator {
       if (lightType === undefined) continue
       if (this.starActCurrent[lightType] > this.starActRequirements[lightType]) {
         this.starActCurrent[lightType]--
-        this.starActCurrent[4]++
+        this.addSenseLight('Variable', idx)
         wrongLightToSp--
         addedLights[i] = 'Variable'
       }
@@ -220,6 +273,8 @@ export default class LiveSimulator {
       this.starActCurrent[i] = 0
       this.overflownLights[i] = 0
       this.newLightCurrentStep[i].fill(0)
+      this.holdingLights = []
+      this.holdingStockLights = []
     }
   }
   trySense(timing, timelineNode) {
