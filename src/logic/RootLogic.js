@@ -946,6 +946,9 @@ export default class RootLogic {
       this.keikoResult.textContent = ConstText.get('KEIKO_CALCULATING', [comb.length])
       await new Promise(r => setTimeout(r, 50))
       const testResult = comb.map(i => {
+        if (i.length < 5) {
+          i.splice(i.length, 0, ...(new Array(5 - i.length).fill(null)))
+        }
         const testCalc = new ScoreCalculator(i, [], [], {
           albumLevel: this.appState.albumLevel,
           albumExtra: this.appState.albumExtra,
@@ -959,6 +962,9 @@ export default class RootLogic {
       bestParty = testResult[0][0]
     } else {
       bestParty = inventoryChara
+    }
+    if (bestParty.length < 5) {
+      bestParty = bestParty.concat(new Array(5 - bestParty.length).fill(null))
     }
 
     const calc = new ScoreCalculator(bestParty, [], [], {
