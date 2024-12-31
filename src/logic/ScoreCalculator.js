@@ -86,12 +86,13 @@ export default class ScoreCalculator {
     passiveEffects.album.forEach(i => i.effect.applyEffect(this, i.source, StatBonusType.Album))
 
     // chara
+    this.liveSim.setStarActRequirements(leader.staract.actualRequirements)
     this.members.forEach((chara, idx) => {
       if (!chara) return
       this.liveSim.skipSense[idx] = chara.data.CharacterBaseMasterId === 401
       chara.bloomBonusEffects.forEach(effect => effect.applyEffect(this, idx, StatBonusType.Album))
     })
-    this.liveSim.starActRequirements = leader.staract.actualRequirements
+    this.liveSim.setStarActRequirements(leader.staract.actualRequirements)
     if (leader.staract.data.BranchCondition1 === 'StorageSenseLightCount') {
       this.liveSim.maxStockCount = leader.staract.data.Branches.find(i => i.JudgeType1 === 'MoreThan')?.Parameter1 ?? 0
       this.liveSim.stockType = leader.staract.data.ConditionValue1

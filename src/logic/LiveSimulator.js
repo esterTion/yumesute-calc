@@ -85,7 +85,6 @@ export default class LiveSimulator {
     this.starActRequiredCount = 0
   }
   runSimulation(node) {
-    this.starActRequiredCount = this.starActRequirements.reduce((a,b) => a+b, 0)
     this.applyPendingActions()
     Array.from(root.senseBox.querySelectorAll('.sense-add-light,.staract-line')).forEach(i => i.remove())
     this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
@@ -182,6 +181,10 @@ export default class LiveSimulator {
       )))
     }
     return container
+  }
+  setStarActRequirements(starActRequirements) {
+    this.starActRequirements = starActRequirements
+    this.starActRequiredCount = starActRequirements.reduce((a,b) => a+b, 0)
   }
 
   applyPendingActions() {
