@@ -2,6 +2,16 @@ import CharacterStat from '../character/CharacterStat'
 import StatBonusType from './StatBonusType'
 
 export default class StatCalculator {
+  initial;   // 初始值
+  buff;      // 百分比加成 及 数值加成
+  buffLimit; // 百分比上限
+  buffFinal; // 百分比加成 及 数值加成 （上限限位后）
+  bonus;     // 加成数值
+  buffAfterCalc; // 计算结束后的额外加成
+  finalBeforeBuff; // 演技额外加成前数值
+  final;     // 最终数值
+  finalTotal;// 最终数值总和
+
   constructor(members) {
     this.initial = members.map(i => i ? i.statFinal : CharacterStat.Zero())
     /**
@@ -54,10 +64,10 @@ export default class StatCalculator {
         return sum
       }, [[0,0,0,0],[0,0,0,0]]))
     })
-    this.final = this.initial.map((i, idx) => i.add(this.bonus[idx][StatBonusType.Total]))
+    this.finalBeforeBuff = this.initial.map((i, idx) => i.add(this.bonus[idx][StatBonusType.Total]))
     // 时间轴效果 / 电姬海报（FinalPerformanceUpCancelSense）
     // 目前只有演技力加成
-    this.final = this.final.map((i, idx) => i.mulPerformance(this.buffAfterCalc[idx]))
+    this.final = this.finalBeforeBuff.map((i, idx) => i.mulPerformance(this.buffAfterCalc[idx]))
     this.finalTotal = this.final.reduce((s, i) => s+i.total, 0)
   }
 }

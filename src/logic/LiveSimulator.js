@@ -51,6 +51,7 @@ export default class LiveSimulator {
   holdingStockLights;
   maxStockCount;
   stockType;
+  performanceDuplicateUp;
 
   constructor(calc) {
     this.calc = calc
@@ -83,6 +84,7 @@ export default class LiveSimulator {
     this.maxStockCount = 0
     this.stockType = -1
     this.starActRequiredCount = 0
+    this.performanceDuplicateUp = [0,0,0,0,0]
   }
   runSimulation(node) {
     this.applyPendingActions()
@@ -364,8 +366,9 @@ export default class LiveSimulator {
         scoreLine = `${scoreLine} × (${extraBuffLine})`
       }
       const stat = this.calc.stat.final[idx]
-      const score = Math.floor(stat.total * multiplier)
-      scoreLine = `${stat.total} × ${scoreLine} = ${score}`
+      const total = stat.total * (1 + this.performanceDuplicateUp[idx] / 100)
+      const score = Math.floor(total * multiplier)
+      scoreLine = `${total} × ${scoreLine} = ${score}`
       this.calc.result.senseScore.push(score)
       this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_SCORE').replace('{0}', scoreLine))
     }
@@ -434,15 +437,19 @@ export default class LiveSimulator {
     }
     this.overflownLights[4] = totalOverflownLights + this.starActCurrent[4] - missingCount
     const idx = this.calc.members.indexOf(this.leader)
-    const stat = this.calc.stat.finalTotal
     this.leader.staract.data.PreEffects.forEach(effect => {
       effect = Effect.get(effect.EffectMasterId, this.leader.bloom)
       effect.applyEffect(this.calc, idx, ScoreBonusType.StarAct)
     })
     const staractEffectBranch = this.leader.staract.getActiveBranch(this)
+    let isPerformanceDuplicateUpActive = false
     if (staractEffectBranch) {
       staractEffectBranch.BranchEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, this.leader.bloom + 1)
+        if (effect.Type === 'PerformanceDuplicateUp') {
+          effect.Range = 'All'
+          isPerformanceDuplicateUpActive = true
+        }
         effect.isLifeGuardBranch = staractEffectBranch.isLifeGuardBranch
         effect.applyEffect(this.calc, idx, ScoreBonusType.StarAct)
       })
@@ -471,6 +478,7 @@ export default class LiveSimulator {
       multiplier *= 1 + extraBuffMul
       scoreLine = `${scoreLine} × (${extraBuffLine})`
     }
+    const stat = !isPerformanceDuplicateUpActive ? this.calc.stat.finalTotal : Math.floor(this.calc.stat.final.reduce((acc, memberStat, idx) => acc + memberStat.total * (1 + this.performanceDuplicateUp[idx] / 100), 0))
     const score = Math.floor(stat * multiplier)
     scoreLine = `${stat} × ${scoreLine} = ${score}`
     this.calc.result.starActScore.push(score)
