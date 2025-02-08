@@ -98,6 +98,27 @@ export default class ScoreCalculator {
       this.liveSim.stockType = leader.staract.data.ConditionValue1
     }
 
+    if (this.extra.type !== ScoreCalculationType.Keiko) {
+      const notation = GameDb.SenseNotation[root.senseNoteSelect.value | 0]
+      notation?.Buffs?.forEach(notationBuff => {
+        for (let i=0; i<5; i++) {
+          if (!this.members[i]) continue
+          let isBuffTarget = false
+          switch (notationBuff.Type) {
+            case "Attribute": { isBuffTarget = this.members[i].data.Attribute === AttributeEnum[notationBuff.TargetValue]; break;}
+            case "Company":   { isBuffTarget = GameDb.CharacterBase[this.members[i].data.CharacterBaseMasterId].CompanyMasterId === notationBuff.TargetValue; break;}
+            case "Character": { isBuffTarget = this.members[i].Id === notationBuff.TargetValue; break;}
+          }
+          if (notationBuff.TargetValue === undefined) {
+            isBuffTarget = true
+          }
+          if (isBuffTarget) {
+            this.stat.buffAfterCalc[i][StatBonus.Performance] += notationBuff.BuffValue * 100
+          }
+        }
+      })
+    }
+
     // leader sense
     this.memberMatchingCategories = this.members.map(_ => ({}))
     if (this.extra.type !== ScoreCalculationType.Keiko) leader.leaderSense.Details.forEach(detail => {
@@ -162,28 +183,6 @@ export default class ScoreCalculator {
     let statExtra = 1
     if (this.extra.starRankScoreBonus) {
       statExtra = 1 + this.extra.starRankScoreBonus * 30 / 100
-    }
-
-    if (this.extra.type !== ScoreCalculationType.Keiko) {
-      const notation = GameDb.SenseNotation[root.senseNoteSelect.value | 0]
-      if (notation && notation.Buffs[0]) {
-        const notationBuff = notation.Buffs[0]
-        for (let i=0; i<5; i++) {
-          if (!this.members[i]) continue
-          let isBuffTarget = false
-          switch (notationBuff.Type) {
-            case "Attribute": { isBuffTarget = this.members[i].data.Attribute === AttributeEnum[notationBuff.TargetValue]; break;}
-            case "Company":   { isBuffTarget = GameDb.CharacterBase[this.members[i].data.CharacterBaseMasterId].CompanyMasterId === notationBuff.TargetValue; break;}
-            case "Character": { isBuffTarget = this.members[i].data.CharacterBaseMasterId === notationBuff.TargetValue; break;}
-          }
-          if (notationBuff.TargetValue === undefined) {
-            isBuffTarget = true
-          }
-          if (isBuffTarget) {
-            this.stat.buffAfterCalc[i][StatBonus.Performance] *= 1 + notationBuff.BuffValue / 100
-          }
-        }
-      }
     }
 
     this.stat.calc()
@@ -286,6 +285,13 @@ export default class ScoreCalculator {
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Expression   ] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Expression   ] / 100}%\n+${this.stat.buffFinal[idx][StatBonusType.Total][1][StatBonus.Expression   ]}\n${this.stat.bonus[idx][StatBonusType.Total].ex}`)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Concentration] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Concentration] / 100}%\n+${this.stat.buffFinal[idx][StatBonusType.Total][1][StatBonus.Concentration]}\n${this.stat.bonus[idx][StatBonusType.Total].co}`)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Performance  ] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Performance  ] / 100}%\n${this.stat.bonus[idx][StatBonusType.Total].total}`)]),
+        ])]),
+        this.stat.buffAfterCalc[idx].every(i => i === 10000) ? new Comment('CALC_TABLE_EXTRA_UP') : _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+          _('td', { 'data-text-key': 'CALC_TABLE_EXTRA_UP'}, [_('text', '额外加成')]),
+          _('td', { className: 'stat-value' }, [_('text', `+${this.stat.buffAfterCalc[idx][StatBonus.Vocal        ] / 100 - 100}%`)]),
+          _('td', { className: 'stat-value' }, [_('text', `+${this.stat.buffAfterCalc[idx][StatBonus.Expression   ] / 100 - 100}%`)]),
+          _('td', { className: 'stat-value' }, [_('text', `+${this.stat.buffAfterCalc[idx][StatBonus.Concentration] / 100 - 100}%`)]),
+          _('td', { className: 'stat-value' }, [_('text', `+${this.stat.buffAfterCalc[idx][StatBonus.Performance  ] / 100 - 100}%`)]),
         ])]),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', { 'data-text-key': 'CALC_TABLE_FINAL_STAT' }, [_('text', '最終値')]),
