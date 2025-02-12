@@ -1,6 +1,7 @@
 import _ from "../createElement"
 import ConstText from "../db/ConstText"
 import GameDb from "../db/GameDb"
+import removeAllChilds from "../removeAllChilds"
 
 export default class PosterDetailBoard {
   static show(posterId) {
@@ -34,7 +35,7 @@ export default class PosterDetailBoard {
             })
           } } }),
         ]),
-        this.posterStoryContainer = _('div', { style: { whiteSpace: 'pre-wrap' } }),
+        this.posterStoryContainer = _('div', { style: { whiteSpace: 'pre-wrap' } }, [_('text', 'Loading stories...')]),
 
         this.srcImageContainer = _('div', { style: { display: 'none' }}, []),
       ])
@@ -72,6 +73,14 @@ export default class PosterDetailBoard {
       this.canvas.height = 1357
     }
 
+    GameDb.extraLoadPromise.PosterStory.then(_ => this.renderPosterStory())
+
+    document.body.classList.add('picking')
+    this.drawImg()
+  }
+
+  renderPosterStory() {
+    removeAllChilds(this.posterStoryContainer)
     const stories = Object.values(GameDb.PosterStory).filter(i => i.PosterMasterId === this.id)
     const afterTalk = []
     for (const story of stories) {
@@ -94,9 +103,6 @@ export default class PosterDetailBoard {
         ])))
       ]))
     }
-
-    document.body.classList.add('picking')
-    this.drawImg()
   }
 
   drawImg() {

@@ -32,6 +32,8 @@ export default class GameDb {
   static StoryEvent = {};
   static StoryEventHighScoreBuffSetting = {};
 
+  static extraLoadPromise = {};
+
   static async load() {
     GameDb.DB_VERSION = await fetch(`./master/!version.txt?t=${Date.now()}`).then(r => r.text())
     let loaded = -1
@@ -58,7 +60,6 @@ export default class GameDb {
 
       this.loadKeyedMasterTable('PosterMaster').then(r => this.Poster = r).then(updateProgress),
       this.loadKeyedMasterTable('PosterAbilityMaster').then(r => this.PosterAbility = r).then(updateProgress),
-      this.loadKeyedMasterTable('PosterStoryMaster').then(r => this.PosterStory = r).then(updateProgress),
 
       this.loadKeyedMasterTable('AccessoryMaster').then(r => this.Accessory = r).then(updateProgress),
       this.loadKeyedMasterTable('AccessoryEffectMaster').then(r => this.AccessoryEffect = r).then(updateProgress),
@@ -73,6 +74,7 @@ export default class GameDb {
       this.loadKeyedMasterTable('StoryEventMaster').then(r => this.StoryEvent = r).then(updateProgress),
       this.loadKeyedMasterTable('StoryEventHighScoreBuffSettingMaster').then(r => this.StoryEventHighScoreBuffSetting = r).then(updateProgress),
     ]
+    this.extraLoadPromise.PosterStory = this.loadKeyedMasterTable('PosterStoryMaster').then(r => this.PosterStory = r)
     const total = promises.length
     updateProgress()
 
