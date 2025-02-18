@@ -875,12 +875,14 @@ export default class RootLogic {
     for (let i = 0; i < 5; i++) {
       this.senseBox.appendChild(_('div', { className: 'sense-lane' }, [_('div', { className: 'sense-lane-ct' }), _('div', { className: 'sense-lane-box' })]))
     }
-    const totalDuration = data.Details.reduce((acc, cur) => Math.max(acc, cur.TimingSecond), 0)
-    data.Details.forEach(i => {
+    const timings = data.Details.slice()
+    timings.sort((a,b) => a.TimingSecond - b.TimingSecond)
+    const totalDuration = timings.slice(-1)[0].TimingSecond
+    timings.forEach(i => {
       const lane = this.senseBox.children[i.Position - 1].children[1]
       lane.appendChild(_('div', { className: 'sense-node', style: {left: `calc(calc(100% - 40px) * ${i.TimingSecond / totalDuration})`, fontSize: i.TimingSecond > 99 ? '14px' : '' } }, [_('text', i.TimingSecond)]))
     })
-    data.Details.reduce((acc, cur) => (acc[cur.Position-1].push(cur),acc), [[],[],[],[],[]])
+    timings.reduce((acc, cur) => (acc[cur.Position-1].push(cur),acc), [[],[],[],[],[]])
       .map(lane => lane.sort((a,b) => a.TimingSecond - b.TimingSecond)
         .reduce((acc, cur) => ([Math.min(acc[0], cur.TimingSecond - acc[1]), cur.TimingSecond]), [Infinity, -Infinity])[0])
       .forEach((i, idx) => this.senseBox.children[idx].children[0].textContent = i === Infinity ? 'N/A' : i)
