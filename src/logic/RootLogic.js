@@ -305,6 +305,7 @@ export default class RootLogic {
     })
     this.keikoSelect.appendChild(_('option', { value: '', 'data-text-key': 'NOT_SELECTED' }, [_('text', '未選択')]))
     Object.values(GameDb.CharacterBase).forEach(i => {
+      if (i.CharacterBaseType !== 'Initial') return
       this.keikoSelect.appendChild(_('option', { value: i.Id }, [_('text', i.Name)]))
     })
     Object.values(GameDb.AlbumEffect).forEach(i => {
