@@ -294,12 +294,20 @@ export default class RootLogic {
       acc[i.SenseNotationMasterId] = i.Id
       return acc
     }, {})
+    const tripleCastNotationIdMap = Object.values(GameDb.TripleCast).reduce((acc, i) => {
+      acc[i.SenseNotationMasterId1] = [i.Id, '1 (マチネ)']
+      acc[i.SenseNotationMasterId2] = [i.Id, '2 (ジュルネ)']
+      acc[i.SenseNotationMasterId3] = [i.Id, '3 (ソワレ)']
+      return acc
+    }, {})
     Object.values(GameDb.SenseNotation).forEach(i => {
       let text = i.Id
       if (GameDb.StoryEvent[i.Id] !== undefined) {
         text += ` - ${GameDb.StoryEvent[i.Id].Title}`
       } else if (leagueNotationIdMap[i.Id] !== undefined) {
         text += ` - League @ ${GameDb.League[leagueNotationIdMap[i.Id]].DisplayStartAt}`
+      } else if (tripleCastNotationIdMap[i.Id] !== undefined) {
+        text += ` - Triple Cast @ ${GameDb.TripleCast[tripleCastNotationIdMap[i.Id][0]].DisplayStartAt} ${tripleCastNotationIdMap[i.Id][1]}`
       }
       this.senseNoteSelect.appendChild(_('option', { value: i.Id }, [_('text', text)]))
     })

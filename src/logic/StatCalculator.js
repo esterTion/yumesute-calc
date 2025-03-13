@@ -47,7 +47,7 @@ export default class StatCalculator {
     }))
     // 时间轴效果 / 单项加成
     // 加成基数为卡面未加成的数值
-    this.attributeExtra = this.initial.map((i, idx) => i.mul(this.buffAfterCalc[idx].map((v,i) => (i<3 ? (v-10000) : 0))))
+    this.attributeExtra = this.initial.map((i, idx) => i.mulStat(this.buffAfterCalc[idx].map((v) => (v-10000))))
     this.bonus = this.buffFinal.map((charaBuf, charaIdx) => {
       const bonus = charaBuf.map(i => this.initial[charaIdx].mulStat(i[0]).add(CharacterStat.fromArray(i[1].slice(0, 3))))
       const bonusAddition = bonus.reduce((sum, category) => sum.add(category), CharacterStat.Zero())
@@ -67,10 +67,10 @@ export default class StatCalculator {
         return sum
       }, [[0,0,0,0],[0,0,0,0]]))
     })
-    this.finalBeforeBuff = this.initial.map((i, idx) => i.add(this.bonus[idx][StatBonusType.Total]))
+    this.finalBeforeBuff = this.initial.map((i, idx) => i.add(this.bonus[idx][StatBonusType.Total]).add(this.attributeExtra[idx]))
     // 时间轴效果 / 电姬海报（FinalPerformanceUpCancelSense）
     // 目前只有演技力加成
-    this.final = this.finalBeforeBuff.map((i, idx) => i.add(this.attributeExtra[idx]).mulPerformance(this.buffAfterCalc[idx]))
+    this.final = this.finalBeforeBuff.map((i, idx) => i.mulPerformance(this.buffAfterCalc[idx]))
     this.finalTotal = this.final.reduce((s, i) => s+i.total, 0)
   }
 }

@@ -25,6 +25,7 @@ export default class GameDb {
 
   static SenseNotation = {};
   static League = {};
+  static TripleCast = {};
 
   static CircleTheaterLevel = {};
   static CircleSupportCompanyLevelDetail = {};
@@ -67,6 +68,7 @@ export default class GameDb {
 
       this.loadKeyedMasterTable('SenseNotationMaster').then(r => this.SenseNotation = r).then(updateProgress),
       this.loadKeyedMasterTable('LeagueMaster').then(r => this.League = r).then(updateProgress),
+      this.loadKeyedMasterTable('TripleCastMaster').then(r => this.TripleCast = r).then(updateProgress),
 
       this.loadKeyedMasterTable('CircleTheaterLevelMaster').then(r => this.CircleTheaterLevel = r).then(updateProgress),
       this.loadKeyedMasterTable('CircleSupportCompanyLevelDetailMaster').then(r => this.CircleSupportCompanyLevelDetail = r).then(updateProgress),
