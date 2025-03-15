@@ -44,7 +44,7 @@ export default class CharacterData {
         _('td', {}, [_('span', {className: `card-attribute-${this.attributeName}`}), _('text', this.fullCardName), _('span', { className: 'obtain-type' }, [_('text', /フェス/.test(this.data.UnlockText) ? 'フェス' : /限定/.test(this.data.UnlockText) ? '限定' : /イベント/.test(this.data.UnlockText) ? 'イベント' : '')])]),
         _('td', {}, [_('text', 'Vo:')]),
         this.voValNode = _('td', {className: 'stat'}),
-        _('td', { rowspan: 4 }, [this.cardImg = imgErrorHandler(_('img', { src: 'about:blank', loading: 'lazy' }))])
+        _('td', { rowspan: 4 }, [this.cardImg = imgErrorHandler(_('img', { src: 'about:blank' }))])
       ]),
       _('tr', {}, [
         _('td', {}, [_('text', 'Level: '), this.levelSelect = _('select', { event: { change: e=>this.setLevel(e) } })]),
@@ -292,6 +292,7 @@ export default class CharacterData {
     if (this.iconSelectionInput.checked) {
       this.node.style.display = ''
       this.cardImg.src = `https://redive.estertion.win/wds/card/${this.cardIconId}.webp@w400`
+      this.cardImg.classList.add('preview-loading')
     } else {
       this.node.style.display = 'none'
     }

@@ -111,6 +111,7 @@ export default class PosterData {
     if (this.iconSelectionInput.checked) {
       this.node.style.display = ''
       this.posterImg.src = this.imageUrl
+      this.posterImg.classList.add('preview-loading')
     } else {
       this.node.style.display = 'none'
     }
