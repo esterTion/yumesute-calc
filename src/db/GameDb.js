@@ -33,6 +33,8 @@ export default class GameDb {
   static StoryEvent = {};
   static StoryEventHighScoreBuffSetting = {};
 
+  static Gacha = {};
+
   static extraLoadPromise = {};
 
   static async load() {
@@ -76,11 +78,13 @@ export default class GameDb {
       this.loadKeyedMasterTable('StoryEventMaster').then(r => this.StoryEvent = r).then(updateProgress),
       this.loadKeyedMasterTable('StoryEventHighScoreBuffSettingMaster').then(r => this.StoryEventHighScoreBuffSetting = r).then(updateProgress),
     ]
-    this.extraLoadPromise.PosterStory = this.loadKeyedMasterTable('PosterStoryMaster').then(r => this.PosterStory = r)
     const total = promises.length
     updateProgress()
 
     await Promise.all(promises)
+
+    this.extraLoadPromise.PosterStory = this.loadKeyedMasterTable('PosterStoryMaster').then(r => this.PosterStory = r)
+    this.extraLoadPromise.Gacha = this.loadKeyedMasterTable('GachaMaster').then(r => this.Gacha = r)
 
     document.getElementById('loading').textContent = 'Preparing'
     await new Promise(res => {

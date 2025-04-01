@@ -34,6 +34,10 @@ export default {
   SELECT_ALL: '全选',
   BACK: '返回',
 
+  VIEW_GACHA: '卡池确认',
+  GACHA_TYPE_PICKUP: '出现率提升',
+  GACHA_TYPE_SELECT: '可选出现率提升',
+
   TAB_CHARA: '角色',
   TAB_POSTER: '海报',
   TAB_ACCESSORY: '饰品',

@@ -34,6 +34,10 @@ export default {
   SELECT_ALL: 'Select all',
   BACK: 'Back',
 
+  VIEW_GACHA: 'View Gacha',
+  GACHA_TYPE_PICKUP: 'Pick Up',
+  GACHA_TYPE_SELECT: 'Selectable Pick Up',
+
   TAB_CHARA: 'Character',
   TAB_POSTER: 'Poster',
   TAB_ACCESSORY: 'Accessory',

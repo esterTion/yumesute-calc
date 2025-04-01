@@ -17,6 +17,7 @@ import ScoreCalculationType from './ScoreCalculationType'
 import ScoreCalculator from './ScoreCalculator'
 import FilterManager from '../manager/FilterManager'
 import SideMenuManager from '../manager/SideMenuManager'
+import GachaViewer, { GACHA_TYPE } from '../manager/GachaViewer'
 
 export default class RootLogic {
   appState = {
@@ -213,6 +214,7 @@ export default class RootLogic {
         ]),
         _('div', {}, [
           _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: e=>this.pickCharacterToAdd() }}),
+          _('input', { type: 'button', 'data-text-value': 'VIEW_GACHA', style: {marginLeft:'1em'}, event: { click: e=>GachaViewer.show(GACHA_TYPE.ACTOR) }}),
         ]),
       ]),
 
@@ -252,6 +254,7 @@ export default class RootLogic {
         this.posterContainer = _('table', { className: 'posters' }),
         _('div', {}, [
           _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: _=>this.pickPosterToAdd() }}),
+          _('input', { type: 'button', 'data-text-value': 'VIEW_GACHA', style: {marginLeft:'1em'}, event: { click: e=>GachaViewer.show(GACHA_TYPE.POSTER) }}),
         ]),
       ]),
 

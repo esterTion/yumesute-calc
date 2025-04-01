@@ -73,7 +73,7 @@ export default class PosterDetailBoard {
       this.canvas.height = 1357
     }
 
-    GameDb.extraLoadPromise.PosterStory.then(_ => this.renderPosterStory())
+    GameDb.extraLoadPromise.PosterStory.then(_ => this.renderPosterStory()).catch(e => this.contentContainer.textContent = `Load failed: ${e}`)
 
     document.body.classList.add('picking')
     this.drawImg()

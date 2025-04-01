@@ -34,6 +34,10 @@ export default {
   SELECT_ALL: '全選択',
   BACK: '戻る',
 
+  VIEW_GACHA: 'ガチャを確認',
+  GACHA_TYPE_PICKUP: 'ピックアップ',
+  GACHA_TYPE_SELECT: '自選ピックアップ',
+
   TAB_CHARA: 'キャラ',
   TAB_POSTER: 'ポスター',
   TAB_ACCESSORY: 'アクセサリー',
