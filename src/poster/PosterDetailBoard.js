@@ -73,7 +73,7 @@ export default class PosterDetailBoard {
       this.canvas.height = 1357
     }
 
-    GameDb.extraLoadPromise.PosterStory.then(_ => this.renderPosterStory()).catch(e => this.contentContainer.textContent = `Load failed: ${e}`)
+    GameDb.extraLoadPromise.PosterStory.then(_ => this.renderPosterStory()).catch(e => this.posterStoryContainer.textContent = `Load failed: ${e}`)
 
     document.body.classList.add('picking')
     this.drawImg()
@@ -97,8 +97,8 @@ export default class PosterDetailBoard {
       this.posterStoryContainer.appendChild(_('details', {}, [
         _('summary', {}, [_('text', 'AfterTalk')]),
         _('div', { style: { background: '#E0E0E0', padding: '5px 10px', borderRadius: '3px' } }, afterTalk.map(i => _('p', {}, [
-          _('span', { className: 'spriteatlas-characterlog after-talk-icon', 'data-id': i.CharacterBaseMasterId }),
-          _('text', `${GameDb.CharacterBase[i.CharacterBaseMasterId].Name}：\n`),
+          _('span', { className: 'spriteatlas-characterlog after-talk-icon', 'data-id': i.CharacterIconId ?? i.CharacterBaseMasterId }),
+          _('text', `${i.CharacterName || GameDb.CharacterBase[i.CharacterBaseMasterId].Name}：\n`),
           _('span', { translate: 'yes' }, [_('text', i.Description.replace(/\/n/g, '\n'))]),
         ])))
       ]))
