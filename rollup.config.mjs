@@ -20,13 +20,25 @@ function cleanMapBeforeBuild() {
 }
 
 function copyStaticFiles() {
-  const files = ['index.html', 'main.css']
   return {
     name: 'copyStaticFiles',
     buildEnd() {
-      return Promise.all(files.map(file => (
-        fs.promises.copyFile(`./${file}`, `./dist/${file}`)
-      )))
+      return Promise.all([
+        fs.promises.copyFile(`./main.css`, `./dist/main.css`),
+        (async () => {
+          const fileVer = {
+            main_css: await fs.promises.stat(`./main.css`).then(stats => stats.mtimeMs),
+            main_js: Date.now()
+          }
+          let content = await fs.promises.readFile(`./index.html`, 'utf-8')
+          content = content.replace(/{ver\.([^}]+)}/g, (_, key) => (t=>{
+            if (!t) return ''
+            t = new Date(t)
+            return t.toLocaleDateString('zh-CN', {year: 'numeric',month: '2-digit',day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false}).replace(/[/:]/g, '').replace(' ', '_')
+          })(fileVer[key]))
+          return fs.promises.writeFile(`./dist/index.html`, content)
+        })()
+      ])
     }
   }
 }
@@ -51,8 +63,8 @@ export default [{
     sourcemapFileNames: 'main-build.js.[hash].map'
   },
   plugins: [
-    babel({ babelHelpers: 'bundled' }),
-    terser(),
+    // babel({ babelHelpers: 'bundled' }),
+    // terser(),
     cleanMapBeforeBuild(),
     copyStaticFiles(),
     // nodeResolve(),

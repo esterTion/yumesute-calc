@@ -189,7 +189,7 @@ export default class CharacterData {
     const episodeReadBonus = this.episodeReadState === EpisodeReadState.One ? 2 : this.episodeReadState === EpisodeReadState.Two ? 5 : 0;
     const bloomBonus = this.baseCorrection;
     const awakenNum = this.awaken ? 1 : 0;
-    const starRankBonus = this.starRank / 2;
+    const starRankBonus = GameDb.CharacterStarRank[this.starRank].StatusBonus;
     return (val + episodeReadBonus) * lvlBase / 100 * (100 + bloomBonus / 100 + awakenNum * 10 + starRankBonus) / 100;
   }
   updateBloomBonus() {
