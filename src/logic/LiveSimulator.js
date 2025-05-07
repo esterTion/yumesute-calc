@@ -117,6 +117,7 @@ export default class LiveSimulator {
         _('br'),
         lights,
         this.getPGaugeProgressElement(),
+        this.getLifeGaugeElement(),
       ]),
       _('text', this.phaseLog.join('\n')),
     ]))
@@ -153,6 +154,7 @@ export default class LiveSimulator {
           _('br'),
           lights,
           this.getPGaugeProgressElement(),
+          this.getLifeGaugeElement(),
         ]),
         _('table', {}, [_('tr', { style: {verticalAlign: 'top'} }, [
           _('td', {}, [_('div', { className: 'spriteatlas-characters', 'data-id': this.calc.members[timing.Position - 1].cardIconId})]),
@@ -169,6 +171,12 @@ export default class LiveSimulator {
     return _('span', {}, [
       _('progress', { value: this.pGauge, max: this.pGaugeLimit, style: { width: `${this.pGaugeLimit / 1000 * 50}px`} }),
       _('text', ` ${this.pGauge}/${this.pGaugeLimit}`),
+    ])
+  }
+  getLifeGaugeElement() {
+    return _('span', { style: { marginLeft: '1em' } }, [
+      _('text', ` ♥${this.life}`),
+      this.lifeGuardCount > 0 ? _('text', ` (+${this.lifeGuardCount})`) : new Comment('life guad conut'),
     ])
   }
   getHoldingLightsElement() {
