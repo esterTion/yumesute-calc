@@ -63,8 +63,8 @@ export default [{
     sourcemapFileNames: 'main-build.js.[hash].map'
   },
   plugins: [
-    // babel({ babelHelpers: 'bundled' }),
-    // terser(),
+    babel({ babelHelpers: 'bundled' }),
+    terser(),
     cleanMapBeforeBuild(),
     copyStaticFiles(),
     // nodeResolve(),

@@ -41,6 +41,7 @@ import StarActScoreUp from './types/StarActScoreUp'
 import ChangeWrongLightToSpLight from './types/ChangeWrongLightToSpLight'
 import PrincipalGaugeBonus from './types/PrincipalGaugeBonus'
 import PerformanceDuplicateUp from './types/PerformanceDuplicateUp'
+import StatBonusType from '../logic/StatBonusType'
 
 export default class Effect {
   // life guard分支下的效果需要单独处理。。
@@ -114,6 +115,9 @@ export default class Effect {
     return true
   }
   applyEffect(calc, index, type) {
+    if (type === StatBonusType.Accessory) {
+      this.Range = 'Self'
+    }
     const targets = this.Range === 'All' ? [0,1,2,3,4] : this.Range === 'Self' ? [index] : []
     switch (this.Type) {
       case 'BaseCorrection':
