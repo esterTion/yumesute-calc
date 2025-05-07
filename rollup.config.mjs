@@ -1,5 +1,6 @@
 import terser from '@rollup/plugin-terser'
 import babel from '@rollup/plugin-babel';
+import replace from '@rollup/plugin-replace';
 // import { nodeResolve } from '@rollup/plugin-node-resolve';
 
 import fs from 'fs'
@@ -52,6 +53,7 @@ export default [{
     sourcemapFileNames: 'main-build.js.map'
   },
   plugins: [
+    replace({'process.env.NODE_ENV': JSON.stringify('production'),preventAssignment: true,}),
     // nodeResolve(),
   ],
 },{
@@ -63,6 +65,7 @@ export default [{
     sourcemapFileNames: 'main-build.js.[hash].map'
   },
   plugins: [
+    replace({'process.env.NODE_ENV': JSON.stringify('production'),preventAssignment: true,}),
     babel({ babelHelpers: 'bundled' }),
     terser(),
     cleanMapBeforeBuild(),

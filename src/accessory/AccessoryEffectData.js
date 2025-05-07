@@ -22,6 +22,7 @@ export default class AccessoryEffectData {
 
   update() {
     this.effect.level = this.level
+    if (process.env.NODE_ENV === 'test') { return }
     this.descNode.innerHTML = this.desc
   }
 

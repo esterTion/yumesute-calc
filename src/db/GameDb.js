@@ -42,6 +42,7 @@ export default class GameDb {
     let loaded = -1
     const updateProgress = () => {
       loaded++
+      if (process.env.NODE_ENV === 'test') { return }
       document.getElementById('loading').textContent = `Loading ${loaded}/${total}`
     }
     const promises = [
@@ -86,7 +87,9 @@ export default class GameDb {
     this.extraLoadPromise.PosterStory = this.loadKeyedMasterTable('PosterStoryMaster').then(r => this.PosterStory = r)
     this.extraLoadPromise.Gacha = this.loadKeyedMasterTable('GachaMaster').then(r => this.Gacha = r)
 
-    document.getElementById('loading').textContent = 'Preparing'
+    if (process.env.NODE_ENV !== 'test') {
+      document.getElementById('loading').textContent = 'Preparing'
+    }
     await new Promise(res => {
       setTimeout(res, 0)
     })

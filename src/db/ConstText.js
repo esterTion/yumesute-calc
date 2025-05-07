@@ -6,6 +6,10 @@ export default class ConstText {
   static language = null
   static init() {
     if (ConstText.language) return
+    if (process.env.NODE_ENV === 'test') {
+      ConstText.language = 'zh'
+      return
+    }
     if (localStorage.getItem('wds-calc-language')) {
       ConstText.language = localStorage.getItem('wds-calc-language')
       return

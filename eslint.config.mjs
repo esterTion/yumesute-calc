@@ -16,6 +16,7 @@ export default [
         ...globals.browser,
         root: 'readonly',
         Draggable: 'readonly',
+        process: 'readonly',
       }
     }
   },
