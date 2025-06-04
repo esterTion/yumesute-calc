@@ -117,7 +117,10 @@ export default class GachaViewer {
         _('text', chara.sense.ct),
         _('text', chara.rarityStr),
         _('br'),
-        _('span', { className: 'item-name' }, [_('text', `【${chara.cardName}】${chara.charaName}`)]),
+        _('span', { className: 'item-name' }, [
+          _('span', { className: 'obtain-type' }, [_('text', /フェス/.test(chara.data.UnlockText) ? 'フェス' : /限定/.test(chara.data.UnlockText) ? '限定' : /イベント/.test(chara.data.UnlockText) ? 'イベント' : '')]),
+          _('text', `【${chara.cardName}】${chara.charaName}`)
+        ]),
       ])
       if (owned) {
         charaEle.classList.add('selected')
