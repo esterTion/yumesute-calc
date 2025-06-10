@@ -39,12 +39,14 @@ export default class AccessoryData {
       if (!group) throw new Error(`RandomEffectGroup ${i} not found`)
       group.AccessoryEffects.forEach(j => this.randomEffectSelect?.appendChild(_('option', { value: j }, [_('text', GameDb.AccessoryEffect[j].Name)])))
     })
-    if (this.data.RandomEffectGroups.length > 0) {
-      this.randomEffectId = this.randomEffectSelect.value
-      this.randomEffect = new AccessoryEffectData(this.randomEffectId, this.effectBox)
-    } else if (this.randomEffectSelect) {
-      this.randomEffectSelect.setAttribute('disabled', '')
-      this.randomEffectSelect.style.display = 'none'
+    if (parent) {
+      if (this.data.RandomEffectGroups.length > 0) {
+        this.randomEffectId = this.randomEffectSelect.value
+        this.randomEffect = new AccessoryEffectData(this.randomEffectId, this.effectBox)
+      } else if (this.randomEffectSelect) {
+        this.randomEffectSelect.setAttribute('disabled', '')
+        this.randomEffectSelect.style.display = 'none'
+      }
     }
 
     for (let i = 1; i < 11; i++) {
