@@ -4,6 +4,7 @@ export default {
   SENSE_NOTATION_TAB_NORMAL: 'Normal (Audition/League）',
   SENSE_NOTATION_TAB_HIGHSCORE: 'Highscore Challenge',
   SENSE_NOTATION_TAB_KEIKO: 'Lesson (Keiko)',
+  SENSE_NOTATION_TAB_QUIZ: 'Quiz (Kaimaku Kouen)',
 
   ALBUM_LEVEL_LABEL: 'Album level: ',
   PARTY_LABEL: 'Party edit',

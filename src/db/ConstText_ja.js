@@ -4,6 +4,7 @@ export default {
   SENSE_NOTATION_TAB_NORMAL: 'オーディション/リーグ',
   SENSE_NOTATION_TAB_HIGHSCORE: 'ハイスコア挑戦',
   SENSE_NOTATION_TAB_KEIKO: '稽古',
+  SENSE_NOTATION_TAB_QUIZ: '改幕公演',
 
   ALBUM_LEVEL_LABEL: 'アルバムレベル：',
   PARTY_LABEL: '編成',

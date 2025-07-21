@@ -4,6 +4,7 @@ export default {
   SENSE_NOTATION_TAB_NORMAL: '通常（试音/排位）',
   SENSE_NOTATION_TAB_HIGHSCORE: '高分',
   SENSE_NOTATION_TAB_KEIKO: '稽古',
+  SENSE_NOTATION_TAB_QUIZ: '改幕公演',
 
   ALBUM_LEVEL_LABEL: '相册等级：',
   PARTY_LABEL: '编队',

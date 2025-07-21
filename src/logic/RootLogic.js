@@ -81,10 +81,15 @@ export default class RootLogic {
       ]),
       this.warningMessageBox = _('div', { id: 'warning_message_box'}),
       _('div', {className: 'margin-box', 'data-menu-anchor': 'MENU_ANCHOR_TIMELINE' }),
-      this.calcTypeSelectForm = _('form', { style: { display: 'flex' }, event: {change: _=>this.changeTab()} }, [
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'normal' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_NORMAL'})]),
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'highscore' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_HIGHSCORE'})]),
-        _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'keiko' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_KEIKO'})]),
+      this.calcTypeSelectForm = _('form', { event: {change: _=>this.changeCalcTab()} }, [
+        _('div', { style: { display: 'flex' } }, [
+          _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'normal' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_NORMAL'})]),
+          _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'highscore' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_HIGHSCORE'})]),
+        ]),
+        _('div', { style: { display: 'flex' } }, [
+          _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'keiko' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_KEIKO'})]),
+          _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'quiz' }), _('span', {'data-text-key': 'SENSE_NOTATION_TAB_QUIZ'})]),
+        ]),
       ]),
       this.normalCalcTabContent = _('div', {}, [
         this.senseNoteSelect = _('select', {event: {change: _=>this.renderSenseNote()}}),
@@ -158,7 +163,7 @@ export default class RootLogic {
 
       _('div', {className: 'margin-box', 'data-menu-anchor': 'MENU_ANCHOR_INVENTORY'}),
 
-      this.tabSelectForm = _('form', { style: { display: 'flex', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.8)', padding: '10px 0', zIndex: 5 }, event: {change: _=>this.changeTab()} }, [
+      this.tabSelectForm = _('form', { style: { display: 'flex', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.8)', padding: '10px 0', zIndex: 5 }, event: {change: _=>this.changeInventoryTab()} }, [
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'character' }), _('span', {'data-text-key': 'TAB_CHARA'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'poster' }), _('span', {'data-text-key': 'TAB_POSTER'})]),
         _('label', { style: { flex: 1 } }, [_('input', { type: 'radio', name: 'tab', value: 'accessory' }), _('span', {'data-text-key': 'TAB_ACCESSORY'})]),
@@ -293,27 +298,7 @@ export default class RootLogic {
       ]),
     ]))
 
-    const leagueNotationIdMap = Object.values(GameDb.League).reduce((acc, i) => {
-      acc[i.SenseNotationMasterId] = i.Id
-      return acc
-    }, {})
-    const tripleCastNotationIdMap = Object.values(GameDb.TripleCast).reduce((acc, i) => {
-      acc[i.SenseNotationMasterId1] = [i.Id, '1 (マチネ)']
-      acc[i.SenseNotationMasterId2] = [i.Id, '2 (ジュルネ)']
-      acc[i.SenseNotationMasterId3] = [i.Id, '3 (ソワレ)']
-      return acc
-    }, {})
-    Object.values(GameDb.SenseNotation).forEach(i => {
-      let text = i.Id
-      if (GameDb.StoryEvent[i.Id] !== undefined) {
-        text += ` - ${GameDb.StoryEvent[i.Id].Title}`
-      } else if (leagueNotationIdMap[i.Id] !== undefined) {
-        text += ` - League @ ${GameDb.League[leagueNotationIdMap[i.Id]].DisplayStartAt}`
-      } else if (tripleCastNotationIdMap[i.Id] !== undefined) {
-        text += ` - Triple Cast @ ${GameDb.TripleCast[tripleCastNotationIdMap[i.Id][0]].DisplayStartAt} ${tripleCastNotationIdMap[i.Id][1]}`
-      }
-      this.senseNoteSelect.appendChild(_('option', { value: i.Id }, [_('text', text)]))
-    })
+    this.renderSenseNoteList()
     this.keikoSelect.appendChild(_('option', { value: '', 'data-text-key': 'NOT_SELECTED' }, [_('text', '未選択')]))
     Object.values(GameDb.CharacterBase).forEach(i => {
       if (i.CharacterBaseType !== 'Initial') return
@@ -371,7 +356,8 @@ export default class RootLogic {
 
     this.calcTypeSelectForm.tab.value = 'normal'
     this.tabSelectForm.tab.value = 'character'
-    this.changeTab()
+    this.changeCalcTab()
+    this.changeInventoryTab()
 
     window.addEventListener('blur', _=>this.saveState())
     window.addEventListener('unload', _=>this.saveState())
@@ -383,6 +369,7 @@ export default class RootLogic {
   saveState() {
     if (window.DEBUG_NO_SAVE) return;
     if (this.errorOccured) return;
+    if (this.calcType === 'quiz') return;
     console.log('save')
     localStorage.setItem('appState', JSON.stringify(this.appState))
   }
@@ -477,17 +464,38 @@ export default class RootLogic {
 
   get calcType() { return this._calcType }
   set calcType(val) {
+    const oldVal = this._calcType
     if (this._calcType !== val) {
-      this._calcType = val
       this.normalCalcTabContent.style.display = val !== 'keiko' ? '' : 'none'
       this.highscoreCalcTabContent.style.display = val === 'highscore' ? '' : 'none'
       this.keikoCalcTabContent.style.display = val === 'keiko' ? '' : 'none'
+      if (val === 'quiz') {
+        this.saveState()
+        this._calcType = val
+        this.renderSenseNoteList()
+        this.renderSenseNote(true)
+      } else if (oldVal === 'quiz') {
+        this._calcType = val
+        this.renderSenseNoteList()
+        this.renderSenseNote(true)
+        this.loadState(localStorage.getItem('appState'))
+        this.update({
+          chara: true,
+          poster: true,
+          accessory: true,
+          album: true,
+          theaterLevel: true,
+          selection: true
+        })
+      }
+      this._calcType = val
       this.update({ party: true })
     }
   }
-  changeTab() {
+  changeCalcTab() {
     this.calcType = this.calcTypeSelectForm.tab.value
-
+  }
+  changeInventoryTab() {
     const tab = this.tabSelectForm.tab.value
     this.characterTabContent.style.display = tab === 'character' ? '' : 'none'
     this.posterTabContent.style.display = tab === 'poster' ? '' : 'none'
@@ -879,6 +887,43 @@ export default class RootLogic {
     this.update({ accessory: true, selection: true })
   }
 
+  renderSenseNoteList() {
+    removeAllChilds(this.senseNoteSelect);
+    if (this.calcType === 'quiz') {
+      const trialNotationIdMap = Object.values(GameDb.TrialPartyEventStage).reduce((acc, i) => {
+        if (GameDb.TrialPartyEvent[i.TrialPartyEventMasterId] === undefined) return acc
+        acc[i.SenseNotationMasterId] = `${GameDb.TrialPartyEvent[i.TrialPartyEventMasterId].Name}`
+        return acc
+      }, {})
+      Object.values(GameDb.SenseNotation).forEach(i => {
+        if (trialNotationIdMap[i.Id] === undefined) return
+        this.senseNoteSelect.appendChild(_('option', { value: i.Id }, [_('text', `${i.Id} - ${trialNotationIdMap[i.Id]}`)]))
+      })
+      return
+    }
+
+    const leagueNotationIdMap = Object.values(GameDb.League).reduce((acc, i) => {
+      acc[i.SenseNotationMasterId] = i.Id
+      return acc
+    }, {})
+    const tripleCastNotationIdMap = Object.values(GameDb.TripleCast).reduce((acc, i) => {
+      acc[i.SenseNotationMasterId1] = [i.Id, '1 (マチネ)']
+      acc[i.SenseNotationMasterId2] = [i.Id, '2 (ジュルネ)']
+      acc[i.SenseNotationMasterId3] = [i.Id, '3 (ソワレ)']
+      return acc
+    }, {})
+    Object.values(GameDb.SenseNotation).forEach(i => {
+      let text = i.Id
+      if (GameDb.StoryEvent[i.Id] !== undefined) {
+        text += ` - ${GameDb.StoryEvent[i.Id].Title}`
+      } else if (leagueNotationIdMap[i.Id] !== undefined) {
+        text += ` - League @ ${GameDb.League[leagueNotationIdMap[i.Id]].DisplayStartAt}`
+      } else if (tripleCastNotationIdMap[i.Id] !== undefined) {
+        text += ` - Triple Cast @ ${GameDb.TripleCast[tripleCastNotationIdMap[i.Id][0]].DisplayStartAt} ${tripleCastNotationIdMap[i.Id][1]}`
+      }
+      this.senseNoteSelect.appendChild(_('option', { value: i.Id }, [_('text', text)]))
+    })
+  }
   renderSenseNote(skipUpdate = false) {
     const id = this.senseNoteSelect.value | 0;
     const data = GameDb.SenseNotation[id];
@@ -901,6 +946,10 @@ export default class RootLogic {
 
     for (let i = 0; i < 5; i++) {
       this.senseBox.children[i].children[0].appendChild(_('div', { className: 'start-live-extra-lights' }))
+    }
+
+    if (this.calcType === 'quiz') {
+      this.fillInventoryForTrial()
     }
 
     if (!skipUpdate) {
@@ -988,6 +1037,76 @@ export default class RootLogic {
       type: ScoreCalculationType.Keiko,
     })
     calc.calc(this.keikoResult)
+  }
+
+  fillInventoryForTrial() {
+    const obj = {
+      characters: [],
+      characterStarRank: {},
+      posters: [],
+      accessories: [],
+      albumLevel: 0,
+      albumExtra: [],
+      theaterLevel: {Sirius:0,Eden:0,Gingaza:0,Denki:0},
+      partyManager: [[[`${ConstText.get('PARTY_DEFAULT_NAME')} 1`,[-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1],0]],0],
+      highScoreBuffManager:{},
+      selectedNotation:0,
+      version:5,
+    }
+
+    const id = this.senseNoteSelect.value | 0;
+    const stage = Object.values(GameDb.TrialPartyEventStage).find(i => i.SenseNotationMasterId === id);
+    const partyId = stage.TrialPartyMasterId;
+
+    // chara
+    Object.values(GameDb.TrialPartyCharacter).forEach(i => {
+      if (i.TrialPartyMasterId !== partyId) return;
+      obj.characters.push([
+        i.CharacterMasterId,
+        i.Level,
+        i.AwakeningStatus,
+        {'None': 0, 'Frist': 1, 'Second': 2}[i.ReadEpisodeOrder],
+        i.SenseLevel,
+        i.TalentStage,
+      ])
+    })
+    // poster
+    Object.values(GameDb.TrialPartyPoster).forEach(i => {
+      if (i.TrialPartyMasterId !== partyId) return;
+      obj.posters.push([i.PosterMasterId, i.Level, i.BreakthroughPhase])
+    })
+    // accessory
+    Object.values(GameDb.TrialPartyAccessory).forEach(i => {
+      if (i.TrialPartyMasterId !== partyId) return;
+      obj.accessories.push([i.AccessoryMasterId, i.Level, i.AccessoryEffects[0]])
+    })
+    const defaultParty = obj.partyManager[0][0]
+    GameDb.TrialParty[partyId].DefaultSlots.forEach(i => {
+      const pos = i.Position - 1
+      if (i.TrialPartyCharacterMasterId) {
+        const chara = GameDb.TrialPartyCharacter[i.TrialPartyCharacterMasterId]
+        defaultParty[1][pos] = obj.characters.findIndex(c => c[0] === chara.CharacterMasterId)
+      }
+      if (i.TrialPartyPosterMasterId) {
+        const poster = GameDb.TrialPartyPoster[i.TrialPartyPosterMasterId]
+        defaultParty[2][pos] = obj.posters.findIndex(p => p[0] === poster.PosterMasterId)
+      }
+      if (i.TrialPartyAccessoryMasterId) {
+        const accessory = GameDb.TrialPartyAccessory[i.TrialPartyAccessoryMasterId]
+        defaultParty[3][pos] = obj.accessories.findIndex(a => a[0] === accessory.AccessoryMasterId)
+      }
+    })
+    defaultParty[4] = GameDb.TrialParty[partyId].LeaderPosition - 1
+
+    this.loadState(JSON.stringify(obj))
+    this.update({
+      chara: true,
+      poster: true,
+      accessory: true,
+      album: true,
+      theaterLevel: true,
+      selection: true
+    })
   }
 }
 

@@ -33,6 +33,13 @@ export default class GameDb {
   static StoryEvent = {};
   static StoryEventHighScoreBuffSetting = {};
 
+  static TrialPartyAccessory = {};
+  static TrialPartyCharacter = {};
+  static TrialPartyEvent = {};
+  static TrialPartyEventStage = {};
+  static TrialParty = {};
+  static TrialPartyPoster = {};
+
   static Gacha = {};
 
   static extraLoadPromise = {};
@@ -78,6 +85,13 @@ export default class GameDb {
 
       this.loadKeyedMasterTable('StoryEventMaster').then(r => this.StoryEvent = r).then(updateProgress),
       this.loadKeyedMasterTable('StoryEventHighScoreBuffSettingMaster').then(r => this.StoryEventHighScoreBuffSetting = r).then(updateProgress),
+
+      this.loadKeyedMasterTable('TrialPartyAccessoryMaster').then(r => this.TrialPartyAccessory = r).then(updateProgress),
+      this.loadKeyedMasterTable('TrialPartyCharacterMaster').then(r => this.TrialPartyCharacter = r).then(updateProgress),
+      this.loadKeyedMasterTable('TrialPartyEventMaster').then(r => this.TrialPartyEvent = r).then(updateProgress),
+      this.loadKeyedMasterTable('TrialPartyEventStageMaster').then(r => this.TrialPartyEventStage = r).then(updateProgress),
+      this.loadKeyedMasterTable('TrialPartyMaster').then(r => this.TrialParty = r).then(updateProgress),
+      this.loadKeyedMasterTable('TrialPartyPosterMaster').then(r => this.TrialPartyPoster = r).then(updateProgress),
     ]
     const total = promises.length
     updateProgress()
