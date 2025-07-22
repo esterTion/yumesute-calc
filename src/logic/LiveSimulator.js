@@ -52,6 +52,8 @@ export default class LiveSimulator {
   maxStockCount;
   stockType;
   performanceDuplicateUp;
+  combinationSenseList;
+  isDuringCombinationSense;
 
   constructor(calc) {
     this.calc = calc
@@ -85,6 +87,8 @@ export default class LiveSimulator {
     this.stockType = -1
     this.starActRequiredCount = 0
     this.performanceDuplicateUp = [0,0,0,0,0]
+    this.combinationSenseList = [[],[],[],[],[]]
+    this.isDuringCombinationSense = false
   }
   runSimulation(node) {
     this.applyPendingActions()
@@ -104,6 +108,23 @@ export default class LiveSimulator {
         startExtraLight.forEach(lightType => {
           container.appendChild(_('div', { className: 'sense-add-light', 'data-sense-type': lightType.toLowerCase(), style: { position: 'initial' } }))
         })
+      }
+
+      // combination sense
+      const combinationSenseEffect = this.calc.members[i].sense.getCombinationSenseEffect(this)
+      if (combinationSenseEffect) {
+        const conditionMap = combinationSenseEffect.Conditions.reduce((acc, cur) => {
+          acc[cur.Condition] = cur.Value
+          return acc
+        }, {})
+        const distance = conditionMap.NeighborPosition
+        const targetCharaId = conditionMap.CharacterBase
+        if (i - distance >= 0 && targetCharaId === this.calc.members[i - distance].data.CharacterBaseMasterId) {
+          this.combinationSenseList[i - distance].push(i)
+        }
+        if (i + distance < 5 && targetCharaId === this.calc.members[i + distance].data.CharacterBaseMasterId) {
+          this.combinationSenseList[i + distance].push(i)
+        }
       }
     }
     let lights = this.getHoldingLightsElement()
@@ -232,6 +253,7 @@ export default class LiveSimulator {
     this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE_LIMIT', [before, amount, this.pGauge, this.pGaugeLimit]))
   }
   addSenseLight(type, idx, amount = 1) {
+    if (this.isDuringCombinationSense) return
     let lightType
     switch (type.toLowerCase()) {
       case 'support':       { lightType = 0; break }
@@ -313,7 +335,6 @@ export default class LiveSimulator {
       idx = this.calc.members.indexOf(chara)
       this.purgeExpiredBuff(timing.TimingSecond)
     }
-    const sense = chara.sense
     const ct = this.senseCt[idx]
     const timeSinceLast = timing.TimingSecond - this.lastSenseTime[idx]
     if (ct > timeSinceLast) {
@@ -321,6 +342,22 @@ export default class LiveSimulator {
       return false
     }
 
+    this.applySenseEffects(idx, timelineNode)
+    this.applyPendingActions()
+
+    this.isDuringCombinationSense = true
+    for (let otherSenseIdx of this.combinationSenseList[idx]) {
+      this.applySenseEffects(otherSenseIdx, timelineNode)
+      this.applyPendingActions()
+    }
+    this.isDuringCombinationSense = false
+
+    return true
+  }
+
+  applySenseEffects(idx, timelineNode) {
+    const chara = this.calc.members[idx]
+    const sense = chara.sense
     sense.data.PreEffects.forEach(effect => {
       effect = Effect.get(effect.EffectMasterId, chara.senselv)
       effect.applyEffect(this.calc, idx, ScoreBonusType.Sense)
@@ -333,21 +370,23 @@ export default class LiveSimulator {
         effect.applyEffect(this.calc, idx, ScoreBonusType.Sense)
       })
     }
-    this.currentSenseType = sense.Type.toLowerCase();
-    const addedLights = new Array(sense.data.LightCount + this.senseExtraAmount[idx]).fill(sense.Type)
-    this.addSenseLight(sense.Type, idx, addedLights.length)
-    for (let light of this.senseExtraLights[idx]) {
-      let [addLightType, addLightAmount] = light
-      this.addSenseLight(addLightType, idx, addLightAmount)
-      while (addLightAmount--) {
-        addedLights.push(addLightType)
+    if (!this.isDuringCombinationSense) {
+      this.currentSenseType = sense.Type.toLowerCase();
+      const addedLights = new Array(sense.data.LightCount + this.senseExtraAmount[idx]).fill(sense.Type)
+      this.addSenseLight(sense.Type, idx, addedLights.length)
+      for (let light of this.senseExtraLights[idx]) {
+        let [addLightType, addLightAmount] = light
+        this.addSenseLight(addLightType, idx, addLightAmount)
+        while (addLightAmount--) {
+          addedLights.push(addLightType)
+        }
       }
+      this.processWrongLightToSp(idx, addedLights)
+      for (let i=0; i<addedLights.length - 1; i++) {
+        timelineNode.appendChild(_('div', { className: 'sense-add-light', 'data-sense-type': addedLights[i + 1].toLowerCase(), style: { top: `calc(100% + ${i*8}px)` } }))
+      }
+      timelineNode.dataset.senseType = addedLights[0].toLowerCase()
     }
-    this.processWrongLightToSp(idx, addedLights)
-    for (let i=0; i<addedLights.length - 1; i++) {
-      timelineNode.appendChild(_('div', { className: 'sense-add-light', 'data-sense-type': addedLights[i + 1].toLowerCase(), style: { top: `calc(100% + ${i*8}px)` } }))
-    }
-    timelineNode.dataset.senseType = addedLights[0].toLowerCase()
     if (sense.scoreUp) {
       let multiplier = sense.scoreUp
       let scoreLine = multiplier
@@ -418,11 +457,6 @@ export default class LiveSimulator {
       amount = Math.floor(amount)
       this.addPGauge(amount, true)
     }
-    this.applyPendingActions()
-
-    // 海报效果
-
-    return true
   }
   tryStarAct() {
     let missingCount = 0

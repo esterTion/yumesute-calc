@@ -169,6 +169,9 @@ export default class Effect {
 
       case "StarActScoreUp": { return StarActScoreUp.applyEffect(this, calc, targets, type) }
 
+      // 相邻sense效果在开场前检查
+      case "CombinationSense": { return }
+
       // case "ScoreUpByBuff":
       // case "BuffTimeExtend":
 
