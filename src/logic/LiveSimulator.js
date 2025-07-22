@@ -347,6 +347,8 @@ export default class LiveSimulator {
 
     this.isDuringCombinationSense = true
     for (let otherSenseIdx of this.combinationSenseList[idx]) {
+      // 相邻sense发动时，附加生效本轮的加成
+      this.purgeExpiredBuff(timing.TimingSecond)
       this.applySenseEffects(otherSenseIdx, timelineNode)
       this.applyPendingActions()
     }
