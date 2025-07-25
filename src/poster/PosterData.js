@@ -36,7 +36,7 @@ export default class PosterData {
     for (let i = 1; i <= this.maxLevel; i++) {
       this.levelSelect.appendChild(_('option', { value: i }, [_('text', i)]))
     }
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i <= this.maxRelease; i++) {
       this.releaseSelect.appendChild(_('option', { value: i }, [_('text', i)]))
     }
 
@@ -50,9 +50,19 @@ export default class PosterData {
     return `https://redive.estertion.win/wds/poster/${this.id}_0.webp@w400`
   }
   get currentMaxLevel() {
+    if (this.maxRelease === 5) {
+      if (this.release == 5) return 12
+      return this.maxLevel - (6 - this.release)
+    }
     return this.maxLevel - (4 - this.release)
   }
+  get maxRelease () {
+    return this.data.PosterBreakthroughMaxPhase
+  }
   get maxLevel () {
+    if (this.maxRelease === 5) {
+      return 12
+    }
     switch (this.data.Rarity) {
       case 'R': return 6
       case 'SR': return 8
@@ -73,7 +83,7 @@ export default class PosterData {
     root.update({ poster: true })
   }
   updateToMax() {
-    this.release = 4
+    this.release = this.maxRelease
     this.level = this.maxLevel
   }
 
@@ -93,8 +103,9 @@ export default class PosterData {
       i.release = this.release
       i.update()
     })
-    const releaseLabel = '◆'.repeat(this.release) + '◇'.repeat(4 - this.release)
+    const releaseLabel = '◆'.repeat(this.release) + '◇'.repeat(Math.max(0, 4 - this.release))
     this.iconNodeLevelLabel.textContent = `${releaseLabel} ${this.level}`
+    this.iconNodeLevelLabel.style.fontSize = this.release == 5 ? '0.85em' : ''
   }
   appendNode(parent) {
     root.posterIconList.appendChild(this.iconNode)
