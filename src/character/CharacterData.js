@@ -6,7 +6,7 @@ import CharacterStat from "./CharacterStat"
 import LeaderSenseData from "./LeaderSenseData"
 import Effect from "../effect/Effect"
 
-import _ from "../createElement";
+import _, { CREATE_FRAGMENT } from "../createElement";
 import removeAllChilds from "../removeAllChilds"
 import imgErrorHandler from "../logic/imgErrorHandler"
 
@@ -17,6 +17,12 @@ export default class CharacterData {
   episodeReadState;
   senselv;
   bloom;
+
+  #senseStarNode;
+  #senseDescNode;
+  #ctValNode;
+  #staractDescNode;
+  #staractRequirementsNode;
 
   data;
   constructor(Id, parent) {
@@ -37,6 +43,13 @@ export default class CharacterData {
     this.sense = new SenseData(this.data.SenseMasterId, this.senselv)
     this.staract = new StarActData(this.data.StarActMasterId, this.bloom)
     this.leaderSense = new LeaderSenseData(this.data.LeaderSenseMasterId)
+    this.senseAll = [this.sense]
+    if (this.data.SecondarySenseMasterId) {
+      this.senseAll.push(new SenseData(this.data.SecondarySenseMasterId, this.senselv))
+    }
+    this.#senseStarNode = []
+    this.#senseDescNode = []
+    this.#ctValNode = []
 
     if (!parent) return
     this.node = parent.appendChild(_('tbody', {}, [
@@ -70,18 +83,18 @@ export default class CharacterData {
         _('td', {}, [_('text', 'Total:')]),
         this.totalValNode = _('td', {className: 'stat'}),
       ]),
-      _('tr', {}, [
-        _('td', { style: {maxWidth: '390px'} }, [
-          this.senseStarNode = _('span', { className: 'sense-star gray-background pad-size' }),
-          this.senseDescNode = _('span', { translate: 'yes', style: {marginLeft: '0.5em'} })
+      _(CREATE_FRAGMENT, {}, new Array(this.senseAll.length).fill(() => 0).map((__, idx) => _('tr', {}, [
+        _('td', { style: {maxWidth: '390px'}, className: 'black-border-bottom text-pre-wrap' }, [
+          this.#senseStarNode[idx] = _('span', { className: 'sense-star gray-background pad-size' }),
+          this.#senseDescNode[idx] = _('span', { translate: 'yes', style: {marginLeft: '0.5em'} })
         ]),
         _('td', {}, [_('text', 'CT: ')]),
-        this.ctValNode = _('td'),
+        this.#ctValNode[idx] = _('td'),
         _('td'),
-      ]),
+      ]))),
       _('tr', {}, [
-        this.staractDescNode = _('td', { translate: 'yes' }),
-        this.staractRequirementsNode = _('td', {colspan: 3}, [
+        this.#staractDescNode = _('td', { translate: 'yes', className: 'black-border-bottom text-pre-wrap' }),
+        this.#staractRequirementsNode = _('td', {colspan: 3}, [
           _('span', { className: 'sense-star', 'data-sense-type': 'support'}),
           _('span', { className: 'sense-star', 'data-sense-type': 'control'}),
           _('span', { className: 'sense-star', 'data-sense-type': 'amplification'}),
@@ -169,6 +182,7 @@ export default class CharacterData {
   get statFinal() {
     return new CharacterStat(Math.floor(this.voFinal), Math.floor(this.exFinal), Math.floor(this.coFinal))
   }
+  // TODO: 支持双sr设置
   get starRank() {
     return root.appState.characterStarRank.get(this.data.CharacterBaseMasterId);
   }
@@ -189,7 +203,11 @@ export default class CharacterData {
     const episodeReadBonus = this.episodeReadState === EpisodeReadState.One ? 2 : this.episodeReadState === EpisodeReadState.Two ? 5 : 0;
     const bloomBonus = this.baseCorrection;
     const awakenNum = this.awaken ? 1 : 0;
-    const starRankBonus = GameDb.CharacterStarRank[this.starRank].StatusBonus;
+    let starRank = this.starRank;
+    if (this.data.SecondaryCharacterBaseMasterId) {
+      starRank = Math.max(starRank, root.appState.characterStarRank.get(this.data.SecondaryCharacterBaseMasterId))
+    }
+    const starRankBonus = GameDb.CharacterStarRank[starRank].StatusBonus;
     return (val + episodeReadBonus) * lvlBase / 100 * (100 + bloomBonus / 100 + awakenNum * 10 + starRankBonus) / 100;
   }
   updateBloomBonus() {
@@ -229,7 +247,12 @@ export default class CharacterData {
     this.coValNode.textContent = stat.co
     this.totalValNode.textContent = stat.total
 
-    this.sense.resetRecastDown()
+    const staractId = this.awaken ? this.data.AwakenStarActMasterId : this.data.StarActMasterId
+    if (staractId !== this.staract.data.Id) {
+      this.staract = new StarActData(staractId, this.bloom)
+    }
+
+    this.senseAll.forEach(i => i.resetRecastDown())
     this.staract.resetRequireDecrease()
     this.bloomBonusEffects.forEach(effect => {
       switch (effect.Type) {
@@ -241,16 +264,18 @@ export default class CharacterData {
       }
     })
 
-    this.sense.level = this.senselv
-    try {
-      this.senseDescNode.textContent = this.sense.desc
-    } catch {
-      // 缺条件时放弃替换
-      this.senseDescNode.textContent = this.sense.data.Description
-    }
-    this.senseStarNode.textContent = this.sense.data.LightCount
-    this.senseStarNode.dataset.senseType = this.sense.getType()
-    this.ctValNode.textContent = this.sense.ct
+    this.senseAll.forEach((sense, i) => {
+      sense.level = this.senselv
+      try {
+        this.#senseDescNode[i].textContent = sense.desc
+      } catch {
+        // 缺条件时放弃替换
+        this.#senseDescNode[i].textContent = sense.data.Description
+      }
+      this.#senseStarNode[i].textContent = sense.data.LightCount
+      this.#senseStarNode[i].dataset.senseType = sense.getType()
+      this.#ctValNode[i].textContent = sense.ct
+    })
     this.leaderSenseDescNode.textContent = this.leaderSense.desc
 
     removeAllChilds(this.categoryNode)
@@ -261,14 +286,14 @@ export default class CharacterData {
 
     this.staract.level = this.bloom
     try {
-      this.staractDescNode.innerHTML = this.staract.desc
+      this.#staractDescNode.innerHTML = this.staract.desc
     } catch {
       // 缺条件时放弃替换
-      this.staractDescNode.textContent = this.staract.data.Description
+      this.#staractDescNode.textContent = this.staract.data.Description
     }
     this.staract.actualRequirements.forEach((req, i) => {
-      this.staractRequirementsNode.children[i].textContent = req
-      this.staractRequirementsNode.children[i].style.display = req > 0 ? '' : 'none'
+      this.#staractRequirementsNode.children[i].textContent = req
+      this.#staractRequirementsNode.children[i].style.display = req > 0 ? '' : 'none'
     })
 
     this.iconNodeCtLabel.textContent = this.sense.ct
@@ -331,6 +356,20 @@ export default class CharacterData {
     this.episodeReadState = EpisodeReadState.Two
     this.senselv = 5
     this.bloom = 5
+  }
+
+  isCharacterBaseId(baseId) {
+    if (this.data.CharacterBaseMasterId === baseId) return true
+    if (this.data.SecondaryCharacterBaseMasterId === baseId) return true
+    return false
+  }
+  isCharacterBaseIdInList(baseIds) {
+    return baseIds.some(baseId => this.isCharacterBaseId(baseId))
+  }
+  isCharacterInCompany(companyId) {
+    if (GameDb.CharacterBase[this.data.CharacterBaseMasterId].CompanyMasterId === companyId) return true
+    if (this.data.SecondaryCharacterBaseMasterId && GameDb.CharacterBase[this.data.SecondaryCharacterBaseMasterId].CompanyMasterId === companyId) return true
+    return false
   }
 
   toJSON() {

@@ -107,7 +107,7 @@ export default class ScoreCalculator {
           switch (notationBuff.Type) {
             case 'None':      { isBuffTarget = true; break;}
             case "Attribute": { isBuffTarget = this.members[i].data.Attribute === AttributeEnum[notationBuff.TargetValue]; break;}
-            case "Company":   { isBuffTarget = GameDb.CharacterBase[this.members[i].data.CharacterBaseMasterId].CompanyMasterId === notationBuff.TargetValue; break;}
+            case "Company":   { isBuffTarget = this.members[i].isCharacterInCompany(notationBuff.TargetValue); break;}
             case "Character": { isBuffTarget = this.members[i].Id === notationBuff.TargetValue; break;}
           }
           if (notationBuff.TargetValue === undefined) {

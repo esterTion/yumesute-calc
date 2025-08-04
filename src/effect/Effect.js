@@ -84,11 +84,11 @@ export default class Effect {
       switch (trigger.Trigger) {
         case 'CompanyCount': { result = result && calc.properties.companyCount == trigger.Value; break }
         case 'AttributeCount': { result = result && calc.properties.attributeCount == trigger.Value; break }
-        case 'CharacterBase': { result = result && calc.members[index] && calc.members[index].data.CharacterBaseMasterId == trigger.Value; break }
-        case "Company": { result = result && calc.members[index] && GameDb.CharacterBase[calc.members[index].data.CharacterBaseMasterId].CompanyMasterId == trigger.Value;  break }
+        case 'CharacterBase': { result = result && calc.members[index] && calc.members[index].isCharacterBaseId(trigger.Value); break }
+        case "Company": { result = result && calc.members[index] && calc.members[index].isCharacterInCompany(trigger.Value); break }
         case "Attribute": { result = result && calc.members[index] && calc.members[index].data.Attribute == AttributeEnum[trigger.Value]; break }
         case "SenseType": { result = result && calc.members[index] && calc.members[index].sense.data.Type == SenseTypeEnum[trigger.Value]; break }
-        case "CharacterBaseGroup": { result = result && calc.members[index] && GameDb.EffectTriggerCharacterBaseGroup[trigger.Value].CharacterBaseMasterIds.indexOf(calc.members[index].data.CharacterBaseMasterId) !== -1; break }
+        case "CharacterBaseGroup": { result = result && calc.members[index] && calc.members[index].isCharacterBaseIdInList(GameDb.EffectTriggerCharacterBaseGroup[trigger.Value].CharacterBaseMasterIds); break }
         case "OverLife":
         case "BelowLife":
         default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED', {trigger:trigger.Trigger, range: this.Range, id: this.Id})); return false }
@@ -102,8 +102,8 @@ export default class Effect {
     if (!member) return false
     for (let condition of this.data.Conditions) {
       switch (condition.Condition) {
-        case "CharacterBase": { if (member.data.CharacterBaseMasterId !== condition.Value) return false; break; }
-        case "Company": { if (GameDb.CharacterBase[member.data.CharacterBaseMasterId].CompanyMasterId !== condition.Value) return false; break; }
+        case "CharacterBase": { if (!member.isCharacterBaseId(condition.Value)) return false; break; }
+        case "Company": { if (!member.isCharacterInCompany(condition.Value)) return false; break; }
         case "Attribute": { if (member.data.Attribute !== AttributeEnum[condition.Value]) return false; break; }
         case "SenseType": { if (GameDb.Sense[member.data.SenseMasterId].Type !== SenseTypeEnum[condition.Value]) return false; break; }
         case "Character": { if (member.data.CharacterMasterId !== condition.Value) return false; break; }

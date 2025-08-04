@@ -967,7 +967,7 @@ export default class RootLogic {
 
     let choice = this.keikoBox['keiko_member_count'].value | 0
     if (choice < 1) choice = 5
-    const inventoryCharaCount = this.appState.characters.filter(i => i.data.CharacterBaseMasterId === keikoCharaId).length
+    const inventoryCharaCount = this.appState.characters.filter(i => i.isCharacterBaseId(keikoCharaId)).length
     this.keikoBox['keiko_member_count'][0][inventoryCharaCount >= 5 ? 'removeAttribute' : 'setAttribute']('disabled', '')
     this.keikoBox['keiko_member_count'][1][inventoryCharaCount >= 4 ? 'removeAttribute' : 'setAttribute']('disabled', '')
     this.keikoBox['keiko_member_count'][2][inventoryCharaCount >= 3 ? 'removeAttribute' : 'setAttribute']('disabled', '')
@@ -983,7 +983,7 @@ export default class RootLogic {
     removeAllChilds(this.keikoResult)
     const keikoCharaId = this.keikoSelect.value | 0;
     if (!keikoCharaId) return
-    const inventoryChara = this.appState.characters.filter(i => i.data.CharacterBaseMasterId === keikoCharaId)
+    const inventoryChara = this.appState.characters.filter(i => i.isCharacterBaseId(keikoCharaId))
     if (inventoryChara.length === 0) return
 
     const choice = this.keikoBox['keiko_member_count'].value | 0
