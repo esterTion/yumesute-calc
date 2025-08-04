@@ -1,6 +1,7 @@
 import GameDb from "../db/GameDb"
 import Effect from "../effect/Effect"
 import ConstText from "../db/ConstText"
+import BeautyText from "../db/BeautyText"
 
 export default class SenseData {
   constructor(id, level) {
@@ -12,13 +13,12 @@ export default class SenseData {
     Object.assign(this, this.data)
   }
   get desc() {
-    return this.Description
+    return BeautyText.convertGameTextToValidDom(this.Description)
       .replace('[:score]', this.scoreUp)
       .replace('[:gauge]', this.gaugeUp)
       .replace(/\[:pre(\d)\]/g, (_,i)=>Effect.get(this.PreEffects[0].EffectMasterId, this.level).activeEffectValueStr)
       .replace('[:sec]', ()=>Effect.get(this.Branches[0].BranchEffects[0].EffectMasterId, this.level).DurationSecond)
       .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level).activeEffectValueStr)
-      .replace(/<\/?size[^>]*>/g, '')
       .replace(/／/g, '／\n　')
   }
   getType(members = null) {

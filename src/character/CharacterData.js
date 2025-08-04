@@ -267,7 +267,7 @@ export default class CharacterData {
     this.senseAll.forEach((sense, i) => {
       sense.level = this.senselv
       try {
-        this.#senseDescNode[i].textContent = sense.desc
+        this.#senseDescNode[i].innerHTML = sense.desc
       } catch {
         // 缺条件时放弃替换
         this.#senseDescNode[i].textContent = sense.data.Description
