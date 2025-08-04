@@ -18,6 +18,8 @@ export default class SenseData {
       .replace(/\[:pre(\d)\]/g, (_,i)=>Effect.get(this.PreEffects[0].EffectMasterId, this.level).activeEffectValueStr)
       .replace('[:sec]', ()=>Effect.get(this.Branches[0].BranchEffects[0].EffectMasterId, this.level).DurationSecond)
       .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level).activeEffectValueStr)
+      .replace(/<\/?size[^>]*>/g, '')
+      .replace(/／/g, '／\n　')
   }
   getType(members = null) {
     switch (this.Type) {

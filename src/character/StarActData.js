@@ -27,6 +27,8 @@ export default class StarActData {
       .replace('[:score]', this.scoreUp)
       .replace(/\[:pre(\d)\]/g, (_,i)=>Effect.get(this.PreEffects[0].EffectMasterId, this.level).activeEffectValueStr)
       .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level+1).activeEffectValueStr)
+      .replace(/<\/?size[^>]*>/g, '')
+      .replace(/／/g, '／\n　')
   }
   get scoreUp() {
     return (this.AcquirableScorePercent + this.level * this.ScoreUpPerLevel) / 100
