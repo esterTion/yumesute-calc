@@ -61,7 +61,7 @@ export default class LiveSimulator {
     if (!this.senseTiming) throw new Error('Sense timeline not found')
     this.senseTiming = this.senseTiming.Details.slice()
     this.senseTiming.sort((a,b) => a.TimingSecond - b.TimingSecond)
-    this.lastSenseTime = new Array(5).fill(-100)
+    this.lastSenseTime = []
     this.skipSense = new Array(5).fill(false)
     this.baseScore = 0
     this.life = 1000
@@ -93,7 +93,8 @@ export default class LiveSimulator {
   runSimulation(node) {
     this.applyPendingActions()
     Array.from(root.senseBox.querySelectorAll('.sense-add-light,.staract-line')).forEach(i => i.remove())
-    this.senseCt = this.calc.members.map((chara, idx) => chara ? chara.sense.ct : 0)
+    this.senseCt = this.calc.members.map(chara => chara ? chara.senseAll.map(i => i.ct) : 0)
+    this.lastSenseTime = this.calc.members.map(chara => chara?.senseAll.map(() => -Infinity))
     for (let i=0; i<5; i++) {
       const startExtraLight = []
       this.newLightCurrentStep[i].forEach((amount, lightType) => {
@@ -336,8 +337,16 @@ export default class LiveSimulator {
       this.purgeExpiredBuff(timing.TimingSecond)
     }
     const ct = this.senseCt[idx]
-    const timeSinceLast = timing.TimingSecond - this.lastSenseTime[idx]
-    if (ct > timeSinceLast) {
+    let activateSenseIndex = -1
+    ct.some((ct, i) => {
+      const timeSinceLast = timing.TimingSecond - this.lastSenseTime[idx][i]
+      if (ct > timeSinceLast) {
+        return false
+      }
+      activateSenseIndex = i
+      return true
+    })
+    if (activateSenseIndex === -1) {
       this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_FAILED'))
       return false
     }
