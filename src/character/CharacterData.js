@@ -83,7 +83,7 @@ export default class CharacterData {
         _('td', {}, [_('text', 'Total:')]),
         this.totalValNode = _('td', {className: 'stat'}),
       ]),
-      _(CREATE_FRAGMENT, {}, new Array(this.senseAll.length).fill(() => 0).map((__, idx) => _('tr', {}, [
+      _(CREATE_FRAGMENT, {}, new Array(this.senseAll.length).fill(0).map((__, idx) => _('tr', {}, [
         _('td', { style: {maxWidth: '390px'}, className: 'black-border-bottom text-pre-wrap' }, [
           this.#senseStarNode[idx] = _('span', { className: 'sense-star gray-background pad-size' }),
           this.#senseDescNode[idx] = _('span', { translate: 'yes', style: {marginLeft: '0.5em'} })
@@ -263,7 +263,7 @@ export default class CharacterData {
     this.staract.resetRequireDecrease()
     this.bloomBonusEffects.forEach(effect => {
       switch (effect.Type) {
-        case 'SenseRecastDown': return this.sense.recastDown.push(effect.activeEffect.Value)
+        case 'SenseRecastDown': return this.senseAll.forEach(i => i.recastDown.push(effect.activeEffect.Value))
         case 'DecreaseRequireSupportLight': return this.staract.requireDecrease[0] += effect.activeEffect.Value
         case 'DecreaseRequireControlLight': return this.staract.requireDecrease[1] += effect.activeEffect.Value
         case 'DecreaseRequireAmplificationLight': return this.staract.requireDecrease[2] += effect.activeEffect.Value

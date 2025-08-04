@@ -61,7 +61,6 @@ export default class LiveSimulator {
     if (!this.senseTiming) throw new Error('Sense timeline not found')
     this.senseTiming = this.senseTiming.Details.slice()
     this.senseTiming.sort((a,b) => a.TimingSecond - b.TimingSecond)
-    this.lastSenseTime = []
     this.skipSense = new Array(5).fill(false)
     this.baseScore = 0
     this.life = 1000
@@ -161,8 +160,6 @@ export default class LiveSimulator {
         this.resetCurrentLights()
 
         timelineNode.classList.add('failed')
-      } else {
-        this.lastSenseTime[timing.Position - 1] = timing.TimingSecond
       }
 
       lights = this.getHoldingLightsElement()
@@ -351,24 +348,26 @@ export default class LiveSimulator {
       return false
     }
 
-    this.applySenseEffects(idx, timelineNode)
+    this.applySenseEffects(idx, timelineNode, activateSenseIndex)
     this.applyPendingActions()
 
     this.isDuringCombinationSense = true
     for (let otherSenseIdx of this.combinationSenseList[idx]) {
       // 相邻sense发动时，附加生效本轮的加成
       this.purgeExpiredBuff(timing.TimingSecond)
-      this.applySenseEffects(otherSenseIdx, timelineNode)
+      this.applySenseEffects(otherSenseIdx, timelineNode, 0)
       this.applyPendingActions()
     }
     this.isDuringCombinationSense = false
 
+    this.lastSenseTime[idx][activateSenseIndex] = timing.TimingSecond
+
     return true
   }
 
-  applySenseEffects(idx, timelineNode) {
+  applySenseEffects(idx, timelineNode, activateSenseIndex) {
     const chara = this.calc.members[idx]
-    const sense = chara.sense
+    const sense = chara.senseAll[activateSenseIndex]
     sense.data.PreEffects.forEach(effect => {
       effect = Effect.get(effect.EffectMasterId, chara.senselv)
       effect.applyEffect(this.calc, idx, ScoreBonusType.Sense)
@@ -383,8 +382,10 @@ export default class LiveSimulator {
     }
     if (!this.isDuringCombinationSense) {
       this.currentSenseType = sense.Type.toLowerCase();
-      const addedLights = new Array(sense.data.LightCount + this.senseExtraAmount[idx]).fill(sense.Type)
-      this.addSenseLight(sense.Type, idx, addedLights.length)
+      const senseTypesOrdered = [sense.Type, ...chara.senseAll.filter((s, i) => i !== activateSenseIndex).map(s => s.Type)]
+      const senseAddCount = sense.data.LightCount + this.senseExtraAmount[idx]
+      const addedLights = new Array(senseAddCount).fill(0).reduce((acc) => acc.concat(senseTypesOrdered), [])
+      senseTypesOrdered.forEach(i => this.addSenseLight(i, idx, senseAddCount))
       for (let light of this.senseExtraLights[idx]) {
         let [addLightType, addLightAmount] = light
         this.addSenseLight(addLightType, idx, addLightAmount)
@@ -401,8 +402,10 @@ export default class LiveSimulator {
     if (sense.scoreUp) {
       let multiplier = sense.scoreUp
       let scoreLine = multiplier
-      multiplier *= 1 + this.pGauge / 1000
-      scoreLine = `${scoreLine} × ${(1 + this.pGauge / 1000).toFixed(3).replace(/0+$/, '')}`
+      if (this.pGauge > 0) {
+        multiplier *= 1 + this.pGauge / 1000
+        scoreLine = `${scoreLine} × ${(1 + this.pGauge / 1000).toFixed(3).replace(/0+$/, '')}`
+      }
       let extraBuffMul = 0
       let extraBuffLine = '1'
       this.activeBuff.sense.forEach(buff => {

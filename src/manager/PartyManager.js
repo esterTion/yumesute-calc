@@ -119,7 +119,7 @@ export default class PartyManager {
       icon.dataset.id = party.characters[idx] ? party.characters[idx].cardIconId : ''
       const senseLane = root.senseBox.children[idx]
       if (!senseLane) return
-      senseLane.dataset.senseType = party.characters[idx] === null ? '' : party.characters[idx].sense.getType(party.characters)
+      // senseLane.dataset.senseType = party.characters[idx] === null ? '' : party.characters[idx].sense.getType(party.characters)
     })
     this.posterSlot.forEach((icon, idx) => {
       icon.dataset.id = party.posters[idx] ? party.posters[idx].id : ''
