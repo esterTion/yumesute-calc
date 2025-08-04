@@ -360,7 +360,7 @@ export default class LiveSimulator {
     }
     this.isDuringCombinationSense = false
 
-    this.lastSenseTime[idx][activateSenseIndex] = timing.TimingSecond
+    this.lastSenseTime[timing.Position - 1][activateSenseIndex] = timing.TimingSecond
 
     return true
   }

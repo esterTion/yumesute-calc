@@ -137,6 +137,7 @@ export default class ScoreCalculator {
     if (this.extra.type !== ScoreCalculationType.Keiko) leader.leaderSense.Details.forEach(detail => {
       const effect = Effect.get(detail.EffectMasterId, 1)
       this.members.forEach((chara, idx) => {
+        if (!chara) return;
         const charaCategories = chara.categories
         const matchedCategories = []
         for (let i = 0; i < detail.Conditions.length; i++) {

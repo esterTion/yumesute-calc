@@ -3,7 +3,7 @@ export default class SenseCoolTimeRecastDown {
     if (effect.CalculationType !== 'FixedAddition') throw new Error(`SenseCoolTimeRecastDown calc type: ${effect.CalculationType}`)
     targets.forEach(idx => {
       if (!effect.conditionSatified(calc, idx)) return
-      calc.liveSim.lastSenseTime[idx] -= effect.activeEffect.Value
+      calc.liveSim.lastSenseTime[idx] = calc.liveSim.lastSenseTime[idx].map(i => i - effect.activeEffect.Value)
     })
   }
 }
