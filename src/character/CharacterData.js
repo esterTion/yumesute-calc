@@ -161,6 +161,13 @@ export default class CharacterData {
   get fullCardName() {
     return `${this.rarityStr}【${this.cardName}】${this.charaName}`
   }
+  get companyIdList() {
+    const list = [GameDb.CharacterBase[this.data.CharacterBaseMasterId].CompanyMasterId]
+    if (this.data.SecondaryCharacterBaseMasterId) {
+      list.push(GameDb.CharacterBase[this.data.SecondaryCharacterBaseMasterId].CompanyMasterId)
+    }
+    return list
+  }
   get coMin() {
     return this.data.MinLevelStatus.Concentration + this.baseAddition[2];
   }

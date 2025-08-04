@@ -30,10 +30,22 @@ export default class ScoreCalculator {
       attribute: [],
     };
     members.forEach(i => {
-      this.properties.company.push(i ? GameDb.CharacterBase[i.data.CharacterBaseMasterId].CompanyMasterId : null);
+      this.properties.company.push(i ? i.companyIdList : null);
       this.properties.attribute.push(i ? i.data.Attribute : null);
     })
-    this.properties.companyCount = (new Set(this.properties.company.filter(i => i!==null))).size;
+    // 双人卡统计所有剧团组合，取最小总剧团数
+    this.properties.companyCount = ((list) => {
+      const combinations = list.reduce((acc, cur) => {
+        const result = [];
+        cur.forEach(id => {
+          acc.forEach(arr => {
+            result.push([...arr, id]);
+          })
+        });
+        return result;
+      }, [[]]);
+      return combinations.map(i => (new Set(i)).size).reduce((acc, cur) => Math.min(acc, cur), Infinity);
+    })(this.properties.company.filter(i => i!==null));
     this.properties.attributeCount = (new Set(this.properties.attribute.filter(i => i!==null))).size;
 
     this.liveSim = new LiveSimulator(this)
