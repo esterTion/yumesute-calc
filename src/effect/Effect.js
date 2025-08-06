@@ -89,6 +89,8 @@ export default class Effect {
         case "Attribute": { result = result && calc.members[index] && calc.members[index].data.Attribute == AttributeEnum[trigger.Value]; break }
         case "SenseType": { result = result && calc.members[index] && calc.members[index].sense.data.Type == SenseTypeEnum[trigger.Value]; break }
         case "CharacterBaseGroup": { result = result && calc.members[index] && calc.members[index].isCharacterBaseIdInList(GameDb.EffectTriggerCharacterBaseGroup[trigger.Value].CharacterBaseMasterIds); break }
+        case "AllMemberBelongingCompany": { result = result && calc.properties.companyCount == 1 && calc.properties.companyMemberCount[trigger.Value] > 0; break}
+        case "MaxMemberBelongingCompanyCount": { result = result && calc.properties.companyMemberMaxCount >= trigger.Value; break }
         case "OverLife":
         case "BelowLife":
         default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED', {trigger:trigger.Trigger, range: this.Range, id: this.Id})); return false }

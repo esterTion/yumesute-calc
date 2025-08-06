@@ -28,11 +28,18 @@ export default class ScoreCalculator {
     this.properties = {
       company: [],
       attribute: [],
+      companyMemberCount: {},
+      companyMemberMaxCount: 0,
     };
     members.forEach(i => {
       this.properties.company.push(i ? i.companyIdList : null);
       this.properties.attribute.push(i ? i.data.Attribute : null);
+      i?.companyIdList.forEach(id => {
+        this.properties.companyMemberCount[id] ??= 0;
+        this.properties.companyMemberCount[id]++;
+      })
     })
+    this.properties.companyMemberMaxCount = Object.values(this.properties.companyMemberCount).reduce((max, c) => Math.max(max, c), 0);
     // 双人卡统计所有剧团组合，取最小总剧团数
     this.properties.companyCount = ((list) => {
       const combinations = list.reduce((acc, cur) => {
