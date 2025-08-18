@@ -41,7 +41,7 @@ export default class PosterAbilityData {
         let judgeValue
         switch (this.data.BranchConditionType1) {
           case 'AttributeCount': { judgeValue = liveSim.calc.properties.attributeCount; break }
-          case 'CompanyMemberCount': { judgeValue = liveSim.calc.properties.company.filter(i => i === this.data.ConditionValue1).length; break }
+          case 'CompanyMemberCount': { judgeValue = liveSim.calc.members.reduce((s,i) => i.isCharacterInCompany(this.data.ConditionValue1) ? s+1 : s, 0); break }
           default: { console.log(`Poster ability branch condition ${this.data.BranchConditionType1}`); return null }
         }
         switch (branch.JudgeType1) {
