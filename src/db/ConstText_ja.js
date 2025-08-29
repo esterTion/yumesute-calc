@@ -10,7 +10,7 @@ export default {
   PARTY_LABEL: '編成',
   IMPORT_DATA_LABEL: 'データを導入',
   EXPORT_DATA_LABEL: 'データを保存',
-  EXPORTER_LABEL: '連携パスワードで導入するツール【2025/02/03更新】',
+  EXPORTER_LABEL: '連携パスワードで導入するツール【2025/08/22更新】',
   HIGHSCORE_BUFF_LABEL: '舞台装置：',
   KEIKO_MEMBER_COUNT_LABEL: '編成人数：',
   KEIKO_CALCULATING: '{0}個の編成の最高スコアを計算中',

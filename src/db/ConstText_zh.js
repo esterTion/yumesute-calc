@@ -10,7 +10,7 @@ export default {
   PARTY_LABEL: '编队',
   IMPORT_DATA_LABEL: '导入数据',
   EXPORT_DATA_LABEL: '导出数据',
-  EXPORTER_LABEL: '引继码导出工具（2025/02/03更新）',
+  EXPORTER_LABEL: '引继码导出工具（2025/08/22更新）',
   HIGHSCORE_BUFF_LABEL: '舞台装置：',
   KEIKO_MEMBER_COUNT_LABEL: '编队人数：',
   KEIKO_CALCULATING: '正在计算{0}个组合的最高分',

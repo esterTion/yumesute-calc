@@ -10,7 +10,7 @@ export default {
   PARTY_LABEL: 'Party edit',
   IMPORT_DATA_LABEL: 'Load exported',
   EXPORT_DATA_LABEL: 'Export',
-  EXPORTER_LABEL: 'Export tool using password (Updated 03/Feb/2025)',
+  EXPORTER_LABEL: 'Export tool using password (Updated 22/Aug/2025)',
   HIGHSCORE_BUFF_LABEL: 'Stage Boost: ',
   KEIKO_MEMBER_COUNT_LABEL: 'Party size: ',
   KEIKO_CALCULATING: 'Calculating the highest score of {0} party combinations',
