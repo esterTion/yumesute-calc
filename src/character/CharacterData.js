@@ -99,6 +99,7 @@ export default class CharacterData {
           _('span', { className: 'sense-star', 'data-sense-type': 'control'}),
           _('span', { className: 'sense-star', 'data-sense-type': 'amplification'}),
           _('span', { className: 'sense-star', 'data-sense-type': 'special'}),
+          _('span', { className: 'sense-star', 'data-sense-type': ''}),
         ]),
       ]),
       _('tr', {}, [

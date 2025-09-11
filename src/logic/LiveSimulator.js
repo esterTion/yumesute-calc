@@ -44,7 +44,7 @@ export default class LiveSimulator {
   activeBuff;
   senseExtraAmount;
   senseExtraLights;
-  overflownLights;
+  overflownLightCount;
   newLightCurrentStep;
   wrongLightToSpAmount;
   holdingLights;
@@ -74,10 +74,10 @@ export default class LiveSimulator {
     this.currentTiming = 0
     this.lastSenseTiming = this.senseTiming[this.senseTiming.length - 1].TimingSecond
     this.activeBuff = { sense: [], starAct: [] }
-    this.starActCurrent = [0,0,0,0,0]
+    this.starActCurrent = [0,0,0,0,0,0]
     this.senseExtraAmount = [0,0,0,0,0]
     this.senseExtraLights = [[],[],[],[],[]]
-    this.overflownLights = [0,0,0,0,0]
+    this.overflownLightCount = 0
     this.newLightCurrentStep = new Array(5).fill(0).map(_ => new Array(5).fill(0))
     this.wrongLightToSpAmount = [0,0,0,0,0]
     this.holdingLights = []
@@ -261,11 +261,12 @@ export default class LiveSimulator {
       case 'variable':      { lightType = 4; break }
       default: throw new Error('Unknown sense type: ' + type)
     }
+    let freeLightUsed = 0;
     // 持有统计
     for (let i = 0; i < amount; i++) {
       // sp光
       if (lightType === 4) {
-        if (this.holdingStockLights.length < this.starActRequiredCount) {
+        if (this.holdingLights.length < this.starActRequiredCount) {
           this.holdingLights.push(type)
         } else {
           this.holdingStockLights.push(type)
@@ -275,10 +276,14 @@ export default class LiveSimulator {
           this.holdingLights.push(type)
         } else if (this.stockType === 5 || this.stockType - 1 === lightType) {
           this.holdingStockLights.push(type)
+        } else if (this.starActCurrent[5] < this.starActRequirements[4]) {
+          this.holdingLights.push(type)
+          this.starActCurrent[5]++
+          freeLightUsed++
         }
       }
     }
-    this.starActCurrent[lightType] += amount
+    this.starActCurrent[lightType] += amount - freeLightUsed
     this.newLightCurrentStep[idx][lightType] += amount
   }
   processWrongLightToSp(idx, addedLights) {
@@ -304,11 +309,12 @@ export default class LiveSimulator {
   resetCurrentLights() {
     for (let i=0; i<5; i++) {
       this.starActCurrent[i] = 0
-      this.overflownLights[i] = 0
       this.newLightCurrentStep[i].fill(0)
       this.holdingLights = []
       this.holdingStockLights = []
     }
+    this.starActCurrent[5] = 0
+    this.overflownLightCount = 0
   }
   trySense(timing, timelineNode) {
     let idx = timing.Position - 1
@@ -473,25 +479,10 @@ export default class LiveSimulator {
     }
   }
   tryStarAct() {
-    let missingCount = 0
-    for (let i=0; i<4; i++) {
-      if (this.starActCurrent[i] < this.starActRequirements[i]) {
-        missingCount += this.starActRequirements[i] - this.starActCurrent[i]
-      } else {
-        this.overflownLights[i] += this.starActCurrent[i] - this.starActRequirements[i]
-        this.starActCurrent[i] = this.starActRequirements[i]
-      }
-    }
-    if (missingCount - this.starActCurrent[4] > 0) {
+    if (this.holdingLights.length < this.starActRequiredCount) {
       return false
     }
-    // stock 5号位统计总溢出光，在加sp前统计
-    const totalOverflownLights = this.overflownLights.reduce((a,b) => a+b, 0)
-    // 当前即将发动，把剩余的sp光加到所有种类用于stock光计算
-    for (let i=0; i<4; i++) {
-      this.overflownLights[i] += this.starActCurrent[4] - missingCount
-    }
-    this.overflownLights[4] = totalOverflownLights + this.starActCurrent[4] - missingCount
+    this.overflownLightCount = this.holdingStockLights.length
     const idx = this.calc.members.indexOf(this.leader)
     this.leader.staract.data.PreEffects.forEach(effect => {
       effect = Effect.get(effect.EffectMasterId, this.leader.bloom)

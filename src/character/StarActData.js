@@ -18,9 +18,10 @@ export default class StarActData {
       this.condition.SupportLight,
       this.condition.ControlLight,
       this.condition.AmplificationLight,
-      this.condition.SpecialLight
+      this.condition.SpecialLight,
+      this.condition.FreeLight,
     ]
-    this.requireDecrease = [0,0,0,0]
+    this.requireDecrease = [0,0,0,0,0]
   }
   get desc() {
     return BeautyText.convertGameTextToValidDom(this.Description)
@@ -33,7 +34,7 @@ export default class StarActData {
     return (this.AcquirableScorePercent + this.level * this.ScoreUpPerLevel) / 100
   }
   resetRequireDecrease() {
-    this.requireDecrease = [0,0,0,0]
+    this.requireDecrease = [0,0,0,0,0]
   }
   get actualRequirements() {
     return this.requirements.map((req, i) => (req > 0 ? Math.max(1, req - this.requireDecrease[i]) : 0))
@@ -49,7 +50,7 @@ export default class StarActData {
         let judgeValue
         switch (this.data.BranchCondition1) {
           case 'LifeGuardCount': { judgeValue = liveSim.lifeGuardCount; isLifeGuardBranch = true; break }
-          case 'StorageSenseLightCount': { judgeValue = liveSim.overflownLights[this.data.ConditionValue1 - 1]; break }
+          case 'StorageSenseLightCount': { judgeValue = liveSim.overflownLightCount; break }
           case 'CompanyMemberCount': { judgeValue = liveSim.calc.members.reduce((s,i) => i.isCharacterInCompany(this.data.ConditionValue1) ? s+1 : s, 0); break }
           case 'AttributeCount': { judgeValue = liveSim.calc.properties.attributeCount; isLifeGuardBranch = true; break }
           case "CharacterBaseGroup": { judgeValue = liveSim.calc.members.reduce((s,i) => i.isCharacterBaseIdInList(GameDb.EffectTriggerCharacterBaseGroup[this.data.ConditionValue1].CharacterBaseMasterIds) ? s+1 : s, 0); break }
