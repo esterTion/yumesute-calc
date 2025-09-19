@@ -201,14 +201,14 @@ export default class ScoreCalculator {
     const theaterEffects = root.appState.theaterLevel.getEffects()
     theaterEffects.forEach(effect => effect.applyEffect(this, -1, StatBonusType.Theater))
 
-    let statExtra = 1
+    let statExtra = 100
     if (this.extra.starRankScoreBonus) {
-      statExtra = 1 + this.extra.starRankScoreBonus * 30 / 100
+      statExtra = 100 + this.extra.starRankScoreBonus * 30
     }
 
     this.stat.calc()
 
-    const baseScore = [0.95, 0.97, 1, 1.05].map(coef => Math.floor(Math.floor(this.stat.finalTotal * statExtra) * 10 * (1 + passiveEffects.baseScoreUp/10000) * coef))
+    const baseScore = [0.95, 0.97, 1, 1.05].map(coef => Math.floor(Math.floor(this.stat.finalTotal * statExtra / 100) * 10 * (1 + passiveEffects.baseScoreUp/10000) * coef))
     const senseScore = []
     const starActScore = []
 
@@ -219,9 +219,7 @@ export default class ScoreCalculator {
       starActCount: 0,
     }
 
-    if (!node) return
-
-    node.appendChild(_('div', {}, [
+    node?.appendChild(_('div', {}, [
       this.createStatDetailsTable(),
       _('span', { 'data-text-key': 'CALC_TOTAL_STAT'}),
       _('text', this.stat.finalTotal),
@@ -231,6 +229,30 @@ export default class ScoreCalculator {
     ]))
 
     if (this.extra.type === ScoreCalculationType.Keiko) {
+      // 250919
+      // 每张卡发动一次sense，只加分
+      const senseScoreNode = node?.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_SENSE_SCORE'})]))
+      const totalScoreNode = node?.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_TOTAL_SCORE'})]))
+      const senseLinesTable = node?.appendChild(_('table'))
+
+      this.members.forEach((chara, idx) => {
+        if (!chara) return
+        const multiplier = chara.sense.scoreUp
+        const finalStat = this.stat.final[idx].total
+        const score = Math.floor(finalStat * statExtra * multiplier / 100)
+        this.result.senseScore.push(score)
+        senseLinesTable?.appendChild(_('tr', { className: 'live-log-phase' + ((idx % 1) === 1 ? ' odd-row' : '') }, [
+          _('td', {}, [_('div', { className: 'spriteatlas-characters', 'data-id': chara.cardIconId})]),
+          _('td', {}, [_('text', `${finalStat} * ${statExtra}% * ${multiplier} = ${score}`)])
+        ]))
+      })
+
+      if (!node) return
+
+      const finalSenseScore = this.result.senseScore.reduce((acc, cur) => acc + cur, 0)
+      senseScoreNode.appendChild(_('text', finalSenseScore))
+      totalScoreNode.appendChild(_('text', this.result.baseScore.map(i => i + finalSenseScore).join(' / ')))
+
       ConstText.fillText()
       return;
     }
