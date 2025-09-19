@@ -91,6 +91,7 @@ export default class extends Filter {
   check(item) {
     const charaId = item.data.CharacterBaseMasterId
     const toggle = this.toggles[charaId]
-    return toggle && toggle.checked
+    const subCharaId = item.data.SecondaryCharacterBaseMasterId
+    return (toggle && toggle.checked) || (subCharaId && this.toggles[subCharaId] && this.toggles[subCharaId].checked)
   }
 }

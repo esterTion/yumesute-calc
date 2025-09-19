@@ -121,6 +121,7 @@ export default {
   FILTER_EFFECT_LIFE_HEALING: 'Life healing',
   FILTER_EFFECT_LIFE_GUARD: 'Life guard',
   FILTER_EFFECT_CT_RECAST_DOWN: 'Current CT decrease',
+  FILTER_EFFECT_PERFORMANCE_DUPLICATE_UP: 'Performance bonus',
   FILTER_EFFECT_NONE: 'No special effect',
   FILTER_EFFECT_VOCAL_UP: 'Vo. bonus',
   FILTER_EFFECT_EXPRESSION_UP: 'Ex. bonus',
