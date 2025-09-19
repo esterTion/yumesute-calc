@@ -1019,7 +1019,7 @@ export default class RootLogic {
           type: ScoreCalculationType.Keiko,
         })
         testCalc.calc(null)
-        return [i, testCalc.result.baseScore[3]]
+        return [i, testCalc.result.baseScore[3] + testCalc.result.senseScore.reduce((acc, cur) => acc + cur, 0)]
       })
       testResult.sort((a,b) => b[1] - a[1])
       bestParty = testResult[0][0]
