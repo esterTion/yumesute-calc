@@ -42,6 +42,7 @@ import ChangeWrongLightToSpLight from './types/ChangeWrongLightToSpLight'
 import PrincipalGaugeBonus from './types/PrincipalGaugeBonus'
 import PerformanceDuplicateUp from './types/PerformanceDuplicateUp'
 import StatBonusType from '../logic/StatBonusType'
+import PrincipalGaugeGainPercentageOfLimit from './types/PrincipalGaugeGainPercentageOfLimit'
 
 export default class Effect {
   // life guard分支下的效果需要单独处理。。
@@ -141,6 +142,7 @@ export default class Effect {
       case "PrincipalGaugeUp": { return PrincipalGaugeUp.applyEffect(this, calc, targets, type) }
       case 'PrincipalGaugeGain': { return PrincipalGaugeGain.applyEffect(this, calc, [index], type) }
       case 'PrincipalGaugeLimitUp': { return PrincipalGaugeLimitUp.applyEffect(this, calc, [index], type) }
+      case 'PrincipalGaugeGainPercentageOfLimit': { return PrincipalGaugeGainPercentageOfLimit.applyEffect(this, calc, [index], type) }
       case 'FinalPerformanceUpCancelSense': { return FinalPerformanceUpCancelSense.applyEffect(this, calc, targets, type) }
       case 'PerformanceDuplicateUp': { return PerformanceDuplicateUp.applyEffect(this, calc, targets, type) }
       case "VocalLimitUp": { return VocalLimitUp.applyEffect(this, calc, targets, type) }
