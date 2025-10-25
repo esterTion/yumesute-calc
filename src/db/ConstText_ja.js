@@ -165,7 +165,7 @@ export default {
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '効果支援していない：{type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '効果の条件支援していない：{trigger} @ {range} ({id})',
   LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: '分岐条件支援していない：{condition} ({id})',
-  LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '現在のスコアに基づくボーナスは正確に計算できません',
+  LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '** 現在のスコアに基づくボーナスは正確に計算できません',
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: 'スコアボーナスの種類支援していない：{type} ({id})',
   UNDEFINED_STRING: '不足しているテキスト：{0}',
 }

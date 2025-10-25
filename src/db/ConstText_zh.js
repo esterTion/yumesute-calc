@@ -165,7 +165,7 @@ export default {
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '未支持的效果：{type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '未支持的效果触发：{trigger} @ {range} ({id})',
   LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: '未支持的分支条件：{condition} ({id})',
-  LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '按当前得分加分的效果无法精确计算分数',
+  LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '** 按当前得分加分的效果无法精确计算分数',
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: '未支持的加分类型：{type} ({id})',
   UNDEFINED_STRING: '缺失的文本：{0}',
 }

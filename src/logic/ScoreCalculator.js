@@ -282,6 +282,10 @@ export default class ScoreCalculator {
     senseScoreNode.appendChild(_('text', finalSenseScore))
     starActScoreNode.appendChild(_('text', ConstText.get('CALC_RESULT_STARACT').replace('{times}', this.result.starActCount).replace('{score}', finalStarActScore)))
     totalScoreNode.appendChild(_('text', this.result.baseScore.map(i => i + finalSenseScore + finalStarActScore).join(' / ')))
+    if (this.liveSim.scoreIsInaccurate) {
+      totalScoreNode.appendChild(_('br'))
+      totalScoreNode.appendChild(_('span', { 'data-text-key': 'LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE' }))
+    }
 
     ConstText.fillText()
   }

@@ -14,7 +14,7 @@ export default class ScoreGainOnScore {
         const score = Math.floor(scoreRightNow * effect.activeEffect.Value / 10000)
         scoreArr.push(score)
         liveSim.phaseLog.push(ConstText.get(logKey, [scoreRightNow, (effect.activeEffect.Value / 100).toFixed(2) + '%', score, 'score']))
-        root.addWarningMessage(ConstText.get('LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE'))
+        liveSim.scoreIsInaccurate = true
       }
       if (type === ScoreBonusType.Poster) {
         // 海报分数百分比加分操作在sense算分最后

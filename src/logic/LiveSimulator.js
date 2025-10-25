@@ -54,6 +54,7 @@ export default class LiveSimulator {
   performanceDuplicateUp;
   combinationSenseList;
   isDuringCombinationSense;
+  scoreIsInaccurate;
 
   constructor(calc) {
     this.calc = calc
@@ -88,6 +89,7 @@ export default class LiveSimulator {
     this.performanceDuplicateUp = [0,0,0,0,0]
     this.combinationSenseList = [[],[],[],[],[]]
     this.isDuringCombinationSense = false
+    this.scoreIsInaccurate = false
   }
   runSimulation(node) {
     this.applyPendingActions()

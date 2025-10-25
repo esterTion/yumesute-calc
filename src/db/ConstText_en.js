@@ -165,7 +165,7 @@ export default {
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: 'Effect type not implemented: {type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: 'Effect trigger not implemented: {trigger} @ {range} ({id})',
   LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED: 'Branch condition not implemented: {condition} ({id})',
-  LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: 'Bonus based on current score cannot be accurately calculated',
+  LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '** Bonus based on current score cannot be accurately calculated',
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: 'Score gain type not implemented: {type} ({id})',
   UNDEFINED_STRING: 'Missing text template: {0}',
 }
