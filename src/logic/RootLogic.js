@@ -141,24 +141,24 @@ export default class RootLogic {
 
       _('div', {}, [
         _('div', {'data-text-key':'THEATER_LEVEL_LABEL'}),
-        this.theaterLevelForm = _('form', { event: { change: e=>this.setTheaterLevel(e) }}, [
+        this.theaterLevelForm = (() => { const entries = Object.values(GameDb.CircleSupportCompanyLevelDetail).reduce((acc,i)=>Math.max(acc, i.Level), 0) + 1; return _('form', { event: { change: e=>this.setTheaterLevel(e) }}, [
           _('div', {}, [
-            _('select', { name: 'Sirius' }, (new Array(11)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Sirius' }, (new Array(entries)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'SIRIUS' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Eden' }, (new Array(11)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Eden' }, (new Array(entries)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'EDEN' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Gingaza' }, (new Array(11)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Gingaza' }, (new Array(entries)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'GINGAZA' }),
           ]),
           _('div', {}, [
-            _('select', { name: 'Denki' }, (new Array(11)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
+            _('select', { name: 'Denki' }, (new Array(entries)).fill(0).map((__,i) => _('option', { value: i }, [_('text', i)]))),
             _('span', { style: { paddingLeft: '1em' }, 'data-text-key': 'DENKI' }),
           ]),
-        ])
+        ])})()
       ]),
 
       _('div', {className: 'margin-box', 'data-menu-anchor': 'MENU_ANCHOR_INVENTORY'}),
