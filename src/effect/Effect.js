@@ -110,6 +110,7 @@ export default class Effect {
         case "Attribute": { if (member.data.Attribute !== AttributeEnum[condition.Value]) return false; break; }
         case "SenseType": { if (GameDb.Sense[member.data.SenseMasterId].Type !== SenseTypeEnum[condition.Value]) return false; break; }
         case "Character": { if (member.data.CharacterMasterId !== condition.Value) return false; break; }
+        case "CharacterBaseGroup": {if (!calc.members[index].isCharacterBaseIdInList(GameDb.EffectTriggerCharacterBaseGroup[condition.Value].CharacterBaseMasterIds)) return false; break; }
         // TODO: Implement after poster is implemented
         case "EquippedPoster": { return false }
         default: { return false }
