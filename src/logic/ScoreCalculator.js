@@ -70,7 +70,7 @@ export default class ScoreCalculator {
     }
     this.liveSim.leader = leader
 
-    this.members.forEach(i => i && (i.sense.resetRecastDown(), i.staract.resetRequireDecrease()))
+    this.members.forEach(i => i?.resetEffects())
 
     // highscore buff
     root.appState.highScoreBuffManager.currentActiveEffects().forEach(effect => {
@@ -301,7 +301,7 @@ export default class ScoreCalculator {
     return _('div', {}, this.members.map((chara, idx) => (rowNumber = 0, chara === null ? _('text', '') : _('details', {}, [
       _('summary', {}, [
         _('span', {className: `card-attribute-${chara.attributeName}`}),
-        _('text', `${chara.fullCardName} CT: ${chara.sense.ct}`),
+        _('text', `${chara.fullCardName} CT: ` + chara.senseAll.map(i => i.ct).join(' / ')),
         _('span', {}, Object.keys(this.memberMatchingCategories[idx]).map(category => _('span', {className: 'character-category'}, [_('text', GameDb.Category[category].Name)]))),
       ]),
       _('table', { className: 'stat-details'}, [

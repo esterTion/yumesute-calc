@@ -260,8 +260,7 @@ export default class CharacterData {
       this.staract = new StarActData(staractId, this.bloom)
     }
 
-    this.senseAll.forEach(i => i.resetRecastDown())
-    this.staract.resetRequireDecrease()
+    this.resetEffects()
     this.bloomBonusEffects.forEach(effect => {
       switch (effect.Type) {
         case 'SenseRecastDown': return this.senseAll.forEach(i => i.recastDown.push(effect.activeEffect.Value))
@@ -364,6 +363,10 @@ export default class CharacterData {
     this.episodeReadState = EpisodeReadState.Two
     this.senselv = 5
     this.bloom = 5
+  }
+  resetEffects() {
+    this.senseAll.forEach(i => i.resetRecastDown())
+    this.staract.resetRequireDecrease()
   }
 
   isCharacterBaseId(baseId) {

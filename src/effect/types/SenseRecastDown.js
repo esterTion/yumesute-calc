@@ -3,7 +3,7 @@ export default class SenseRecastDown {
     if (effect.CalculationType !== 'FixedAddition') throw new Error(`SenseRecastDown calc type: ${effect.CalculationType}`)
     targets.forEach(idx => {
       if (!effect.conditionSatified(calc, idx)) return
-      calc.members[idx]?.sense.recastDown.push(effect.activeEffect.Value)
+      calc.members[idx]?.senseAll.forEach(i => i.recastDown.push(effect.activeEffect.Value))
     })
   }
 }
