@@ -231,6 +231,7 @@ export default class LiveSimulator {
     }
     const before = this.life
     this.life += amount
+    this.life = Math.max(this.life, 1)
     this.phaseLog.push(ConstText.get('LIVE_LOG_LIFE', [before, amount, this.life]))
   }
   addPGauge(amount, immediateAction = false) {
