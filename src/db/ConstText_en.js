@@ -46,6 +46,7 @@ export default {
   CARD_LABEL_STORY: 'Card story: ',
   CARD_LABEL_SENSE: 'Sense: ',
   CARD_LABEL_BLOOM: 'Bloom: ',
+  CARD_LABEL_AWAKEN: 'Awaken',
   CARD_SELECTION_EPISODE_READ_0: 'Not read',
   CARD_SELECTION_EPISODE_READ_1: 'Read Episode 1',
   CARD_SELECTION_EPISODE_READ_2: 'Read Episode 2',

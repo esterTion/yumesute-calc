@@ -17,6 +17,7 @@ export default class GachaViewer {
 
   constructor(type) {
     this.type = type
+    this.showAwaken = true
     this.container = document.body.appendChild(_('div', { className: 'picking-overlay', event: { click: e => e.target === this.container && this.close() } }, [
       _('div', { className: 'picking-container' }, [
         _('input', { type: 'button', value: ConstText.get('BACK'), event: { click: () => this.close() } }),
@@ -33,11 +34,19 @@ export default class GachaViewer {
     const list = Object.values(GameDb.Gacha).filter(i => i.CardType === this.type)
     list.sort((a, b) => a.StartDate > b.StartDate ? -1 : a.StartDate < b.StartDate ? 1 : b.Order - a.Order)
     this.contentContainer.appendChild(_('div', {}, [
-      _('div', {}, [_('select', { event: { change: e => this.changeGacha(e.target.value) } }, list.map(i => _('option', { value: i.Id }, [_('text', this.getGachaName(i))])))]),
+      _('div', {}, [this.gachaSelect = _('select', { event: { change: e => this.changeGacha(e.target.value) } }, list.map(i => _('option', { value: i.Id }, [_('text', this.getGachaName(i))])))]),
+      _('div', { style: { display: this.type === GACHA_TYPE.ACTOR ? '' : 'none', padding: '0.5em 0' } }, [_('label', {}, [
+        _('input', { type: 'checkbox', checked: 1, event: { change: e => {
+          this.showAwaken = e.target.checked;
+          this.changeGacha(this.gachaSelect.value);
+        }}}),
+        _('span', { 'data-text-key': 'CARD_LABEL_AWAKEN' }),
+      ])]),
       this.gachaTable = _('div')
     ]))
 
     this.changeGacha(list[0].Id)
+    ConstText.fillText()
   }
   getGachaName(g) {
     let str = `${g.Name} ${g.StartDate.slice(0, -3)}`
@@ -110,6 +119,7 @@ export default class GachaViewer {
   getThingPreviewNode(item, owned) {
     if (item.ThingType === 'Character') {
       const chara = new CharacterData(item.ThingId, null)
+      chara.awaken = this.showAwaken
       const charaEle = _('span', { className: 'list-icon-container hoz-item-with-name' }, [
         _('span', { className: 'spriteatlas-characters', 'data-id': chara.cardIconId }),
         _('span', { className: `card-attribute-${chara.attributeName}`}),

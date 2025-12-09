@@ -46,6 +46,7 @@ export default {
   CARD_LABEL_STORY: 'カードストーリー：',
   CARD_LABEL_SENSE: 'センス：',
   CARD_LABEL_BLOOM: '開花：',
+  CARD_LABEL_AWAKEN: '覚醒',
   CARD_SELECTION_EPISODE_READ_0: '未読',
   CARD_SELECTION_EPISODE_READ_1: '前編読む',
   CARD_SELECTION_EPISODE_READ_2: '後編読む',
