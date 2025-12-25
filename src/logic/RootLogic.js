@@ -1,4 +1,5 @@
 import GameDb from '../db/GameDb'
+import AtlasDb from '../db/AtlasDb'
 import ConstText from '../db/ConstText'
 
 import _ from '../createElement'
@@ -40,7 +41,11 @@ export default class RootLogic {
   async init() {
     console.log('init')
 
-    await GameDb.load()
+    AtlasDb.addAtlasSheet('accessories');
+    AtlasDb.addAtlasSheet('characters');
+    AtlasDb.addAtlasSheet('posters');
+    AtlasDb.addAtlasSheet('characterlog');
+    await GameDb.load();
     this.loaded = true;
 
     {
