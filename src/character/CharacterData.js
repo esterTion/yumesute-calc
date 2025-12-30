@@ -76,7 +76,7 @@ export default class CharacterData {
       ]),
       _('tr', {}, [
         _('td', {}, [
-          _('text', 'Star Rank: '), this.starRankInput = _('select', { event: { change: e=>this.setStarRank(e) } }),
+          this.getStarRankSelects(),
           _('text', '　Sense: '), this.senseInput = _('select', { event: { change: e=>this.setSense(e) } }),
           _('text', '　突破: '), this.bloomInput = _('select', { event: { change: e=>this.setBloom(e) } }),
         ]),
@@ -127,10 +127,6 @@ export default class CharacterData {
 
     for (let lvl in GameDb.CharacterLevel) {
       this.levelSelect.appendChild(_('option', { value: lvl }, [_('text', lvl)]))
-    }
-    const maxStarRank = Object.values(GameDb.CharacterStarRank).slice(-1)[0].Rank
-    for (let i = 0; i <= maxStarRank; i++) {
-      this.starRankInput.appendChild(_('option', { value: i }, [_('text', i)]))
     }
     for (let i = 1; i < 6; i++) {
       this.senseInput.appendChild(_('option', { value: i }, [_('text', i)]))
@@ -190,12 +186,12 @@ export default class CharacterData {
   get statFinal() {
     return new CharacterStat(Math.floor(this.voFinal), Math.floor(this.exFinal), Math.floor(this.coFinal))
   }
-  // TODO: 支持双sr设置
-  get starRank() {
-    return root.appState.characterStarRank.get(this.data.CharacterBaseMasterId);
-  }
-  set starRank(val) {
-    root.appState.characterStarRank.set(this.data.CharacterBaseMasterId, val);
+  get starRanks() {
+    const arr = [root.appState.characterStarRank.get(this.data.CharacterBaseMasterId)];
+    if (this.data.SecondaryCharacterBaseMasterId) {
+      arr.push(root.appState.characterStarRank.get(this.data.SecondaryCharacterBaseMasterId));
+    }
+    return arr;
   }
   get bloomBonusEffects() {
     const bloomBonusGroup = GameDb.CharacterBloomBonusGroup[this.data.BloomBonusGroupMasterId].BloomBonuses;
@@ -211,10 +207,7 @@ export default class CharacterData {
     const episodeReadBonus = this.episodeReadState === EpisodeReadState.One ? 2 : this.episodeReadState === EpisodeReadState.Two ? 5 : 0;
     const bloomBonus = this.baseCorrection;
     const awakenNum = this.awaken ? 1 : 0;
-    let starRank = this.starRank;
-    if (this.data.SecondaryCharacterBaseMasterId) {
-      starRank = Math.max(starRank, root.appState.characterStarRank.get(this.data.SecondaryCharacterBaseMasterId))
-    }
+    let starRank = this.starRanks.reduce((a, b) => Math.max(a, b), 0);
     const starRankBonus = GameDb.CharacterStarRank[starRank].StatusBonus;
     return (val + episodeReadBonus) * lvlBase / 100 * (100 + bloomBonus / 100 + awakenNum * 10 + starRankBonus) / 100;
   }
@@ -237,7 +230,11 @@ export default class CharacterData {
     }
     this.levelSelect.value = this.lvl;
     this.awakenInput.checked = this.awaken;
-    this.starRankInput.value = this.starRank;
+    const starRanks = this.starRanks;
+    this.starRankInputs[0].value = starRanks[0];
+    if (this.data.SecondaryCharacterBaseMasterId) {
+      this.starRankInputs[1].value = starRanks[1];
+    }
     root.characterForm[`episodeReadState-${this.data.Id}`].value = this.episodeReadState;
     this.senseInput.value = this.senselv;
     this.bloomInput.value = this.bloom;
@@ -331,6 +328,29 @@ export default class CharacterData {
 
     root.update({ selection: true })
   }
+  getStarRankSelects() {
+    this.starRankInputs = []
+    const id = this.data.CharacterBaseMasterId
+    const container = _('span', {}, [
+      _('span', { style: { verticalAlign: 'middle' }, className: 'spriteatlas-characterlog after-talk-icon', 'data-id': id }),
+      this.starRankInputs[0] = _('select', { 'data-id': id, event: { change: e=>this.setStarRank(e) } }),
+    ])
+    if (this.data.SecondaryCharacterBaseMasterId) {
+      const id = this.data.SecondaryCharacterBaseMasterId
+      container.appendChild(_(CREATE_FRAGMENT, {}, [
+        _('br'),
+        _('span', { style: { verticalAlign: 'middle' }, className: 'spriteatlas-characterlog after-talk-icon', 'data-id': id }),
+        this.starRankInputs[this.starRankInputs.length] = _('select', { 'data-id': id, event: { change: e=>this.setStarRank(e) } }),
+      ]))
+    }
+    const maxStarRank = Object.values(GameDb.CharacterStarRank).slice(-1)[0].Rank
+    for (let i = 0; i <= maxStarRank; i++) {
+      for (let j = 0; j < this.starRankInputs.length; j++) {
+        this.starRankInputs[j].appendChild(_('option', { value: i }, [_('text', i)]))
+      }
+    }
+    return container
+  }
 
   setLevel(e) {
     this.lvl = e.target.value | 0;
@@ -345,7 +365,9 @@ export default class CharacterData {
     root.update({ chara: true })
   }
   setStarRank(e) {
-    this.starRank = e.target.value | 0;
+    const starRank = e.target.value | 0;
+    const id = e.target.dataset.id | 0;
+    root.appState.characterStarRank.set(id, starRank);
     root.update({ chara: true })
   }
   setSense(e) {
