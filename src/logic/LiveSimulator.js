@@ -121,10 +121,10 @@ export default class LiveSimulator {
         }, {})
         const distance = conditionMap.NeighborPosition
         const targetCharaId = conditionMap.CharacterBase
-        if (i - distance >= 0 && targetCharaId === this.calc.members[i - distance].data.CharacterBaseMasterId) {
+        if (i - distance >= 0 && this.calc.members[i - distance].isCharacterBaseId(targetCharaId)) {
           this.combinationSenseList[i - distance].push(i)
         }
-        if (i + distance < 5 && targetCharaId === this.calc.members[i + distance].data.CharacterBaseMasterId) {
+        if (i + distance < 5 && this.calc.members[i + distance].isCharacterBaseId(targetCharaId)) {
           this.combinationSenseList[i + distance].push(i)
         }
       }
