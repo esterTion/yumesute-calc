@@ -8,7 +8,7 @@ import ScoreCalculationType from "./ScoreCalculationType"
 import LiveSimulator from "./LiveSimulator"
 import Effect from "../effect/Effect"
 
-import _ from "../createElement"
+import _, { CREATE_FRAGMENT } from "../createElement"
 import removeAllChilds from "../removeAllChilds"
 
 export default class ScoreCalculator {
@@ -301,6 +301,10 @@ export default class ScoreCalculator {
     return _('div', {}, this.members.map((chara, idx) => (rowNumber = 0, chara === null ? _('text', '') : _('details', {}, [
       _('summary', {}, [
         _('span', {className: `card-attribute-${chara.attributeName}`}),
+        chara.secondaryAttributeName ? _(CREATE_FRAGMENT, {}, [
+          _('text', '|'),
+          _('span', { className: `card-attribute-${chara.secondaryAttributeName}`}),
+        ]) : new Comment(''),
         _('text', `${chara.fullCardName} CT: ` + chara.senseAll.map(i => i.ct).join(' / ')),
         _('span', {}, Object.keys(this.memberMatchingCategories[idx]).map(category => _('span', {className: 'character-category'}, [_('text', GameDb.Category[category].Name)]))),
       ]),

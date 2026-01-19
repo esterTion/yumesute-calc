@@ -563,7 +563,10 @@ export default class RootLogic {
         const chara = new CharacterData(i, null)
         const charaEle = groupEle.appendChild(_('span', { className: 'list-icon-container hoz-item-with-name', 'data-pick-id': i }, [
           _('span', { className: 'spriteatlas-characters', 'data-id': chara.cardIconId }),
-          _('span', { className: `card-attribute-${chara.attributeName}`}),
+          chara.secondaryAttributeName ? _('span', { className: 'card-attribute-rotate' }, [
+            _('span', { className: `card-attribute-${chara.attributeName}`}),
+            _('span', { className: `card-attribute-${chara.secondaryAttributeName}`}),
+          ]) : _('span', { className: `card-attribute-${chara.attributeName}`}),
           _('span', { className: 'sense-star gray-background', 'data-sense-type': chara.sense.getType() }, [_('text', `${chara.sense.data.LightCount} `)]),
           _('text', chara.sense.ct),
           _('text', chara.rarityStr),

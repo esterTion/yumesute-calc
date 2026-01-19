@@ -122,7 +122,10 @@ export default class GachaViewer {
       chara.awaken = this.showAwaken
       const charaEle = _('span', { className: 'list-icon-container hoz-item-with-name' }, [
         _('span', { className: 'spriteatlas-characters', 'data-id': chara.cardIconId }),
-        _('span', { className: `card-attribute-${chara.attributeName}`}),
+        chara.secondaryAttributeName ? _('span', { className: 'card-attribute-rotate' }, [
+          _('span', { className: `card-attribute-${chara.attributeName}`}),
+          _('span', { className: `card-attribute-${chara.secondaryAttributeName}`}),
+        ]) : _('span', { className: `card-attribute-${chara.attributeName}`}),
         _('span', { className: 'sense-star gray-background', 'data-sense-type': chara.sense.getType() }, [_('text', `${chara.sense.data.LightCount} `)]),
         _('text', chara.sense.ct),
         _('text', chara.rarityStr),
