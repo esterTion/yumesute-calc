@@ -128,6 +128,7 @@ export default {
   FILTER_EFFECT_EXPRESSION_UP: '表現力アップ',
   FILTER_EFFECT_CONCENTRATION_UP: '集中力アップ',
   FILTER_EFFECT_PERFORMANCE_UP: '演技力アップ',
+  FILTER_EFFECT_PERFORMANCE_LIMIT_UP: '演技力上限増加',
   FILTER_EFFECT_SENSE_LIGHT_SELF: 'センス光追加',
   FILTER_EFFECT_SENSE_LIGHT_SUPPORT: '<span class="sense-star" data-sense-type="support"></span>追加',
   FILTER_EFFECT_SENSE_LIGHT_CONTROL: '<span class="sense-star" data-sense-type="control"></span>追加',
@@ -136,6 +137,7 @@ export default {
   FILTER_EFFECT_SENSE_LIGHT_VARIABLE: '<span class="sense-star" data-sense-type="variable"></span>追加',
   FILTER_EFFECT_RECAST_DOWN: 'CT減少',
   FILTER_EFFECT_BASE_SCORE_UP: '基礎スコアアップ',
+  FILTER_EFFECT_REWARD_UP: '报酬アップ',
   FILTER_EFFECT_OTHER: 'その他',
 
   FILTER_EFFECT_CONDITION_CHARACTER: 'キャラクター',

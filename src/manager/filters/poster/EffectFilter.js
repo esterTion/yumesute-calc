@@ -7,6 +7,7 @@ const FILTER_KEYS = [
   'FILTER_EFFECT_EXPRESSION_UP',
   'FILTER_EFFECT_CONCENTRATION_UP',
   'FILTER_EFFECT_PERFORMANCE_UP',
+  'FILTER_EFFECT_PERFORMANCE_LIMIT_UP',
   'FILTER_EFFECT_SENSE_LIGHT_SELF',
   'FILTER_EFFECT_SENSE_LIGHT_SUPPORT',
   'FILTER_EFFECT_SENSE_LIGHT_CONTROL',
@@ -20,8 +21,12 @@ const FILTER_KEYS = [
   'FILTER_EFFECT_LIFE_HEALING',
   'FILTER_EFFECT_LIFE_GUARD',
   'FILTER_EFFECT_RECAST_DOWN',
+  'FILTER_EFFECT_REWARD_UP',
   'FILTER_EFFECT_OTHER',
 ]
+function idx(key) {
+  return FILTER_KEYS.indexOf(key)
+}
 
 export default class extends Filter {
   constructor() {
@@ -43,7 +48,7 @@ export default class extends Filter {
         ])),
       ])
     ]);
-    ([4+6+4+2,6+4+2,4+2]).forEach(i => this.container.children[2].insertBefore(_('br'), this.container.children[2].children[i]))
+    ([4+6+5+2,6+5+2,5+2]).forEach(i => this.container.children[2].insertBefore(_('br'), this.container.children[2].children[i]))
   }
   changeAll() {
     const target = this.toggleAll.checked
@@ -75,28 +80,30 @@ export default class extends Filter {
     }
     for (const effect of effects) {
       switch (effect.Type) {
-        case 'VocalUp': { matchResult = matchResult || this.state[ 0 ]; break }
-        case 'ExpressionUp': { matchResult = matchResult || this.state[ 1 ]; break }
-        case 'ConcentrationUp': { matchResult = matchResult || this.state[ 2 ]; break }
-        case 'PerformanceUp': { matchResult = matchResult || this.state[ 3 ]; break }
+        case 'VocalUp': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_VOCAL_UP') ]; break }
+        case 'ExpressionUp': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_EXPRESSION_UP') ]; break }
+        case 'ConcentrationUp': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_CONCENTRATION_UP') ]; break }
+        case 'PerformanceUp': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_PERFORMANCE_UP') ]; break }
+        case 'PerformanceLimitUp': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_PERFORMANCE_LIMIT_UP') ]; break }
 
-        case 'AddSenseLightSelf': { matchResult = matchResult || this.state[ 4 ]; break }
-        case 'AddSenseLightSupport': { matchResult = matchResult || this.state[ 5 ]; break }
-        case 'AddSenseLightControl': { matchResult = matchResult || this.state[ 6 ]; break }
-        case 'AddSenseLightAmplification': { matchResult = matchResult || this.state[ 7 ]; break }
-        case 'AddSenseLightSpecial': { matchResult = matchResult || this.state[ 8 ]; break }
-        case 'AddSenseLightVariable': { matchResult = matchResult || this.state[ 9 ]; break }
+        case 'AddSenseLightSelf': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_SENSE_LIGHT_SELF') ]; break }
+        case 'AddSenseLightSupport': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_SENSE_LIGHT_SUPPORT') ]; break }
+        case 'AddSenseLightControl': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_SENSE_LIGHT_CONTROL') ]; break }
+        case 'AddSenseLightAmplification': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_SENSE_LIGHT_AMPLIFICATION') ]; break }
+        case 'AddSenseLightSpecial': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_SENSE_LIGHT_SPECIAL') ]; break }
+        case 'AddSenseLightVariable': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_SENSE_LIGHT_VARIABLE') ]; break }
 
-        case 'PrincipalGaugeUp': { matchResult = matchResult || this.state[ 10 ]; break }
-        case 'PrincipalGaugeGain': { matchResult = matchResult || this.state[ 11 ]; break }
-        case 'PrincipalGaugeLimitUp': { matchResult = matchResult || this.state[ 12 ]; break }
+        case 'PrincipalGaugeUp': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_PGAUGE_UP') ]; break }
+        case 'PrincipalGaugeGain': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_PGAUGE_GAIN') ]; break }
+        case 'PrincipalGaugeLimitUp': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_PGAUGE_LIMIT_GAIN') ]; break }
         case 'ScoreGainOnVocal':
         case 'ScoreGainOnExpression':
         case 'ScoreGainOnConcentration':
-        case 'ScoreGainOnScore': { matchResult = matchResult || this.state[ 13 ]; break }
-        case 'LifeHealing': { matchResult = matchResult || this.state[ 14 ]; break }
-        case 'LifeGuard': { matchResult = matchResult || this.state[ 15 ]; break }
-        case 'SenseRecastDown': { matchResult = matchResult || this.state[ 16 ]; break }
+        case 'ScoreGainOnScore': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_SCORE_GAIN') ]; break }
+        case 'LifeHealing': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_LIFE_HEALING') ]; break }
+        case 'LifeGuard': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_LIFE_GUARD') ]; break }
+        case 'SenseRecastDown': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_RECAST_DOWN') ]; break }
+        case 'RewardUp': { matchResult = matchResult || this.state[ idx('FILTER_EFFECT_REWARD_UP') ]; break }
         default: { matchResult = matchResult || this.state[ this.state.length-1 ]; break }
       }
     }

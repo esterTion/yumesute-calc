@@ -52,9 +52,14 @@ export default class CharacterData {
     this.#ctValNode = []
 
     if (!parent) return
+    const attributeNodes = [_('span', {className: `card-attribute-${this.attributeName}`})]
+    if (this.data.SecondaryAttribute) {
+      attributeNodes.push(_('text', '|'))
+      attributeNodes.push(_('span', {className: `card-attribute-${this.secondaryAttributeName}`}))
+    }
     this.node = parent.appendChild(_('tbody', {}, [
       _('tr', {}, [
-        _('td', {}, [_('span', {className: `card-attribute-${this.attributeName}`}), _('text', this.fullCardName), _('span', { className: 'obtain-type' }, [_('text', /フェス/.test(this.data.UnlockText) ? 'フェス' : /限定/.test(this.data.UnlockText) ? '限定' : /イベント/.test(this.data.UnlockText) ? 'イベント' : '')])]),
+        _('td', {}, [_(CREATE_FRAGMENT, {}, attributeNodes), _('text', this.fullCardName), _('span', { className: 'obtain-type' }, [_('text', /フェス/.test(this.data.UnlockText) ? 'フェス' : /限定/.test(this.data.UnlockText) ? '限定' : /イベント/.test(this.data.UnlockText) ? 'イベント' : '')])]),
         _('td', {}, [_('text', 'Vo:')]),
         this.voValNode = _('td', {className: 'stat'}),
         _('td', { rowspan: 4 }, [this.cardImg = imgErrorHandler(_('img', { src: 'about:blank' }))])
@@ -116,7 +121,10 @@ export default class CharacterData {
     this.iconNode = root.characterIconList.appendChild(_('span', { className: 'list-icon-container', event: { click: e => this.toggleSelection() } }, [
       this.iconNodeIcon = _('span', { className: 'spriteatlas-characters', 'data-id': this.cardIconId }),
       _('br'),
-      _('span', { className: `card-attribute-${this.attributeName}`}),
+      this.secondaryAttributeName ? _('span', { className: 'card-attribute-rotate' }, [
+        _('span', { className: `card-attribute-${this.attributeName}`}),
+        _('span', { className: `card-attribute-${this.secondaryAttributeName}`}),
+      ]) : _('span', { className: `card-attribute-${this.attributeName}`}),
       _('span', { className: 'sense-star gray-background', 'data-sense-type': this.sense.getType() }, [_('text', `${this.sense.data.LightCount} `)]),
       this.iconNodeCtLabel = _('span'),
       _('br'),
@@ -145,6 +153,9 @@ export default class CharacterData {
   }
   get attributeName() {
     return this.data.Attribute.toLowerCase()
+  }
+  get secondaryAttributeName() {
+    return this.data.SecondaryAttribute ? this.data.SecondaryAttribute.toLowerCase() : null
   }
   get cardIconId() {
     return `${this.Id}_${this.awaken&&this.data.Rarity==='Rare4'?1:0}`

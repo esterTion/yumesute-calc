@@ -128,6 +128,7 @@ export default {
   FILTER_EFFECT_EXPRESSION_UP: 'Ex. bonus',
   FILTER_EFFECT_CONCENTRATION_UP: 'Co. bonus',
   FILTER_EFFECT_PERFORMANCE_UP: 'Perf. bonus',
+  FILTER_EFFECT_PERFORMANCE_LIMIT_UP: 'Perf. limit increase',
   FILTER_EFFECT_SENSE_LIGHT_SELF: 'Add sense light',
   FILTER_EFFECT_SENSE_LIGHT_SUPPORT: 'Add <span class="sense-star" data-sense-type="support"></span>',
   FILTER_EFFECT_SENSE_LIGHT_CONTROL: 'Add <span class="sense-star" data-sense-type="control"></span>',
@@ -136,6 +137,7 @@ export default {
   FILTER_EFFECT_SENSE_LIGHT_VARIABLE: 'Add <span class="sense-star" data-sense-type="variable"></span>',
   FILTER_EFFECT_RECAST_DOWN: 'CT decrease',
   FILTER_EFFECT_BASE_SCORE_UP: 'Base score bonus',
+  FILTER_EFFECT_REWARD_UP: 'Extra rewards',
   FILTER_EFFECT_OTHER: 'Other',
 
   FILTER_EFFECT_CONDITION_CHARACTER: 'Character',

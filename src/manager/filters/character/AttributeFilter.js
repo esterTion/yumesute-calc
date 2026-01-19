@@ -40,7 +40,11 @@ export default class extends Filter {
     return this.container
   }
   check(item) {
-    let index = ['cute','cool','colorful','cheerful'].indexOf(item.data.Attribute.toLowerCase())
+    let index = ['cute','cool','colorful','cheerful'].indexOf(item.attributeName)
+    if (index === -1) index = 4
+    if (this.state[ index ]) return true
+    if (!item.secondaryAttributeName) return false
+    index = ['cute','cool','colorful','cheerful'].indexOf(item.secondaryAttributeName)
     if (index === -1) index = 4
     return this.state[ index ]
   }

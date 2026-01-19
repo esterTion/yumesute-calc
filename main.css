@@ -405,3 +405,15 @@ img.preview-loading {
 .text-pre-wrap {
   white-space: pre-wrap;
 }
+.card-attribute-rotate span {
+  animation: visibility-rotate 4s linear infinite;
+}
+.card-attribute-rotate span:nth-of-type(2) {
+  margin-left: -0.8em;
+  animation-delay: -2s;
+}
+@keyframes visibility-rotate {
+  0%,40% { opacity: 1; }
+  50%,90% { opacity: 0; }
+  100% { opacity: 1; }
+}

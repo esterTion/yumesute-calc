@@ -128,6 +128,7 @@ export default {
   FILTER_EFFECT_EXPRESSION_UP: '表现力提升',
   FILTER_EFFECT_CONCENTRATION_UP: '集中力提升',
   FILTER_EFFECT_PERFORMANCE_UP: '演技力提升',
+  FILTER_EFFECT_PERFORMANCE_LIMIT_UP: '演技力上限提升',
   FILTER_EFFECT_SENSE_LIGHT_SELF: '加发动光',
   FILTER_EFFECT_SENSE_LIGHT_SUPPORT: '加<span class="sense-star" data-sense-type="support"></span>光',
   FILTER_EFFECT_SENSE_LIGHT_CONTROL: '加<span class="sense-star" data-sense-type="control"></span>光',
@@ -136,6 +137,7 @@ export default {
   FILTER_EFFECT_SENSE_LIGHT_VARIABLE: '加<span class="sense-star" data-sense-type="variable"></span>光',
   FILTER_EFFECT_RECAST_DOWN: 'CT减少',
   FILTER_EFFECT_BASE_SCORE_UP: '基础分数提升',
+  FILTER_EFFECT_REWARD_UP: '报酬增加',
   FILTER_EFFECT_OTHER: '其他',
 
   FILTER_EFFECT_CONDITION_CHARACTER: '角色',
