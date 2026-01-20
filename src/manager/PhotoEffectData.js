@@ -2,6 +2,7 @@ import GameDb from "../db/GameDb"
 import Effect from "../effect/Effect"
 
 import _ from "../createElement"
+import BeautyText from "../db/BeautyText"
 
 export default class PhotoEffectData {
   constructor(id, level, parent, enabled = false) {
@@ -18,18 +19,19 @@ export default class PhotoEffectData {
       _('input', { type: 'button', 'data-text-value': 'DELETE', event: { click: _=>this.remove() }}),
     ]))
 
-    for (let i = 1; i < 26; i++) {
+    for (let i = 1; i <= 30; i++) {
       this.levelSelect.appendChild(_('option', { value: i }, [_('text', i)]))
     }
   }
   get effectLevel() {
-    if (this.level < 1 || this.level > 25) return 1
+    if (this.level < 1 || this.level > 30) return 1
     return [0,
       1,1,1,1,2,
       3,3,3,3,4,
       5,5,5,5,6,
       7,7,7,7,8,
-      9,9,9,9,10
+      9,9,9,9,10,
+      11,11,11,11,12
     ][this.level]
   }
   get selectName() {
@@ -47,7 +49,7 @@ export default class PhotoEffectData {
   update() {
     this.levelSelect.value = this.level;
     this.effect = Effect.get(this.data.EffectMasterId, this.effectLevel)
-    this.desc.textContent = `${this.data.Name}：${this.description}`;
+    this.desc.innerHTML = `${this.data.Name}：${BeautyText.convertGameTextToValidDom(this.description)}`;
     this.enableToggle.checked = this.enabled
   }
   appendNode(parent) {
