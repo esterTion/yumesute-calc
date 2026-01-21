@@ -114,7 +114,16 @@ export default class AccessoryData {
     const accessory = new AccessoryData(data[0], parent)
     accessory.level = data[1]
     if (data[2]) {
-      accessory.randomEffectSelect && (accessory.randomEffectSelect.value = data[2])
+      if (accessory.randomEffectSelect) {
+        accessory.randomEffectSelect.value = data[2]
+        // 日本人会写不存在的随机效果id。。。。。
+        if (accessory.randomEffectSelect.value != data[2]) {
+          accessory.randomEffectSelect.appendChild(_('option', { value: data[2] }, [
+            _('text', 'ILLEGAL ' + GameDb.AccessoryEffect[data[2]].Name)
+          ]))
+          accessory.randomEffectSelect.value = data[2]
+        }
+      }
       accessory.setRandomEffect({ target: accessory.randomEffectSelect }, true)
     }
     return accessory
