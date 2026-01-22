@@ -164,6 +164,7 @@ export default {
   MENU_ANCHOR_TIMELINE: '时间轴',
   MENU_ANCHOR_ALBUM: '相册',
   MENU_ANCHOR_INVENTORY: '仓库',
+  MENU_ANCHOR_END: '【页尾】',
 
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '未支持的效果：{type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '未支持的效果触发：{trigger} @ {range} ({id})',

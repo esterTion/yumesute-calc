@@ -164,6 +164,7 @@ export default {
   MENU_ANCHOR_TIMELINE: '編成',
   MENU_ANCHOR_ALBUM: 'アルバム',
   MENU_ANCHOR_INVENTORY: 'メンバー',
+  MENU_ANCHOR_END: '【最後尾】',
 
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: '効果支援していない：{type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: '効果の条件支援していない：{trigger} @ {range} ({id})',

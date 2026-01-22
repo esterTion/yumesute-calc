@@ -164,6 +164,7 @@ export default {
   MENU_ANCHOR_TIMELINE: 'Timeline',
   MENU_ANCHOR_ALBUM: 'Album',
   MENU_ANCHOR_INVENTORY: 'Inventory',
+  MENU_ANCHOR_END: '[Footer]',
 
   LOG_WARNING_EFFECT_NOT_IMPLEMENTED: 'Effect type not implemented: {type} ({id})',
   LOG_WARNING_EFFECT_TRIGGER_NOT_IMPLEMENTED: 'Effect trigger not implemented: {trigger} @ {range} ({id})',

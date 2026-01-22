@@ -301,6 +301,7 @@ export default class RootLogic {
           _('input', { type: 'button', 'data-text-value': 'ADD', event: { click: _=>this.pickAccessoryToAdd() }}),
         ]),
       ]),
+      _('div', {className: 'margin-box', 'data-menu-anchor': 'MENU_ANCHOR_END'}),
     ]))
 
     this.renderSenseNoteList()

@@ -96,9 +96,12 @@ export default class ScoreCalculator {
         passiveEffects.album.push({effect, source:-1})
         return
       }
+      let nonPassiveTriggered = false
       this.members.forEach((chara, idx) => {
         if (!chara) return
         if (!effect.canTrigger(this, idx)) return
+        if (nonPassiveTriggered && effect.FireTimingType !== 'Passive') return
+        nonPassiveTriggered = true
         passiveEffects.album.push({effect, source:idx})
       })
     })
