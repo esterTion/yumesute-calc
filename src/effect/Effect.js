@@ -43,6 +43,7 @@ import PrincipalGaugeBonus from './types/PrincipalGaugeBonus'
 import PerformanceDuplicateUp from './types/PerformanceDuplicateUp'
 import StatBonusType from '../logic/StatBonusType'
 import PrincipalGaugeGainPercentageOfLimit from './types/PrincipalGaugeGainPercentageOfLimit'
+import StarActProcrastinate from './types/StarActProcrastinate'
 
 export default class Effect {
   // life guard分支下的效果需要单独处理。。
@@ -173,6 +174,7 @@ export default class Effect {
       case "ScoreGainOnPerformance": { return ScoreGainOnPerformance.applyEffect(this, calc, [index], type) }
 
       case "StarActScoreUp": { return StarActScoreUp.applyEffect(this, calc, targets, type) }
+      case "StarActProcrastinate": { return StarActProcrastinate.applyEffect(this, calc, targets, type) }
 
       // 相邻sense效果在开场前检查
       case "CombinationSense": { return }

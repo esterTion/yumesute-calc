@@ -55,6 +55,8 @@ export default class LiveSimulator {
   combinationSenseList;
   isDuringCombinationSense;
   scoreIsInaccurate;
+  senseScoreIndex;
+  starActScoreIndex
 
   constructor(calc) {
     this.calc = calc
@@ -90,6 +92,8 @@ export default class LiveSimulator {
     this.combinationSenseList = [[],[],[],[],[]]
     this.isDuringCombinationSense = false
     this.scoreIsInaccurate = false
+    this.senseScoreIndex = [[],[],[],[],[]]
+    this.starActScoreIndex = []
   }
   runSimulation(node) {
     this.applyPendingActions()
@@ -187,6 +191,14 @@ export default class LiveSimulator {
 
       oddRow = !oddRow
     })
+
+    // sa推迟
+    if (this.starActScoreIndex.length && this.calc.result.starActScore[this.starActScoreIndex[0]] === 0) {
+      [...root.senseBox.querySelectorAll('.staract-line')].slice(0, -1).forEach((i) => {
+        i.style.filter = 'grayscale(100%)'
+        i.style.opacity = 0.4
+      })
+    }
   }
   getPGaugeProgressElement() {
     return _('span', {}, [
@@ -439,6 +451,7 @@ export default class LiveSimulator {
       const total = stat.total * (1 + this.performanceDuplicateUp[idx] / 100)
       const score = Math.floor(total * multiplier)
       scoreLine = `${total} × ${scoreLine} = ${score}`
+      this.senseScoreIndex[idx].push(this.calc.result.senseScore.length)
       this.calc.result.senseScore.push(score)
       this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_SCORE').replace('{0}', scoreLine))
     }
@@ -529,6 +542,7 @@ export default class LiveSimulator {
     const stat = Math.floor(this.calc.stat.final.reduce((acc, memberStat, idx) => acc + memberStat.total * (1 + this.performanceDuplicateUp[idx] / 100), 0))
     const score = Math.floor(stat * multiplier)
     scoreLine = `${stat} × ${scoreLine} = ${score}`
+    this.starActScoreIndex.push(this.calc.result.starActScore.length)
     this.calc.result.starActScore.push(score)
     this.calc.result.starActCount++
     this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_SCORE').replace('{0}', scoreLine))
