@@ -504,7 +504,7 @@ export default class LiveSimulator {
       effect = Effect.get(effect.EffectMasterId, this.leader.bloom)
       effect.applyEffect(this.calc, idx, ScoreBonusType.StarAct)
     })
-    const staractEffectBranch = this.leader.staract.getActiveBranch(this)
+    const staractEffectBranch = this.leader.staract.getActiveBranch(this, idx)
     if (staractEffectBranch) {
       staractEffectBranch.BranchEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, this.leader.bloom + 1)

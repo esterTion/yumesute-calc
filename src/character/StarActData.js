@@ -40,7 +40,7 @@ export default class StarActData {
     return this.requirements.map((req, i) => (req > 0 ? Math.max(1, req - this.requireDecrease[i]) : 0))
   }
 
-  getActiveBranch(liveSim) {
+  getActiveBranch(liveSim, idx) {
     const branches = this.data.Branches
     let result = null
     let isLifeGuardBranch = false
@@ -54,6 +54,7 @@ export default class StarActData {
           case 'CompanyMemberCount': { judgeValue = liveSim.calc.members.reduce((s,i) => i.isCharacterInCompany(this.data.ConditionValue1) ? s+1 : s, 0); break }
           case 'AttributeCount': { judgeValue = liveSim.calc.properties.attributeCount; isLifeGuardBranch = true; break }
           case "CharacterBaseGroup": { judgeValue = liveSim.calc.members.reduce((s,i) => i.isCharacterBaseIdInList(GameDb.EffectTriggerCharacterBaseGroup[this.data.ConditionValue1].CharacterBaseMasterIds) ? s+1 : s, 0); break }
+          case "SenseTriggeredCount": { judgeValue = liveSim.senseScoreIndex[idx].length; break }
           default: { root.addWarningMessage(ConstText.get('LOG_WARNING_EFFECT_BRANCH_NOT_IMPLEMENTED', {condition:this.data.BranchCondition1, id: this.id})); return null }
         }
         switch (branch.JudgeType1) {
