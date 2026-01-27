@@ -9,6 +9,7 @@ import Effect from "../effect/Effect"
 import _, { CREATE_FRAGMENT } from "../createElement";
 import removeAllChilds from "../removeAllChilds"
 import imgErrorHandler from "../logic/imgErrorHandler"
+import { AttributeEnum, SenseTypeEnum } from "../db/Enum"
 
 export default class CharacterData {
   Id;
@@ -173,6 +174,13 @@ export default class CharacterData {
     const list = [GameDb.CharacterBase[this.data.CharacterBaseMasterId].CompanyMasterId]
     if (this.data.SecondaryCharacterBaseMasterId) {
       list.push(GameDb.CharacterBase[this.data.SecondaryCharacterBaseMasterId].CompanyMasterId)
+    }
+    return list
+  }
+  get attributeList() {
+    const list = [this.data.Attribute]
+    if (this.data.SecondaryAttribute) {
+      list.push(this.data.SecondaryAttribute)
     }
     return list
   }
@@ -413,6 +421,15 @@ export default class CharacterData {
   isCharacterInCompany(companyId) {
     if (GameDb.CharacterBase[this.data.CharacterBaseMasterId].CompanyMasterId === companyId) return true
     if (this.data.SecondaryCharacterBaseMasterId && GameDb.CharacterBase[this.data.SecondaryCharacterBaseMasterId].CompanyMasterId === companyId) return true
+    return false
+  }
+  isCharacterAttribute(attributeId) {
+    if (this.data.Attribute === AttributeEnum[attributeId]) return true
+    if (this.data.SecondaryAttribute === AttributeEnum[attributeId]) return true
+    return false
+  }
+  isCharacterSenseType(senseTypeId) {
+    if (this.sense.data.Type === SenseTypeEnum[senseTypeId]) return true
     return false
   }
 

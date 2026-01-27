@@ -88,8 +88,8 @@ export default class Effect {
         case 'AttributeCount': { result = result && calc.properties.attributeCount == trigger.Value; break }
         case 'CharacterBase': { result = result && calc.members[index] && calc.members[index].isCharacterBaseId(trigger.Value); break }
         case "Company": { result = result && calc.members[index] && calc.members[index].isCharacterInCompany(trigger.Value); break }
-        case "Attribute": { result = result && calc.members[index] && calc.members[index].data.Attribute == AttributeEnum[trigger.Value]; break }
-        case "SenseType": { result = result && calc.members[index] && calc.members[index].sense.data.Type == SenseTypeEnum[trigger.Value]; break }
+        case "Attribute": { result = result && calc.members[index] && calc.members[index].isCharacterAttribute(trigger.Value); break }
+        case "SenseType": { result = result && calc.members[index] && calc.members[index].isCharacterSenseType(trigger.Value); break }
         case "CharacterBaseGroup": { result = result && calc.members[index] && calc.members[index].isCharacterBaseIdInList(GameDb.EffectTriggerCharacterBaseGroup[trigger.Value].CharacterBaseMasterIds); break }
         case "AllMemberBelongingCompany": { result = result && calc.properties.companyCount == 1 && calc.properties.companyMemberCount[trigger.Value] > 0; break}
         case "MaxMemberBelongingCompanyCount": { result = result && calc.properties.companyMemberMaxCount >= trigger.Value; break }
@@ -108,8 +108,8 @@ export default class Effect {
       switch (condition.Condition) {
         case "CharacterBase": { if (!member.isCharacterBaseId(condition.Value)) return false; break; }
         case "Company": { if (!member.isCharacterInCompany(condition.Value)) return false; break; }
-        case "Attribute": { if (member.data.Attribute !== AttributeEnum[condition.Value]) return false; break; }
-        case "SenseType": { if (GameDb.Sense[member.data.SenseMasterId].Type !== SenseTypeEnum[condition.Value]) return false; break; }
+        case "Attribute": { if (!member.isCharacterAttribute(condition.Value)) return false; break; }
+        case "SenseType": { if (!member.isCharacterSenseType(condition.Value)) return false; break; }
         case "Character": { if (member.data.CharacterMasterId !== condition.Value) return false; break; }
         case "CharacterBaseGroup": {if (!calc.members[index].isCharacterBaseIdInList(GameDb.EffectTriggerCharacterBaseGroup[condition.Value].CharacterBaseMasterIds)) return false; break; }
         // TODO: Implement after poster is implemented
