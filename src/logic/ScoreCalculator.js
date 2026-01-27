@@ -97,6 +97,12 @@ export default class ScoreCalculator {
         passiveEffects.album.push({effect, source:-1})
         return
       }
+      // 2.27.2 bug
+      // p条照片无视触发条件，始终触发
+      if (effect.Type === 'PrincipalGaugeGain' || effect.Type === 'PrincipalGaugeLimitUp') {
+        passiveEffects.album.push({effect, source:-1})
+        return
+      }
       let nonPassiveTriggered = false
       this.members.forEach((chara, idx) => {
         if (!chara) return
