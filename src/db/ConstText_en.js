@@ -90,6 +90,7 @@ export default {
   LIVE_LOG_STARACT_UP: 'Star Act bonus: {0}%, lasts{1} sec',
   LIVE_LOG_SENSE_SCORE_EXTRA: 'Sense bonus ({3}): {0} × {1} = {2}',
   LIVE_LOG_STARACT_SCORE_EXTRA: 'Star Act bonus ({3}): {0} × {1} = {2}',
+  LIVE_LOG_STARACT_DELAYED: 'Star Act bonus is stacked to last',
 
   PARTY_DEFAULT_NAME: 'Party',
   PARTY_DELETE_CONFIRM: 'Delete this party?',

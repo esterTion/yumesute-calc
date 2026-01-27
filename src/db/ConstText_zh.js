@@ -90,6 +90,7 @@ export default {
   LIVE_LOG_STARACT_UP: 'StarAct加成：{0}%，持续{1}秒',
   LIVE_LOG_SENSE_SCORE_EXTRA: 'Sense额外加分({3})：{0} × {1} = {2}',
   LIVE_LOG_STARACT_SCORE_EXTRA: 'StarAct额外加分({3})：{0} × {1} = {2}',
+  LIVE_LOG_STARACT_DELAYED: 'StarAct发动已推迟',
 
   PARTY_DEFAULT_NAME: '队伍',
   PARTY_DELETE_CONFIRM: '确定删除队伍吗？',

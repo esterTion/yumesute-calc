@@ -6,6 +6,7 @@ import _ from "../createElement"
 import ScoreBonusType from "./ScoreBonusType"
 import { SenseTypeInternalEnum } from "../db/Enum"
 import removeAllChilds from "../removeAllChilds"
+import ScoreCalculator from "./ScoreCalculator"
 
 export default class LiveSimulator {
   /**
@@ -56,7 +57,8 @@ export default class LiveSimulator {
   isDuringCombinationSense;
   scoreIsInaccurate;
   senseScoreIndex;
-  starActScoreIndex
+  starActScoreIndex;
+  static saDelayLastTiming;
 
   constructor(calc) {
     this.calc = calc
@@ -150,6 +152,7 @@ export default class LiveSimulator {
     ]))
 
     let oddRow = false
+    let saLastTiming = -1;
     this.senseTiming.forEach(timing => {
       this.currentTiming = timing.TimingSecond
       this.currentSenseType = 'none';
@@ -172,6 +175,7 @@ export default class LiveSimulator {
       if (this.tryStarAct()) {
         this.phase = ConstText.get('LIVE_PHASE_SENSE_WITH_STARACT').replace('{time}', timing.TimingSecond)
         this.resetCurrentLights()
+        saLastTiming = timing.TimingSecond;
       }
       node.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : '') }, [
         _('summary', { className: 'sense-star', 'data-sense-type': this.currentSenseType }, [
@@ -194,10 +198,19 @@ export default class LiveSimulator {
 
     // sa推迟
     if (this.starActScoreIndex.length && this.calc.result.starActScore[this.starActScoreIndex[0]] === 0) {
-      [...root.senseBox.querySelectorAll('.staract-line')].slice(0, -1).forEach((i) => {
-        i.style.filter = 'grayscale(100%)'
-        i.style.opacity = 0.4
-      })
+      if (LiveSimulator.saDelayLastTiming) {
+        [...root.senseBox.querySelectorAll('.staract-line')].slice(0, -1).forEach((i) => {
+          i.style.filter = 'grayscale(100%)'
+          i.style.opacity = 0.4
+        })
+        LiveSimulator.saDelayLastTiming = null
+      } else if (this.starActScoreIndex.length > 1) {
+        // 重新模拟
+        LiveSimulator.saDelayLastTiming = saLastTiming;
+        const calc = new ScoreCalculator(this.calc.members, this.calc.posters, this.calc.accessories, this.calc.extra)
+        calc.calc(node)
+        return true
+      }
     }
   }
   getPGaugeProgressElement() {
@@ -543,9 +556,14 @@ export default class LiveSimulator {
     const score = Math.floor(stat * multiplier)
     scoreLine = `${stat} × ${scoreLine} = ${score}`
     this.starActScoreIndex.push(this.calc.result.starActScore.length)
-    this.calc.result.starActScore.push(score)
+    if (LiveSimulator.saDelayLastTiming && this.currentTiming !== LiveSimulator.saDelayLastTiming) {
+      this.calc.result.starActScore.push(0)
+      this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_DELAYED'))
+    } else {
+      this.calc.result.starActScore.push(score)
+      this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_SCORE').replace('{0}', scoreLine))
+    }
     this.calc.result.starActCount++
-    this.phaseLog.push(ConstText.get('LIVE_LOG_STARACT_SCORE').replace('{0}', scoreLine))
     const leftStyle = this.currentTiming ? `calc(calc(calc(100% - 40px) * ${this.currentTiming/this.lastSenseTiming}) + 19px)` : '-8px'
     root.senseBox.children[0].children[1].appendChild(_('div', { className: 'staract-line', style: { left: leftStyle } }))
 

@@ -278,7 +278,8 @@ export default class ScoreCalculator {
       _('div', { style: {clear: 'both'}}),
     ]))
 
-    this.liveSim.runSimulation(node)
+    const canceled = this.liveSim.runSimulation(node)
+    if (canceled) return
 
     let finalSenseScore = this.result.senseScore.reduce((acc, cur) => acc + cur, 0)
     let finalStarActScore = this.result.starActScore.reduce((acc, cur) => acc + cur, 0)

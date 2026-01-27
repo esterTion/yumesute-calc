@@ -90,6 +90,7 @@ export default {
   LIVE_LOG_STARACT_UP: 'スターアクトブースト：{0}%，{1}秒間持続',
   LIVE_LOG_SENSE_SCORE_EXTRA: 'センスボーナススコア({3})：{0} × {1} = {2}',
   LIVE_LOG_STARACT_SCORE_EXTRA: 'スターアクトボーナススコア({3})：{0} × {1} = {2}',
+  LIVE_LOG_STARACT_DELAYED: 'スターアクトの発動は最後に',
 
   PARTY_DEFAULT_NAME: 'パーティー',
   PARTY_DELETE_CONFIRM: 'パーティーを消しますか？',
