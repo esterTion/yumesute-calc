@@ -54,7 +54,8 @@ export default class ScoreCalculator {
       return combinations.map(i => (new Set(i)).size).reduce((acc, cur) => Math.min(acc, cur), Infinity);
     }
     this.properties.companyCount = minimalCombinationCount(this.properties.company.filter(i => i!==null));
-    this.properties.attributeCount = minimalCombinationCount(this.properties.attribute.filter(i => i!==null));
+    // 双色卡两个颜色都算
+    this.properties.attributeCount = (new Set(this.properties.attribute.filter(i => i!==null).reduce((acc, cur) => acc.concat(cur), []))).size;
 
     this.liveSim = new LiveSimulator(this)
   }
