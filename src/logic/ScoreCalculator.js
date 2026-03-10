@@ -168,23 +168,6 @@ export default class ScoreCalculator {
       })
     })
 
-    // poster
-    this.posters.forEach((poster, idx) => {
-      if (!poster) return
-      poster.abilities.forEach(ability => {
-        if (!ability.unlocked) return
-        if (ability.data.Type === 'Leader' && this.members[idx] !== leader) return
-        const abilityEffectBranch = ability.getActiveBranch(this.liveSim)
-        if (!abilityEffectBranch) return
-        abilityEffectBranch.BranchEffects.forEach(effect => {
-          effect = Effect.get(effect.EffectMasterId, ability.level + ability.release)
-          if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') return
-          if (!effect.canTrigger(this, idx)) return
-          effect.applyEffect(this, idx, StatBonusType.Poster)
-        })
-      })
-    })
-
     // accessory
     this.accessories.forEach((accessory, idx) => {
       if (!accessory) return
@@ -200,6 +183,23 @@ export default class ScoreCalculator {
           effect.applyEffect(this, idx, StatBonusType.Accessory)
         }
       }
+    })
+
+    // poster
+    this.posters.forEach((poster, idx) => {
+      if (!poster) return
+      poster.abilities.forEach(ability => {
+        if (!ability.unlocked) return
+        if (ability.data.Type === 'Leader' && this.members[idx] !== leader) return
+        const abilityEffectBranch = ability.getActiveBranch(this.liveSim)
+        if (!abilityEffectBranch) return
+        abilityEffectBranch.BranchEffects.forEach(effect => {
+          effect = Effect.get(effect.EffectMasterId, ability.level + ability.release)
+          if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') return
+          if (!effect.canTrigger(this, idx)) return
+          effect.applyEffect(this, idx, StatBonusType.Poster)
+        })
+      })
     })
 
     // theater effect
