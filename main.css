@@ -417,3 +417,9 @@ img.preview-loading {
   50%,90% { opacity: 0; }
   100% { opacity: 1; }
 }
+.desc-keyword {
+	/* padding: 0.1em 0.2em; */
+	/* background: #E0E0E0; */
+	border-radius: 5px;
+	text-decoration: underline;
+}

@@ -7,5 +7,6 @@ export default class BeautyText {
       .replace(/<color=(#[0-9A-Fa-f]*)>(.*?)<\/color>/g, '<span style="color: $1">$2</span>')
       .replace(/<\/?size[^>]*>/g, '')
       .replace(/(支援|支配|増幅|特殊)系?の光/g, (text, type) => `<span class="sense-star" data-sense-type="${SenseTypeTextEnum[type]}">${text}</span>`)
+      .replace(/((プリンシパル|P\.)ゲージ(の?上限値?|獲得量)?|ライフガード|(スターアクト|センス)スコア)/g, '<span class="desc-keyword">$1</span>')
   }
 }
