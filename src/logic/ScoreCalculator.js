@@ -91,21 +91,35 @@ export default class ScoreCalculator {
       if (!effect.canTrigger(this, -1)) return
       passiveEffects.album.push({effect, source:-1})
     })
+    const albumMemberTriggers = new Set([
+      'CharacterBase',
+      'Character',
+      'Company',
+      'Attribute',
+      'SenseType',
+      'CharacterBaseGroup',
+    ])
     this.extra.albumExtra.forEach(i => {
       if (!i.enabled) return
       const effect = i.effect
-      if (effect.Triggers.length === 0) {
-        passiveEffects.album.push({effect, source:-1})
+      const hasMemberTrigger = effect.Triggers.some(t => albumMemberTriggers.has(t.Trigger))
+      if (hasMemberTrigger) {
+        const targets = []
+        this.members.forEach((chara, idx) => {
+          if (!chara) return
+          if (!effect.canTrigger(this, idx)) return
+          targets.push(idx)
+        })
+        if (targets.length === 0) return
+        const originalRange = effect.Range
+        if (originalRange === 'All') effect.Range = 'Self'
+        targets.forEach(idx => effect.applyEffect(this, idx, StatBonusType.Album))
+        effect.Range = originalRange
         return
       }
-      let nonPassiveTriggered = false
-      this.members.forEach((chara, idx) => {
-        if (!chara) return
-        if (!effect.canTrigger(this, idx)) return
-        if (nonPassiveTriggered && effect.FireTimingType !== 'Passive') return
-        nonPassiveTriggered = true
-        passiveEffects.album.push({effect, source:idx})
-      })
+      if (effect.Triggers.length === 0 || effect.canTrigger(this, -1)) {
+        passiveEffects.album.push({effect, source:-1})
+      }
     })
     passiveEffects.album.forEach(i => i.effect.applyEffect(this, i.source, StatBonusType.Album))
 
