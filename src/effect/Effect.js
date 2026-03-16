@@ -1,5 +1,4 @@
 import GameDb from '../db/GameDb'
-import { AttributeEnum, SenseTypeEnum } from '../db/Enum'
 import ConstText from '../db/ConstText'
 
 import VocalUpEffect from './types/VocalUp'

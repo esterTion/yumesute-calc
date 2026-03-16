@@ -1,5 +1,4 @@
 import GameDb from "../db/GameDb"
-import { AttributeEnum } from "../db/Enum"
 import StatCalculator from "./StatCalculator"
 import ConstText from "../db/ConstText"
 import StatBonus from "./StatBonus"
