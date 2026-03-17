@@ -107,6 +107,7 @@ export default class ScoreCalculator {
         this.members.forEach((chara, idx) => {
           if (!chara) return
           if (!effect.canTrigger(this, idx)) return
+          if (effect.FireTimingType !== 'Passive' && targets.length) return;
           targets.push(idx)
         })
         if (targets.length === 0) return
