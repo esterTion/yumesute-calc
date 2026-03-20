@@ -363,8 +363,10 @@ export default class RootLogic {
       accessory: true,
       album: true,
       theaterLevel: true,
+      skipCalc: true,
       selection: true
     })
+    this.batchUpdating = true
 
     this.calcTypeSelectForm.tab.value = 'normal'
     this.tabSelectForm.tab.value = 'character'
@@ -377,6 +379,9 @@ export default class RootLogic {
     SideMenuManager.init()
 
     ConstText.fillText()
+
+    this.batchUpdating = false
+    this.update({ party: true })
   }
   saveState() {
     if (window.DEBUG_NO_SAVE) return;
@@ -764,6 +769,7 @@ export default class RootLogic {
         this.appState.highScoreBuffManager.changeNotation(this.senseNoteSelect.value | 0)
       }
 
+      if (parts.skipCalc) return
       if ('keiko' === this.calcTypeSelectForm.tab.value) {
         if (parts.chara || parts.album || parts.theaterLevel) {
           this.keikoFillChara()
