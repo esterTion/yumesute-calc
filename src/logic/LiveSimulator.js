@@ -127,11 +127,14 @@ export default class LiveSimulator {
         }, {})
         const distance = conditionMap.NeighborPosition
         const targetCharaId = conditionMap.CharacterBase
-        if (i - distance >= 0 && this.calc.members[i - distance].isCharacterBaseId(targetCharaId)) {
-          this.combinationSenseList[i - distance].push(i)
-        }
-        if (i + distance < 5 && this.calc.members[i + distance].isCharacterBaseId(targetCharaId)) {
-          this.combinationSenseList[i + distance].push(i)
+        const top = Math.max(0, i - distance)
+        const bottom = Math.min(4, i + distance)
+        for (let j = top; j <= bottom; j++) {
+          if (j === i) continue
+          if (this.calc.members[j].isCharacterBaseId(targetCharaId)) {
+            this.combinationSenseList[j].push(i)
+            break;
+          }
         }
       }
     }
