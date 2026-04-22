@@ -87,12 +87,14 @@ export default class SenseData {
     return result
   }
 
-  getCombinationSenseEffect(liveSim) {
-    let effect
-    for (effect of this.data.PreEffects) {
+  getCombinationSenseEffects(liveSim) {
+    let effects = []
+    for (let effect of this.data.PreEffects) {
       effect = Effect.get(effect.EffectMasterId, this.level)
-      if (effect.Type === 'CombinationSense') return effect
+      if (effect.Type === 'CombinationSense') {
+        effects.push(effect)
+      }
     }
-    return null
+    return effects
   }
 }

@@ -119,8 +119,8 @@ export default class LiveSimulator {
       }
 
       // combination sense
-      const combinationSenseEffect = this.calc.members[i].sense.getCombinationSenseEffect(this)
-      if (combinationSenseEffect) {
+      const combinationSenseEffects = this.calc.members[i].sense.getCombinationSenseEffects(this)
+      combinationSenseEffects.forEach(combinationSenseEffect => {
         const conditionMap = combinationSenseEffect.Conditions.reduce((acc, cur) => {
           acc[cur.Condition] = cur.Value
           return acc
@@ -133,10 +133,9 @@ export default class LiveSimulator {
           if (j === i) continue
           if (this.calc.members[j].isCharacterBaseId(targetCharaId)) {
             this.combinationSenseList[j].push(i)
-            break;
           }
         }
-      }
+      })
     }
     let lights = this.getHoldingLightsElement()
     if (this.tryStarAct()) {
