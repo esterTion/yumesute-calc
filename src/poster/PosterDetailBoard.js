@@ -44,7 +44,7 @@ export default class PosterDetailBoard {
     this.failed = 0
     this.total = 1
     this.renderPosition = [
-      [this.canvas.previousSibling, 0, 0, true],
+      [this.canvas.previousSibling, 0, 0, true, true],
     ]
     for (let i = 1; i < 4; i++) {
       if (this.data[`SubTitlePositionX${i}`] === undefined) continue
@@ -110,9 +110,13 @@ export default class PosterDetailBoard {
     if (this.failed) this.loadingText.textContent += ` (${this.failed} failed)`
     const ctx = this.canvas.getContext('2d')
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-    for (const [img, x, y, visible] of this.renderPosition) {
+    for (const [img, x, y, visible, fullSize] of this.renderPosition) {
       if (!visible) continue
-      ctx.drawImage(img, x, y)
+      if (fullSize) {
+        ctx.drawImage(img, x, y, this.canvas.width, this.canvas.height)
+      } else {
+        ctx.drawImage(img, x, y)
+      }
     }
   }
 
