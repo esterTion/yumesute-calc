@@ -405,6 +405,7 @@ export default class LiveSimulator {
   applySenseEffects(idx, timelineNode, activateSenseIndex) {
     const chara = this.calc.members[idx]
     const sense = chara.senseAll[activateSenseIndex]
+    if (sense.Type === 'None') return
     sense.data.PreEffects.forEach(effect => {
       effect = Effect.get(effect.EffectMasterId, chara.senselv)
       effect.applyEffect(this.calc, idx, ScoreBonusType.Sense)
@@ -419,7 +420,7 @@ export default class LiveSimulator {
     }
     if (!this.isDuringCombinationSense) {
       this.currentSenseType = sense.Type.toLowerCase();
-      const senseTypesOrdered = [sense.Type, ...chara.senseAll.filter((s, i) => i !== activateSenseIndex).map(s => s.Type)]
+      const senseTypesOrdered = [sense.Type, ...chara.senseAll.filter((s, i) => i !== activateSenseIndex && s.Type !== 'None').map(s => s.Type)]
       const senseAddCount = sense.data.LightCount + this.senseExtraAmount[idx]
       const addedLights = new Array(senseAddCount).fill(0).reduce((acc) => acc.concat(senseTypesOrdered), [])
       senseTypesOrdered.forEach(i => this.addSenseLight(i, idx, senseAddCount))
