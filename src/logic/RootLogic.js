@@ -695,7 +695,7 @@ export default class RootLogic {
   }
   addPhotoEffect() {
     const photoEffectId = this.addPhotoEffectSelect.value | 0;
-    this.appState.albumExtra.push(new PhotoEffectData(photoEffectId, 1, this.photoEffectContainer))
+    this.appState.albumExtra.push(new PhotoEffectData(photoEffectId, 30, this.photoEffectContainer))
     this.update({ album: true })
   }
   removePhotoEffect(pe) {
