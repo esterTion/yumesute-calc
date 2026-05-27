@@ -1,6 +1,7 @@
 import _ from "../createElement"
 import ConstText from "../db/ConstText"
 import GameDb from "../db/GameDb"
+import WebpLoader from "../manager/WebpLoader"
 import removeAllChilds from "../removeAllChilds"
 
 export default class PosterDetailBoard {
@@ -19,13 +20,7 @@ export default class PosterDetailBoard {
         this.layerToggles = _('div', { className: 'poster-layer-toggles' }),
         this.loadingText = _('div'),
         _('div', { style: {position: 'relative'}}, [
-          _('img', {
-            src: `https://redive.estertion.win/wds/poster/${this.id}_0.webp`,
-            crossorigin: 'anonymous',
-            style: { width: '100%' },
-            event: { load: _ => {this.loaded++, this.drawImg()}, error: _ => {this.failed++, this.drawImg()} }
-          }),
-          this.canvas = _('canvas', { style: { width: '100%', position: 'absolute', left: 0, top: 0 }, event: { click: _ => {
+          this.canvas = _('canvas', { style: { width: '100%' }, event: { click: _ => {
             const newWin = window.open('about:blank', '_blank')
             this.drawImg()
             this.canvas.toBlob(blob => {
@@ -43,22 +38,40 @@ export default class PosterDetailBoard {
     this.loaded = 0
     this.failed = 0
     this.total = 1
-    this.renderPosition = [
-      [this.canvas.previousSibling, 0, 0, true, true],
-    ]
+    const baseImage = [null, 0, 0, true, true]
+    this.renderPosition = [baseImage]
+    const abort = WebpLoader.instance.load(`https://redive.estertion.win/wds/poster/${this.id}_0.webp`, (img, finish) => {
+      baseImage[0] = img;
+      if (finish) {
+        this.loaded++;
+      }
+      this.drawImg();
+    }, e => {
+      this.failed++;
+      this.drawImg();
+    })
+    baseImage.push(abort)
     for (let i = 1; i < 4; i++) {
       if (this.data[`SubTitlePositionX${i}`] === undefined) continue
       this.total++
       const partInfo = [
-        this.srcImageContainer.appendChild(_('img', {
-          src: `https://redive.estertion.win/wds/poster_parts/${this.id}_${i}.webp`,
-          crossorigin: 'anonymous',
-          event: { load: _ => {this.loaded++, this.drawImg()}, error: _ => {this.failed++, this.drawImg()} }
-        })),
+        null,
         this.data[`SubTitlePositionX${i}`],
         this.data[`SubTitlePositionY${i}`],
-        true
+        true,
+        false,
       ]
+      const abort = WebpLoader.instance.load(`https://redive.estertion.win/wds/poster_parts/${this.id}_${i}.webp`, (img, finish) => {
+        partInfo[0] = img;
+        if (finish) {
+          this.loaded++;
+        }
+        this.drawImg();
+      }, e => {
+        this.failed++;
+        this.drawImg();
+      })
+      partInfo.push(abort);
       this.renderPosition.push(partInfo)
       this.layerToggles.appendChild(_('label', {}, [
         _('input', { type: 'checkbox', checked: true, event: { change: e => {partInfo[3] = e.target.checked, this.drawImg()} } }),
@@ -112,6 +125,7 @@ export default class PosterDetailBoard {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     for (const [img, x, y, visible, fullSize] of this.renderPosition) {
       if (!visible) continue
+      if (!img) continue
       if (fullSize) {
         ctx.drawImage(img, x, y, this.canvas.width, this.canvas.height)
       } else {
@@ -121,6 +135,7 @@ export default class PosterDetailBoard {
   }
 
   close() {
+    this.renderPosition.forEach(i => i[5]?.abort())
     this.container.remove()
     document.body.classList.remove('picking')
   }

@@ -1,6 +1,7 @@
 import GameDb from '../db/GameDb'
 import AtlasDb from '../db/AtlasDb'
 import ConstText from '../db/ConstText'
+import WebpLoader from '../manager/WebpLoader'
 
 import _ from '../createElement'
 import removeAllChilds from '../removeAllChilds'
@@ -46,6 +47,7 @@ export default class RootLogic {
     AtlasDb.addAtlasSheet('characters');
     AtlasDb.addAtlasSheet('posters');
     AtlasDb.addAtlasSheet('characterlog');
+    WebpLoader.instance.init();
     await GameDb.load();
     this.loaded = true;
 

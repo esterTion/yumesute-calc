@@ -1,0 +1,8 @@
+master*
+node_modules
+main-build.js
+*.map
+dist/
+.vscode
+draggable.min.js
+webp-idec.js
