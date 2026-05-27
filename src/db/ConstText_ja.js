@@ -174,5 +174,7 @@ export default {
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: 'スコアボーナスの種類支援していない：{type} ({id})',
   UNDEFINED_STRING: '不足しているテキスト：{0}',
 
-  OPTIMIZE_ALBUM: "自動設定アルバム"
+  OPTIMIZE_ALBUM: "フォト最適化",
+  OPTIMIZE_ALBUM_NO_PARTY: '編成又はリーダーが未設定',
+  OPTIMIZE_WORKING: '最適化中…',
 }

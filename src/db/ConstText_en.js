@@ -174,5 +174,7 @@ export default {
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: 'Score gain type not implemented: {type} ({id})',
   UNDEFINED_STRING: 'Missing text template: {0}',
 
-  OPTIMIZE_ALBUM: "Auto configure album"
+  OPTIMIZE_ALBUM: "Auto pick best photos",
+  OPTIMIZE_ALBUM_NO_PARTY: 'Party or leader not set',
+  OPTIMIZE_WORKING: 'Calculating...',
 }

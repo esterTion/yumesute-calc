@@ -137,7 +137,8 @@ export default class RootLogic {
         this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])]),
         this.albumExtraCountLabel = _('span', { style: { marginLeft: '0.5em' } }),
         _('text', ` / ${this.nonPersistentState.maxAlbumPages * 6}`),
-        _('input', { type: 'button', 'data-text-value': 'OPTIMIZE_ALBUM', style: { marginLeft: "1em" }, event: { click: e=>this.handleOptimizeAlbum() }}),
+        this.albumOptimizeBtn = _('input', { type: 'button', 'data-text-value': 'OPTIMIZE_ALBUM', style: { marginLeft: "1em" }, event: { click: e=>this.handleOptimizeAlbum() }}),
+        this.albumOptimizeMessageBox = _('span', { style: { marginLeft: '1em' } }),
       ]),
       _('details', {}, [
         _('summary', {'data-text-key':'LABEL_SORT_AND_FILTER' }),
@@ -983,10 +984,8 @@ export default class RootLogic {
   async handleOptimizeAlbum() {
     if (this.appState.albumExtra.length === 0) return;
 
-    const btn = document.querySelector(
-      'input[data-text-value="OPTIMIZE_ALBUM"]',
-    );
-    const originalText = btn.value;
+    const btn = this.albumOptimizeBtn;
+    const msgBox = this.albumOptimizeMessageBox;
     btn.disabled = true;
 
     const items = this.appState.albumExtra;
@@ -995,7 +994,8 @@ export default class RootLogic {
 
     const party = this.appState.partyManager.currentParty;
     if (!party || !party.leader) {
-      alert("请先选择编队并设置队长");
+      msgBox.textContent = ConstText.get('OPTIMIZE_ALBUM_NO_PARTY');
+      setTimeout(() => (msgBox.textContent = ''), 5000);
       btn.disabled = false;
       return;
     }
@@ -1045,7 +1045,7 @@ export default class RootLogic {
       isUsedDescriptionList = [];
 
       // 进度反馈
-      btn.value = `Calculating... ${step}/${limit}`;
+      msgBox.textContent = ConstText.get('OPTIMIZE_WORKING') + ` ${step}/${limit}`;
       if (step % 5 === 0) {
         await new Promise((r) => setTimeout(r, 0));
       }
@@ -1084,7 +1084,7 @@ export default class RootLogic {
       if (selectedIndices.size >= items.length) break;
     }
 
-    btn.value = originalText;
+    msgBox.textContent = '';
     btn.disabled = false;
     this.update({ album: true });
   }

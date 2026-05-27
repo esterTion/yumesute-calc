@@ -174,5 +174,7 @@ export default {
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: '未支持的加分类型：{type} ({id})',
   UNDEFINED_STRING: '缺失的文本：{0}',
 
-  OPTIMIZE_ALBUM: "自动配置相册"
+  OPTIMIZE_ALBUM: "自动配置相册",
+  OPTIMIZE_ALBUM_NO_PARTY: '未配置编队或队长',
+  OPTIMIZE_WORKING: '计算中…',
 }
