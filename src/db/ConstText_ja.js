@@ -173,4 +173,6 @@ export default {
   LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '** 現在のスコアに基づくボーナスは正確に計算できません',
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: 'スコアボーナスの種類支援していない：{type} ({id})',
   UNDEFINED_STRING: '不足しているテキスト：{0}',
+
+  OPTIMIZE_ALBUM: "自動設定アルバム"
 }

@@ -173,4 +173,6 @@ export default {
   LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '** Bonus based on current score cannot be accurately calculated',
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: 'Score gain type not implemented: {type} ({id})',
   UNDEFINED_STRING: 'Missing text template: {0}',
+
+  OPTIMIZE_ALBUM: "Auto configure album"
 }

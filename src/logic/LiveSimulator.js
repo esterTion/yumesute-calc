@@ -142,7 +142,7 @@ export default class LiveSimulator {
       this.phase = ConstText.get('LIVE_PHASE_START_WITH_STARACT')
       this.resetCurrentLights()
     }
-    node.appendChild(_('details', { className: 'live-log-phase odd-row' }, [
+    node?.appendChild(_('details', { className: 'live-log-phase odd-row' }, [
       _('summary', {}, [
         _('text', this.phase),
         _('br'),
@@ -179,7 +179,7 @@ export default class LiveSimulator {
         this.resetCurrentLights()
         saLastTiming = timing.TimingSecond;
       }
-      node.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : '') }, [
+      node?.appendChild(_('details', { className: 'live-log-phase' + (oddRow ? ' odd-row' : '') }, [
         _('summary', { className: 'sense-star', 'data-sense-type': this.currentSenseType }, [
           _('text', this.phase),
           _('br'),

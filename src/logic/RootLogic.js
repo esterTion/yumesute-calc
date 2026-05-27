@@ -137,6 +137,7 @@ export default class RootLogic {
         this.albumLevelSelect = _('select', { event: { change: e=>this.setAlbumLevel(e) } }, [_('option', { value: 0 }, [_('text', '0')])]),
         this.albumExtraCountLabel = _('span', { style: { marginLeft: '0.5em' } }),
         _('text', ` / ${this.nonPersistentState.maxAlbumPages * 6}`),
+        _('input', { type: 'button', 'data-text-value': 'OPTIMIZE_ALBUM', style: { marginLeft: "1em" }, event: { click: e=>this.handleOptimizeAlbum() }}),
       ]),
       _('details', {}, [
         _('summary', {'data-text-key':'LABEL_SORT_AND_FILTER' }),
@@ -976,6 +977,116 @@ export default class RootLogic {
     if (!skipUpdate) {
       this.update({ party: true })
     }
+  }
+
+  // 勾选当前相册照片最优组合
+  async handleOptimizeAlbum() {
+    if (this.appState.albumExtra.length === 0) return;
+
+    const btn = document.querySelector(
+      'input[data-text-value="OPTIMIZE_ALBUM"]',
+    );
+    const originalText = btn.value;
+    btn.disabled = true;
+
+    const items = this.appState.albumExtra;
+    // 先全部关闭
+    items.forEach((i) => (i.enabled = false));
+
+    const party = this.appState.partyManager.currentParty;
+    if (!party || !party.leader) {
+      alert("请先选择编队并设置队长");
+      btn.disabled = false;
+      return;
+    }
+
+    const calcType = this.calcTypeSelectForm.tab.value;
+    const extra = {
+      albumLevel: this.appState.albumLevel,
+      albumExtra: items,
+      leader: party.leader,
+      type:
+        calcType === "highscore"
+          ? ScoreCalculationType.Highscore
+          : calcType === "keiko"
+            ? ScoreCalculationType.Keiko
+            : ScoreCalculationType.Normal,
+    };
+
+    const getScore = () => {
+      const calc = new ScoreCalculator(
+        party.characters,
+        party.posters,
+        party.accessories,
+        extra,
+      );
+      calc.calc();
+      const finalSenseScore = calc.result.senseScore.reduce(
+        (acc, cur) => acc + cur,
+        0,
+      );
+      const finalStarActScore = calc.result.starActScore.reduce(
+        (acc, cur) => acc + cur,
+        0,
+      );
+
+      return calc.result.baseScore[0] + finalSenseScore + finalStarActScore;
+    };
+
+    let currentScore = getScore();
+    const selectedIndices = new Set();
+    const limit = this.nonPersistentState.maxAlbumPages * 6;
+    let isUsedDescriptionList = [];
+
+    // 每次从未选中的效果中挑出一个能让总分增加最多的效果，直到选满照片数量最大值或没有正增益为止
+    for (let step = 0; step < limit; step++) {
+      let bestGain = -1;
+      let bestIndex = -1;
+      isUsedDescriptionList = [];
+
+      // 进度反馈
+      btn.value = `Calculating... ${step}/${limit}`;
+      if (step % 5 === 0) {
+        await new Promise((r) => setTimeout(r, 0));
+      }
+
+      for (let i = 0; i < items.length; i++) {
+        if (selectedIndices.has(i)) continue;
+
+        // 照片等级小于10级直接跳过
+        if (items[i].level < 10) continue;
+
+        // 记录已用于计算分数的效果描述，避免重复计算
+        const description = items[i].description;
+        if (isUsedDescriptionList.includes(description)) continue;
+        isUsedDescriptionList.push(description);
+
+        items[i].enabled = true;
+        const score = getScore();
+        const gain = score - currentScore;
+
+        if (gain > bestGain) {
+          bestGain = gain;
+          bestIndex = i;
+        }
+        items[i].enabled = false;
+      }
+
+      // 只有在能带来正向收益（或至少不减分）时才继续
+      if (bestIndex !== -1 && bestGain >= 0) {
+        items[bestIndex].enabled = true;
+        currentScore += bestGain;
+        selectedIndices.add(bestIndex);
+      } else {
+        break;
+      }
+
+      if (selectedIndices.size >= items.length) break;
+    }
+
+    btn.value = originalText;
+    btn.disabled = false;
+    this.update({ album: true });
   }
 
   keikoFillChara() {

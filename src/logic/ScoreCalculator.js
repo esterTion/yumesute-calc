@@ -84,7 +84,8 @@ export default class ScoreCalculator {
     })
 
     const passiveEffects = this.passiveEffects
-    Object.values(GameDb.AlbumEffect).forEach(i => {
+    // 相册等级效果倒序加载，确保先加p上限
+    Object.values(GameDb.AlbumEffect).reverse().forEach(i => {
       if (this.extra.albumLevel < i.Level) return
       const effect = Effect.get(i.EffectMasterId, 1)
       if (!effect.canTrigger(this, -1)) return
@@ -128,7 +129,54 @@ export default class ScoreCalculator {
     this.members.forEach((chara, idx) => {
       if (!chara) return
       this.liveSim.skipSense[idx] = chara.data.CharacterBaseMasterId === 401
+      // 开花效果
       chara.bloomBonusEffects.forEach(effect => effect.applyEffect(this, idx, StatBonusType.Album))
+
+      // 海报效果
+      const poster = this.posters[idx];
+      poster?.abilities.forEach((ability) => {
+        if (!ability.unlocked) return;
+        if (ability.data.Type === "Leader" && this.members[idx] !== leader)
+          return;
+        const abilityEffectBranch = ability.getActiveBranch(this.liveSim);
+        if (!abilityEffectBranch) return;
+        abilityEffectBranch.BranchEffects.forEach((effect) => {
+          effect = Effect.get(
+            effect.EffectMasterId,
+            ability.level + ability.release,
+          );
+          if (
+            effect.FireTimingType !== "Passive" &&
+            effect.FireTimingType !== "StartLive"
+          )
+            return;
+          if (!effect.canTrigger(this, idx)) return;
+          effect.applyEffect(this, idx, StatBonusType.Poster);
+        });
+      });
+
+      // 饰品效果
+      const accessory = this.accessories[idx];
+      for (let effect of accessory?.mainEffects ?? []) {
+        effect = effect.effect;
+        if (
+          effect.FireTimingType !== "Passive" &&
+          effect.FireTimingType !== "StartLive"
+        )
+          continue;
+        if (!effect.canTrigger(this, idx)) continue;
+        effect.applyEffect(this, idx, StatBonusType.Accessory);
+      }
+      if (accessory?.randomEffect) {
+        let effect = accessory.randomEffect.effect;
+        if (
+          effect.canTrigger(this, idx) &&
+          (effect.FireTimingType === "Passive" ||
+            effect.FireTimingType === "StartLive")
+        ) {
+          effect.applyEffect(this, idx, StatBonusType.Accessory);
+        }
+      }
     })
     this.liveSim.setStarActRequirements(leader.staract.actualRequirements)
     if (leader.staract.data.BranchCondition1 === 'StorageSenseLightCount') {
@@ -180,37 +228,6 @@ export default class ScoreCalculator {
         matchedCategories.forEach(category => this.memberMatchingCategories[idx][category] = true)
         effect.applyEffect(this, idx, StatBonusType.Actor)
       })
-    })
-
-    // poster => accessory
-    this.members.forEach((_chara, idx) => {
-      const poster = this.posters[idx]
-      poster?.abilities.forEach(ability => {
-        if (!ability.unlocked) return
-        if (ability.data.Type === 'Leader' && this.members[idx] !== leader) return
-        const abilityEffectBranch = ability.getActiveBranch(this.liveSim)
-        if (!abilityEffectBranch) return
-        abilityEffectBranch.BranchEffects.forEach(effect => {
-          effect = Effect.get(effect.EffectMasterId, ability.level + ability.release)
-          if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') return
-          if (!effect.canTrigger(this, idx)) return
-          effect.applyEffect(this, idx, StatBonusType.Poster)
-        })
-      })
-
-      const accessory = this.accessories[idx]
-      for (let effect of (accessory?.mainEffects ?? [])) {
-        effect = effect.effect
-        if (effect.FireTimingType !== 'Passive' && effect.FireTimingType !== 'StartLive') continue
-        if (!effect.canTrigger(this, idx)) continue
-        effect.applyEffect(this, idx, StatBonusType.Accessory)
-      }
-      if (accessory?.randomEffect) {
-        let effect = accessory.randomEffect.effect
-        if (effect.canTrigger(this, idx) && (effect.FireTimingType === 'Passive' || effect.FireTimingType === 'StartLive')) {
-          effect.applyEffect(this, idx, StatBonusType.Accessory)
-        }
-      }
     })
 
     // theater effect
@@ -277,13 +294,13 @@ export default class ScoreCalculator {
       return
     }
 
-    const senseScoreNode = node.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_SENSE_SCORE'})]))
-    const starActScoreNode = node.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_STARACT_SCORE'})]))
-    const totalScoreNode = node.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_TOTAL_SCORE'})]))
+    const senseScoreNode = node?.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_SENSE_SCORE'})]))
+    const starActScoreNode = node?.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_STARACT_SCORE'})]))
+    const totalScoreNode = node?.appendChild(_('div', {}, [_('span', { 'data-text-key': 'CALC_TOTAL_SCORE'})]))
 
     this.liveSim.baseScore = baseScore[3]
 
-    node.appendChild(_('div', {}, [
+    node?.appendChild(_('div', {}, [
       _('div', { className: 'spriteatlas-characters', 'data-id': leader.cardIconId, style: {float: 'left', margin: '0 5px 5px 0'}}),
       _('div', { 'data-text-key': 'CALC_STAR_ACT_REQUIREMENTS'}),
       ScoreCalculator.createStarActDisplay(this.liveSim.starActRequirements),
@@ -296,12 +313,12 @@ export default class ScoreCalculator {
 
     let finalSenseScore = this.result.senseScore.reduce((acc, cur) => acc + cur, 0)
     let finalStarActScore = this.result.starActScore.reduce((acc, cur) => acc + cur, 0)
-    senseScoreNode.appendChild(_('text', finalSenseScore))
-    starActScoreNode.appendChild(_('text', ConstText.get('CALC_RESULT_STARACT').replace('{times}', this.result.starActCount).replace('{score}', finalStarActScore)))
-    totalScoreNode.appendChild(_('text', this.result.baseScore.map(i => i + finalSenseScore + finalStarActScore).join(' / ')))
+    senseScoreNode?.appendChild(_('text', finalSenseScore))
+    starActScoreNode?.appendChild(_('text', ConstText.get('CALC_RESULT_STARACT').replace('{times}', this.result.starActCount).replace('{score}', finalStarActScore)))
+    totalScoreNode?.appendChild(_('text', this.result.baseScore.map(i => i + finalSenseScore + finalStarActScore).join(' / ')))
     if (this.liveSim.scoreIsInaccurate) {
-      totalScoreNode.appendChild(_('br'))
-      totalScoreNode.appendChild(_('span', { 'data-text-key': 'LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE' }))
+      totalScoreNode?.appendChild(_('br'))
+      totalScoreNode?.appendChild(_('span', { 'data-text-key': 'LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE' }))
     }
 
     ConstText.fillText()

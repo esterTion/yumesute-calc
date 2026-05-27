@@ -173,4 +173,6 @@ export default {
   LOG_WARNING_INACCURATE_SCORE_GAIN_ON_SCORE: '** 按当前得分加分的效果无法精确计算分数',
   LOG_WARNING_EFFECT_SCORE_GAIN_TYPE_NOT_IMPLEMENTED: '未支持的加分类型：{type} ({id})',
   UNDEFINED_STRING: '缺失的文本：{0}',
+
+  OPTIMIZE_ALBUM: "自动配置相册"
 }
