@@ -54,9 +54,9 @@ export default class StatCalculator {
       const v = this.buffAfterCalc[idx]
       for (let j=0; j<count; j++) {
         i = i.mulStat({
-          [StatBonus.Vocal        ]: (v[j][StatBonus.Vocal        ] ?? 0) + 10000,
-          [StatBonus.Expression   ]: (v[j][StatBonus.Expression   ] ?? 0) + 10000,
-          [StatBonus.Concentration]: (v[j][StatBonus.Concentration] ?? 0) + 10000,
+          [StatBonus.Vocal        ]: (v[StatBonus.Vocal        ][j] ?? 0) + 10000,
+          [StatBonus.Expression   ]: (v[StatBonus.Expression   ][j] ?? 0) + 10000,
+          [StatBonus.Concentration]: (v[StatBonus.Concentration][j] ?? 0) + 10000,
         })
       }
       return i.sub(o)
