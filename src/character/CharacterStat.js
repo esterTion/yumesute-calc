@@ -17,6 +17,13 @@ export default class CharacterStat {
     newStat.co += stat.co
     return newStat
   }
+  sub(stat) {
+    const newStat = new CharacterStat(this.vo, this.ex, this.co)
+    newStat.vo -= stat.vo
+    newStat.ex -= stat.ex
+    newStat.co -= stat.co
+    return newStat
+  }
   // multiple a percentage, including performance
   mul(percentage) {
     const newStat = new CharacterStat(

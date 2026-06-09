@@ -207,7 +207,7 @@ export default class ScoreCalculator {
             isBuffTarget = true
           }
           if (isBuffTarget) {
-            this.stat.buffAfterCalc[i][StatBonus[notationBuff.StatusType]] += notationBuff.BuffValue * 100
+            this.stat.buffAfterCalc[i][StatBonus[notationBuff.StatusType]].push(notationBuff.BuffValue * 100)
           }
         }
       })
@@ -378,12 +378,12 @@ export default class ScoreCalculator {
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Concentration] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Concentration] / 100}%\n+${this.stat.buffFinal[idx][StatBonusType.Total][1][StatBonus.Concentration]}\n${this.stat.bonus[idx][StatBonusType.Total].co}`)]),
           _('td', { className: 'stat-value' }, [_('text', `${this.stat.buffFinal[idx][StatBonusType.Total][0][StatBonus.Performance  ] / 100}%/${this.stat.buffLimit[idx][0][StatBonus.Performance  ] / 100}%\n${this.stat.bonus[idx][StatBonusType.Total].total}`)]),
         ])]),
-        this.stat.buffAfterCalc[idx].every(i => i === 10000) ? new Comment('CALC_TABLE_EXTRA_UP') : _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
+        this.stat.buffAfterCalc[idx].every(i => i.length === 0) ? new Comment('CALC_TABLE_EXTRA_UP') : _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', { 'data-text-key': 'CALC_TABLE_EXTRA_UP'}, [_('text', '额外加成')]),
-          _('td', { className: 'stat-value' }, [_('text', `+${this.stat.buffAfterCalc[idx][StatBonus.Vocal        ] / 100 - 100}%`)]),
-          _('td', { className: 'stat-value' }, [_('text', `+${this.stat.buffAfterCalc[idx][StatBonus.Expression   ] / 100 - 100}%`)]),
-          _('td', { className: 'stat-value' }, [_('text', `+${this.stat.buffAfterCalc[idx][StatBonus.Concentration] / 100 - 100}%`)]),
-          _('td', { className: 'stat-value' }, [_('text', `+${this.stat.buffAfterCalc[idx][StatBonus.Performance  ] / 100 - 100}%`)]),
+          _('td', { className: 'stat-value' }, [_('text', this.stat.buffAfterCalc[idx][StatBonus.Vocal        ].map(i => `+${i / 100}%`).join('\n'))]),
+          _('td', { className: 'stat-value' }, [_('text', this.stat.buffAfterCalc[idx][StatBonus.Expression   ].map(i => `+${i / 100}%`).join('\n'))]),
+          _('td', { className: 'stat-value' }, [_('text', this.stat.buffAfterCalc[idx][StatBonus.Concentration].map(i => `+${i / 100}%`).join('\n'))]),
+          _('td', { className: 'stat-value' }, [_('text', this.stat.buffAfterCalc[idx][StatBonus.Performance  ].map(i => `+${i / 100}%`).join('\n'))]),
         ])]),
         _('tbody', {}, [_('tr', { className: rowNumber++%2 ? 'odd-row' : '' }, [
           _('td', { 'data-text-key': 'CALC_TABLE_FINAL_STAT' }, [_('text', '最終値')]),

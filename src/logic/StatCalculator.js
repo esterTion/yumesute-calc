@@ -1,4 +1,5 @@
 import CharacterStat from '../character/CharacterStat'
+import StatBonus from './StatBonus';
 import StatBonusType from './StatBonusType'
 
 export default class StatCalculator {
@@ -34,7 +35,7 @@ export default class StatCalculator {
      */
     this.buff = members.map(_ => ([0,0,0,0,0].map(_ => ([[0,0,0,0], [0,0,0,0]]))))
     this.buffLimit = members.map(_ => ([[20000,20000,20000,20000], [Infinity,Infinity,Infinity,Infinity]]))
-    this.buffAfterCalc = members.map(_ => [10000,10000,10000,10000])
+    this.buffAfterCalc = members.map(_ => [[],[],[],[]])
   }
   calc() {
     const buffRemaining = this.buffLimit.map(i=>i.map(i=>i.map(i=>i)))
@@ -47,7 +48,19 @@ export default class StatCalculator {
     }))
     // 时间轴效果 / 单项加成
     // 加成基数为卡面未加成的数值
-    this.attributeExtra = this.initial.map((i, idx) => i.mulStat(this.buffAfterCalc[idx].map((v) => (v-10000))))
+    this.attributeExtra = this.initial.map((i, idx) => {
+      const o = i
+      const count = this.buffAfterCalc[idx].reduce((max, v) => Math.max(max, v.length), 0)
+      const v = this.buffAfterCalc[idx]
+      for (let j=0; j<count; j++) {
+        i = i.mulStat({
+          [StatBonus.Vocal        ]: (v[j][StatBonus.Vocal        ] ?? 0) + 10000,
+          [StatBonus.Expression   ]: (v[j][StatBonus.Expression   ] ?? 0) + 10000,
+          [StatBonus.Concentration]: (v[j][StatBonus.Concentration] ?? 0) + 10000,
+        })
+      }
+      return i.sub(o)
+    })
     this.bonus = this.buffFinal.map((charaBuf, charaIdx) => {
       const bonus = charaBuf.map(i => this.initial[charaIdx].mulStat(i[0]).add(CharacterStat.fromArray(i[1].slice(0, 3))))
       const bonusAddition = bonus.reduce((sum, category) => sum.add(category), CharacterStat.Zero())
@@ -70,7 +83,12 @@ export default class StatCalculator {
     this.finalBeforeBuff = this.initial.map((i, idx) => i.add(this.bonus[idx][StatBonusType.Total]).add(this.attributeExtra[idx]))
     // 时间轴效果 / 电姬海报（FinalPerformanceUpCancelSense）
     // 目前只有演技力加成
-    this.final = this.finalBeforeBuff.map((i, idx) => i.mulPerformance(this.buffAfterCalc[idx]))
+    this.final = this.finalBeforeBuff.map((i, idx) => {
+      this.buffAfterCalc[idx][StatBonus.Performance].forEach(v => {
+        i = i.mulPerformance({ [StatBonus.Performance]: v + 10000 })
+      })
+      return i
+    })
     this.finalTotal = this.final.reduce((s, i) => s+i.total, 0)
   }
 }

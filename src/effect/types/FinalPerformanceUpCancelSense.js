@@ -5,7 +5,7 @@ export default class FinalPerformanceUpCancelSense {
     if (effect.CalculationType !== 'Multiplication') throw new Error(`FinalPerformanceUpCancelSense calc type: ${effect.CalculationType}`)
     targets.forEach(idx => {
       if (!effect.conditionSatified(calc, idx)) return
-      calc.stat.buffAfterCalc[idx][StatBonus.Performance] *= effect.activeEffect.Value / 100
+      calc.stat.buffAfterCalc[idx][StatBonus.Performance].push(effect.activeEffect.Value * 100 - 10000)
       calc.liveSim.skipSense[idx] = true
     })
   }
