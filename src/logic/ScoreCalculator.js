@@ -29,6 +29,8 @@ export default class ScoreCalculator {
       attribute: [],
       companyMemberCount: {},
       companyMemberMaxCount: 0,
+      attributeCount: {},
+      attributeMaxCount: 0,
     };
     members.forEach(i => {
       this.properties.company.push(i ? i.companyIdList : null);
@@ -37,8 +39,13 @@ export default class ScoreCalculator {
         this.properties.companyMemberCount[id] ??= 0;
         this.properties.companyMemberCount[id]++;
       })
+      i?.attributeList.forEach(id => {
+        this.properties.attributeCount[id] ??= 0;
+        this.properties.attributeCount[id]++;
+      })
     })
     this.properties.companyMemberMaxCount = Object.values(this.properties.companyMemberCount).reduce((max, c) => Math.max(max, c), 0);
+    this.properties.attributeMaxCount = Object.values(this.properties.attributeCount).reduce((max, c) => Math.max(max, c), 0);
     // 双人卡统计所有剧团组合，取最小总剧团数
     const minimalCombinationCount = (list) => {
       const combinations = list.reduce((acc, cur) => {
