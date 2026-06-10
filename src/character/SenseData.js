@@ -16,11 +16,17 @@ export default class SenseData {
     return BeautyText.convertGameTextToValidDom(this.Description)
       .replace('[:score]', this.scoreUp)
       .replace('[:gauge]', this.gaugeUp)
-      .replace(/\[:pre(\d)\]/g, (_,i)=>Effect.get(this.PreEffects[0].EffectMasterId, this.level).activeEffectValueStr)
+      .replace(/\[:pre(\d)\]/g, (_,i)=>Effect.get(this.getPreEffect(i).EffectMasterId, this.level).activeEffectValueStr)
       .replace('[:sec]', ()=>Effect.get(this.Branches[0].BranchEffects[0].EffectMasterId, this.level).DurationSecond)
-      .replace(/\[:sec(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level).DurationSecond)
-      .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.Branches[i-1].BranchEffects[j-1].EffectMasterId, this.level).activeEffectValueStr)
+      .replace(/\[:sec(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.getBranchEffect(i, j).EffectMasterId, this.level).DurationSecond)
+      .replace(/\[:param(\d)(\d)\]/g, (_,i,j)=>Effect.get(this.getBranchEffect(i, j).EffectMasterId, this.level).activeEffectValueStr)
       .replace(/／/g, '／\n　')
+  }
+  getPreEffect(i) {
+    return this.PreEffects.find(e => e.Order == i)
+  }
+  getBranchEffect(i, j) {
+    return this.Branches.find(b => b.Order == i).BranchEffects.find(e => e.Order == j)
   }
   getType(members = null) {
     switch (this.Type) {
