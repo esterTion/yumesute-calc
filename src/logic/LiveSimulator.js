@@ -281,7 +281,7 @@ export default class LiveSimulator {
     this.phaseLog.push(ConstText.get('LIVE_LOG_PGUAGE_LIMIT', [before, amount, this.pGauge, this.pGaugeLimit]))
   }
   addSenseLight(type, idx, amount = 1) {
-    if (this.isDuringCombinationSense) return
+    if (this.isDuringCombinationSense) return false
     let lightType
     switch (type.toLowerCase()) {
       case 'support':       { lightType = 0; break }
@@ -289,6 +289,7 @@ export default class LiveSimulator {
       case 'amplification': { lightType = 2; break }
       case 'special':       { lightType = 3; break }
       case 'variable':      { lightType = 4; break }
+      case 'alternative':   { return false }
       default: throw new Error('Unknown sense type: ' + type)
     }
     let freeLightUsed = 0;
@@ -315,6 +316,7 @@ export default class LiveSimulator {
     }
     this.starActCurrent[lightType] += amount - freeLightUsed
     this.newLightCurrentStep[idx][lightType] += amount
+    return true
   }
   processWrongLightToSp(idx, addedLights) {
     let wrongLightToSp = this.wrongLightToSpAmount[idx]
@@ -354,13 +356,13 @@ export default class LiveSimulator {
       return true
     }
     let chara = this.calc.members[idx]
-    if (chara.data.CharacterBaseMasterId === 102) {
+    if (chara.isCharacterBaseId(102)) {
       // 发动加分效果
       chara.sense.data.PreEffects.forEach(effect => {
         effect = Effect.get(effect.EffectMasterId, chara.senselv)
         effect.applyEffect(this.calc, idx, ScoreBonusType.Sense)
       })
-      chara = this.calc.members.find(i => i && i.data.CharacterBaseMasterId === 101)
+      chara = this.calc.members.find(i => i && i.isCharacterBaseId(101))
       if (!chara) {
         // szk发动但没有kkn时，始终失败
         this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_FAILED'))
@@ -419,10 +421,18 @@ export default class LiveSimulator {
     }
     if (!this.isDuringCombinationSense) {
       this.currentSenseType = sense.Type.toLowerCase();
-      const senseTypesOrdered = [sense.Type, ...chara.senseAll.filter((s, i) => i !== activateSenseIndex && s.Type !== 'None').map(s => s.Type)]
-      const senseAddCount = sense.data.LightCount + this.senseExtraAmount[idx]
-      const addedLights = new Array(senseAddCount).fill(0).reduce((acc) => acc.concat(senseTypesOrdered), [])
-      senseTypesOrdered.forEach(i => this.addSenseLight(i, idx, senseAddCount))
+      const senseTypesOrdered = [
+        [sense.Type, sense.data.LightCount],
+        ...chara.senseAll.filter((s, i) => i !== activateSenseIndex && s.Type !== 'None').map(s => [s.Type, s.data.LightCount])
+      ]
+      const senseExtraAmount = this.senseExtraAmount[idx]
+      const addedLights = []
+      senseTypesOrdered.forEach(i => {
+        const [type, c] = i
+        const count = c + senseExtraAmount
+        const added = this.addSenseLight(type, idx, count)
+        if (added) addedLights.push(...(new Array(count)).fill(i[0]))
+      })
       for (let light of this.senseExtraLights[idx]) {
         let [addLightType, addLightAmount] = light
         this.addSenseLight(addLightType, idx, addLightAmount)
