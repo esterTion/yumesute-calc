@@ -21,7 +21,6 @@ export default class WebpLoader {
     }
     fetch(url, { mode: 'cors', signal: abort.signal }).then(async res => {
       const code = res.status;
-      console.log(`code ${code} for ${url}`)
       if (code !== 200) {
         onError?.({
           error: 'HTTP error ' + code,
@@ -30,7 +29,6 @@ export default class WebpLoader {
         return;
       }
       const size = Number(res.headers.get('Content-Length'));
-      console.log(`size ${size} for ${url}`)
       if (isNaN(size)) {
         onError?.({
           error: 'Content-Length header is missing',
@@ -40,18 +38,14 @@ export default class WebpLoader {
       }
       const canvas = document.createElement('canvas');
       const reader = res.body.getReader();
-      let received = 0;
       msg.size = size;
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          console.log('done, delete object')
           deleteObject()
           onImage(canvas, true);
           break;
         }
-        received += value.length;
-        console.log(`received ${received}/${size} for ${url}`)
         const buf = value.buffer;
         msg.buf = buf;
         const [image, id] = await this.appendChunk(msg, [buf]);
