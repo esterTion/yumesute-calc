@@ -385,6 +385,9 @@ export default class LiveSimulator {
       this.phaseLog.push(ConstText.get('LIVE_LOG_SENSE_FAILED'))
       return false
     }
+    if (chara.isCharacterBaseId(101) && chara.isCharacterBaseId(102) && chara.senseAll.length === 2) {
+      activateSenseIndex = 1 - activateSenseIndex
+    }
 
     this.applySenseEffects(idx, timelineNode, activateSenseIndex)
     this.applyPendingActions()
