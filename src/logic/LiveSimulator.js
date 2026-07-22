@@ -132,7 +132,7 @@ export default class LiveSimulator {
         for (let j = top; j <= bottom; j++) {
           if (j === i) continue
           if (this.calc.members[j].isCharacterBaseId(targetCharaId)) {
-            this.combinationSenseList[j].push(i)
+            this.combinationSenseList[j].push([i, targetCharaId])
           }
         }
       })
@@ -356,6 +356,7 @@ export default class LiveSimulator {
       return true
     }
     let chara = this.calc.members[idx]
+    const timingOriginChara = chara;
     if (chara.isCharacterBaseId(102)) {
       // 发动加分效果
       chara.sense.data.PreEffects.forEach(effect => {
@@ -393,7 +394,8 @@ export default class LiveSimulator {
     this.applyPendingActions()
 
     this.isDuringCombinationSense = true
-    for (let otherSenseIdx of this.combinationSenseList[idx]) {
+    for (let [otherSenseIdx, targetCharaId] of this.combinationSenseList[idx]) {
+      if (!timingOriginChara.isCharacterBaseId(targetCharaId)) continue;
       // 相邻sense发动时，附加生效本轮的加成
       this.purgeExpiredBuff(timing.TimingSecond)
       this.applySenseEffects(otherSenseIdx, timelineNode, 0)
