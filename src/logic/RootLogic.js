@@ -90,7 +90,10 @@ export default class RootLogic {
       _('div', {}, [
         _('input', { type: 'button', 'data-text-value': 'IMPORT_DATA_LABEL', event: { click: e=>this.importState(e) }}),
         _('input', { type: 'button', 'data-text-value': 'EXPORT_DATA_LABEL', event: { click: e=>this.exportState(e) }}),
+      ]),
+      _('div', {}, [
         _('a', { href: './YumesuteExporter.exe', download: 'YumesuteExporter.exe', 'data-text-key': 'EXPORTER_LABEL' }),
+        _('span', { 'data-text-key': 'EXPORTER_LABEL_DESC' }),
       ]),
       this.warningMessageBox = _('div', { id: 'warning_message_box'}),
       _('div', {className: 'margin-box', 'data-menu-anchor': 'MENU_ANCHOR_TIMELINE' }),
